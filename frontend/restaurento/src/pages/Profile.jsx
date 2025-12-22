@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
 import { Bell, Copy, Share2, LogOut, ChevronRight, User, Wallet } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '../redux/slices/authSlice';
 
 const Profile = () => {
     const [copied, setCopied] = useState(false);
     const referralCode = "WELCOME50";
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const handleCopy = () => {
         navigator.clipboard.writeText(referralCode);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate('/login');
     };
 
     return (
@@ -93,7 +102,10 @@ const Profile = () => {
                             <h3 className="text-red-500 font-bold text-lg mb-1">Log Out</h3>
                             <p className="text-gray-500 text-sm">You will be returned to the login screen.</p>
                         </div>
-                        <button className="px-6 py-2.5 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors shadow-md shadow-red-200">
+                        <button
+                            onClick={handleLogout}
+                            className="px-6 py-2.5 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors shadow-md shadow-red-200"
+                        >
                             Log Out
                         </button>
                     </div>

@@ -2,13 +2,35 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import AuthLayout from '../../components/layouts/AuthLayout';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import authService from '../../services/auth.service';
+import { loginSuccess } from '../../redux/slices/authSlice';
 
 const AdminLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [serverError, setServerError] = useState("");
     const { register, handleSubmit, formState: { errors } } = useForm();
 
-    const onSubmit = (data) => {
-        console.log("Admin Login:", data);
+    const onSubmit = async (data) => {
+        try {
+            setServerError("");
+            const response = await authService.adminLogin(data);
+
+            // Backend should likely return 'admin' as user object, but we'll adapt if needed
+            // For now assuming response structure is consistent
+            dispatch(loginSuccess({
+                user: response.data.admin || response.data.user,
+                tokens: response.data.tokens
+            }));
+
+            navigate('/admin/dashboard');
+        } catch (error) {
+            const message = error.response?.data?.message || "Login failed.";
+            setServerError(message);
+        }
     };
 
     return (
@@ -18,6 +40,11 @@ const AdminLogin = () => {
             image="https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=2070&auto=format&fit=crop"
             reverse={true}
         >
+            {serverError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+                    {serverError}
+                </div>
+            )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>
                     <label className="block text-sm font-semibold text-white md:text-gray-800 mb-1.5 ml-1">Admin Email</label>

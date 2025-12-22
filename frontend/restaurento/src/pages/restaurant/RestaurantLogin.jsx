@@ -3,9 +3,17 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthLayout from '../../components/layouts/AuthLayout';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import authService from '../../services/auth.service';
+import { loginSuccess } from '../../redux/slices/authSlice';
 
 const RestaurantLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
+
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [serverError, setServerError] = useState("");
 
     const {
         register,
@@ -13,8 +21,21 @@ const RestaurantLogin = () => {
         formState: { errors }
     } = useForm();
 
-    const onSubmit = (data) => {
-        console.log('Restaurant Login:', data);
+    const onSubmit = async (data) => {
+        try {
+            setServerError("");
+            const response = await authService.restaurantLogin(data);
+
+            dispatch(loginSuccess({
+                user: response.data.restaurant, // Assuming backend returns 'restaurant' object
+                tokens: response.data.tokens
+            }));
+
+            navigate('/restaurant/dashboard');
+        } catch (error) {
+            const message = error.response?.data?.message || "Login failed. Please try again.";
+            setServerError(message);
+        }
     };
 
     return (
@@ -23,6 +44,11 @@ const RestaurantLogin = () => {
             subtitle="Manage your restaurant, orders, and menu from one place."
             image="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop"
         >
+            {serverError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+                    {serverError}
+                </div>
+            )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div>
                     <label htmlFor="email" className="block text-sm font-semibold text-white md:text-gray-800 mb-1.5">

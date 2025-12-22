@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthLayout from '../../components/layouts/AuthLayout';
 import authService from '../../services/auth.service';
 
 
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../redux/slices/authSlice';
+
+
 const UserLogin = () => {
     const from = location.state?.from?.pathname || "/";
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [showPassword, setShowPassword] = useState(false);
     const [serverError, setServerError] = useState("");
 
@@ -21,9 +26,15 @@ const UserLogin = () => {
     const onSubmit = async (data) => {
         try {
             setServerError("");
-            const response = await authService.userLogin(data)
+            const response = await authService.userLogin(data);
+
+            // Dispatch login success action
+            dispatch(loginSuccess({
+                user: response.data.user,
+                tokens: response.data.tokens
+            }));
+
             navigate(from, { replace: true });
-            console.log("Login succesfull: ", response);
         } catch (error) {
             const message = error.response?.data?.message || "Something went wrong. Please try again.";
             setServerError(message)
