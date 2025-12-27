@@ -3,6 +3,7 @@ import { Bell, Copy, Share2, LogOut, ChevronRight, User, Wallet } from 'lucide-r
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
+import authService from '../services/auth.service';
 
 const Profile = () => {
     const [copied, setCopied] = useState(false);
@@ -16,9 +17,14 @@ const Profile = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleLogout = () => {
-        dispatch(logout());
-        navigate('/login');
+    const handleLogout = async () => {
+        try {
+            await authService.logout();
+            dispatch(logout());
+            navigate('/login');
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
     };
 
     return (

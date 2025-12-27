@@ -25,6 +25,14 @@ const authService = {
     const response = await api.post("/auth/verify-email", data);
     return response;
   },
+  refreshToken: async () => {
+    const response = await api.post("/auth/refresh-token");
+    return response;
+  },
+  logout: async () => {
+    const response = await api.post("/logout");
+    return response;
+  },
 };
 
 export default authService;

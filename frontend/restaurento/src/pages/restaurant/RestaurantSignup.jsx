@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthLayout from '../../components/layouts/AuthLayout';
+import authService from '../../services/auth.service';
+import VerifyEmailModal from '../../components/modals/VerifyEmailModal';
 
 const RestaurantSignup = () => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [serverError, setServerError] = useState("")
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
+    const [registeredEmail, setRegisteredEmail] = useState("");
 
     const {
         register,
@@ -15,10 +21,40 @@ const RestaurantSignup = () => {
         formState: { errors }
     } = useForm();
 
-    const onSubmit = (data) => {
-        console.log('Restaurant Registration:', data);
-        // Add registration logic here
+    const onSubmit = async (data) => {
+        try {
+            setServerError("");
+            await authService.restaurantRegister({
+                ...data,
+                fullName: data.restaurantName
+            });
+
+            setRegisteredEmail(data.email);
+            setShowVerifyModal(true);
+        } catch (error) {
+
+            if (error.response?.status === 403) {
+                setRegisteredEmail(data.email);
+                setShowVerifyModal(true);
+                return;
+            }
+
+            const message = error.response?.data?.message || "Something went wrong. Please try again.";
+            setServerError(message);
+        }
     };
+
+    const handleVerifyOtp = async (otp) => {
+        try {
+            await authService.verifyEmail({ email: registeredEmail, otp, role: 'RESTAURANT' });
+
+            navigate('/login');
+        } catch (error) {
+
+            alert(error.response?.data?.message || "Verification failed");
+        }
+    };
+
 
     return (
         <AuthLayout
@@ -26,6 +62,11 @@ const RestaurantSignup = () => {
             subtitle="Join thousands of restaurants growing their business with Restauranto."
             image="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop"
         >
+            {serverError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+                    {serverError}
+                </div>
+            )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div>
                     <label htmlFor="restaurantName" className="block text-sm font-semibold text-white md:text-gray-800 mb-1.5">
@@ -155,6 +196,13 @@ const RestaurantSignup = () => {
             <p className="text-center mt-8 text-sm text-gray-300 md:text-gray-500">
                 Already a partner? <Link to="/restaurant/login" className="text-[#ff5e00] font-semibold hover:underline">Login here.</Link>
             </p>
+            {showVerifyModal && (
+                <VerifyEmailModal
+                    email={registeredEmail}
+                    onClose={() => setShowVerifyModal(false)}
+                    onVerify={handleVerifyOtp}
+                />
+            )}
         </AuthLayout>
     );
 };

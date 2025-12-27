@@ -5,7 +5,7 @@ import AuthLayout from '../../components/layouts/AuthLayout';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
-import { loginSuccess } from '../../redux/slices/authSlice';
+import { setCredentials } from '../../redux/slices/authSlice';
 
 const AdminLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -21,9 +21,9 @@ const AdminLogin = () => {
 
             // Backend should likely return 'admin' as user object, but we'll adapt if needed
             // For now assuming response structure is consistent
-            dispatch(loginSuccess({
+            dispatch(setCredentials({
                 user: response.data.admin || response.data.user,
-                tokens: response.data.tokens
+                role: 'ADMIN'
             }));
 
             navigate('/admin/dashboard');

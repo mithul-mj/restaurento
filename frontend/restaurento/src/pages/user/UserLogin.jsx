@@ -7,7 +7,7 @@ import authService from '../../services/auth.service';
 
 
 import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../redux/slices/authSlice';
+import { setCredentials } from '../../redux/slices/authSlice';
 
 
 const UserLogin = () => {
@@ -28,10 +28,9 @@ const UserLogin = () => {
             setServerError("");
             const response = await authService.userLogin(data);
 
-            // Dispatch login success action
-            dispatch(loginSuccess({
+            dispatch(setCredentials({
                 user: response.data.user,
-                tokens: response.data.tokens
+                role: 'USER'
             }));
 
             navigate(from, { replace: true });

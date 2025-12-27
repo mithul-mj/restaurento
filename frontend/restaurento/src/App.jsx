@@ -18,21 +18,41 @@ import RestaurantSignup from './pages/restaurant/RestaurantSignup';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { checkAuth } from './redux/slices/authSlice';
+import { setAuthFailed } from './redux/slices/authSlice';
 import ProtectedRoutes from './components/routes/ProtectedRoutes';
 import PublicRoutes from './components/routes/PublicRoutes';
+import authService from './services/auth.service';
+import { setCredentials } from './redux/slices/authSlice';
 
 import './App.css';
 
 function App() {
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.auth);
+  const { isInitializing } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(checkAuth());
+    const initializeAuth = async () => {
+      try {
+        const response = await authService.refreshToken();
+        if (!response.data.role) {
+          throw new Error("Role missing in refresh response");
+        }
+        dispatch(setCredentials({
+          user: response.data.user,
+          role: response.data.role?.toUpperCase()
+        }))
+      } catch (error) {
+        // 401 is expected if user is not logged in
+        if (error.response?.status !== 401) {
+          console.error("Auth init failed:", error);
+        }
+        dispatch(setAuthFailed())
+      }
+    }
+    initializeAuth()
   }, [dispatch]);
 
-  if (loading) {
+  if (isInitializing) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff5e00]"></div>

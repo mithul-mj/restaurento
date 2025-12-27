@@ -6,7 +6,7 @@ import AuthLayout from '../../components/layouts/AuthLayout';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
-import { loginSuccess } from '../../redux/slices/authSlice';
+import { setCredentials } from '../../redux/slices/authSlice';
 
 const RestaurantLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -26,9 +26,9 @@ const RestaurantLogin = () => {
             setServerError("");
             const response = await authService.restaurantLogin(data);
 
-            dispatch(loginSuccess({
+            dispatch(setCredentials({
                 user: response.data.restaurant, // Assuming backend returns 'restaurant' object
-                tokens: response.data.tokens
+                role: 'RESTAURANT' // Setting role explicitly for consistency
             }));
 
             navigate('/restaurant/dashboard');
