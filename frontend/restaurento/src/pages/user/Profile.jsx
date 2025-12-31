@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Bell, Copy, Share2, LogOut, ChevronRight, User, Wallet } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { logout } from '../redux/slices/authSlice';
-import authService from '../services/auth.service';
+import { logout } from '../../redux/slices/authSlice';
+import authService from '../../services/auth.service';
 
 const Profile = () => {
     const [copied, setCopied] = useState(false);

@@ -33,6 +33,14 @@ const authService = {
     const response = await api.post("/logout");
     return response;
   },
+  forgotPassword: async (email) => {
+    const response = await api.post("/auth/forgot-password");
+    return response;
+  },
+  resetPasword: async (data) => {
+    const response = await api.post("/auth/reset/password");
+    return response;
+  },
 };
 
 export default authService;

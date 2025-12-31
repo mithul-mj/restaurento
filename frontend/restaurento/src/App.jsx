@@ -1,19 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import VerifyEmail from './pages/VerifyEmail';
-import RestaurantDetails from './pages/RestaurantDetails';
-import Profile from './pages/Profile';
-import EditProfile from './pages/EditProfile';
-import AdminDashboard from './pages/AdminDashboard';
-import UserManagement from './pages/UserManagement';
+import Home from './pages/user/Home';
+import Profile from './pages/user/Profile';
+import EditProfile from './pages/user/EditProfile';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
 
 
 import UserLogin from './pages/user/UserLogin';
 import UserSignup from './pages/user/UserSignup';
 import AdminLogin from './pages/admin/AdminLogin';
 import RestaurantLogin from './pages/restaurant/RestaurantLogin';
-import RestaurantDashboard from './pages/RestaurantDashboard';
+import RestaurantDashboard from './pages/restaurant/RestaurantDashboard';
 import RestaurantSignup from './pages/restaurant/RestaurantSignup';
+import RestaurantOnboarding from './pages/restaurant/RestaurantOnboarding';
 
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -81,6 +80,7 @@ function App() {
 
         <Route element={<ProtectedRoutes allowedRoles={['RESTAURANT']} />}>
           <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+          <Route path="/restaurant/onboarding" element={<RestaurantOnboarding />} />
         </Route>
 
 
