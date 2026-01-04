@@ -29,7 +29,7 @@ const Profile = () => {
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] font-sans">
-            {/* Navbar (Reused) */}
+
             <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Link to="/" className="flex items-center gap-2">
@@ -66,7 +66,7 @@ const Profile = () => {
 
                 <div className="space-y-6">
 
-                    {/* Profile Info Card */}
+
                     <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-6">
                         <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shrink-0 border-4 border-[#fff0e3]">
                             <img
@@ -88,7 +88,7 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    {/* Wallet Balance Card */}
+
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-[#fff5eb] rounded-full flex items-center justify-center text-[#ff5e00]">
@@ -102,7 +102,7 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    {/* Log Out Card */}
+
                     <div className="bg-[#fff5f5] rounded-2xl p-6 border border-red-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="text-center sm:text-left">
                             <h3 className="text-red-500 font-bold text-lg mb-1">Log Out</h3>
@@ -116,7 +116,7 @@ const Profile = () => {
                         </button>
                     </div>
 
-                    {/* Referral Code Card */}
+
                     <div className="mt-12 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative overflow-hidden">
                         <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                             <div className="text-center md:text-left max-w-md">
@@ -138,7 +138,7 @@ const Profile = () => {
                             </div>
 
                             <div className="shrink-0 text-gray-800">
-                                {/* Network Icon Illustration */}
+
                                 <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="18" cy="5" r="3"></circle>
                                     <circle cx="6" cy="12" r="3"></circle>

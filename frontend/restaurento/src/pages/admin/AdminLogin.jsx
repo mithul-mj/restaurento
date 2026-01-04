@@ -19,8 +19,7 @@ const AdminLogin = () => {
             setServerError("");
             const response = await authService.adminLogin(data);
 
-            // Backend should likely return 'admin' as user object, but we'll adapt if needed
-            // For now assuming response structure is consistent
+
             dispatch(setCredentials({
                 user: response.data.admin || response.data.user,
                 role: 'ADMIN'

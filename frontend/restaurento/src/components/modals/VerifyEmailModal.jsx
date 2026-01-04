@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { createPortal } from 'react-dom';
 
 const VerifyEmailModal = ({ email, onClose, onVerify }) => {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -45,7 +46,7 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
         onVerify(data.otp);
     };
 
-    return (
+    const modalContent = (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-8 w-full max-w-[450px] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="text-center mb-8">
@@ -106,6 +107,7 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
             </div>
         </div>
     );
+    return createPortal(modalContent, document.getElementById("modal-root"))
 };
 
 export default VerifyEmailModal;

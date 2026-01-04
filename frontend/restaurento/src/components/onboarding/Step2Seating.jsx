@@ -1,122 +1,138 @@
 import { useFormContext } from "react-hook-form";
-import { Upload, MapPin, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { useDropzone } from "react-dropzone";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 const Step2Seating = () => {
     const { register, watch, setValue, formState: { errors } } = useFormContext();
-    // We'll manage files in local state for better UX, then sync to useForm
     const currentImages = watch("images") || [];
-    const [previewFiles, setPreviewFiles] = useState([]);
 
-    const onDrop = useCallback((acceptedFiles) => {
-        // combine with existing
-        const newFiles = [...(currentImages || []), ...acceptedFiles];
-        setValue("images", newFiles, { shouldValidate: true });
+    const onDrop = useCallback(async (acceptedFiles) => {
+        const filesWithPreview = await Promise.all(
+            acceptedFiles.map(async (file) => {
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                });
+                return Object.assign(file, { preview: dataUrl });
+            })
+        );
 
-        // Generate previews
-        const newPreviews = acceptedFiles.map(file => Object.assign(file, {
-            preview: URL.createObjectURL(file)
-        }));
-        setPreviewFiles(prev => [...prev, ...newPreviews]);
-
+        const combined = [...(currentImages || []), ...filesWithPreview];
+        const newFiles = combined.slice(0, 5);
+        setValue("images", newFiles, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     }, [currentImages, setValue]);
 
     const removeFile = (e, indexToRemove) => {
-        e.stopPropagation(); // prevent opening dropzone
+        e.stopPropagation();
         const newFiles = (currentImages || []).filter((_, index) => index !== indexToRemove);
-        setValue("images", newFiles, { shouldValidate: true });
-
-        setPreviewFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+        setValue("images", newFiles, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
-        accept: {
-            'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-        }
+        accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
+        maxFiles: 5
     });
 
-    useEffect(() => {
-        // Cleanup previews
-        return () => previewFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    }, [previewFiles]);
-
-
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
             <div>
-                <h2 className="text-2xl font-bold text-gray-800">Seating & Photos</h2>
-                <p className="text-gray-500 text-sm">Step 2: Capacity and Visuals</p>
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Restaurant Details</h2>
+                <p className="text-gray-500 mt-2">Step 2: Seating & Photos</p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Seating Capacity</label>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Seating Capacity</h3>
+                    <label className="block text-sm font-bold text-gray-800 mb-2">Total Seats</label>
                     <input
                         {...register("totalSeats")}
                         type="number"
-                        className={`w-full p-3 rounded-lg border ${errors.totalSeats ? 'border-red-500' : 'border-gray-200 focus:border-[#ff5e00]'} outline-none`}
+                        className="w-full md:w-1/3 p-4 rounded-xl bg-[#FFFBF7] border border-orange-100 focus:bg-white focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-400"
                         placeholder="e.g. 50"
                     />
-                    {errors.totalSeats && <p className="text-red-500 text-sm mt-1">{errors.totalSeats.message}</p>}
+                    {errors.totalSeats && <p className="text-red-500 text-xs mt-1 font-medium">{errors.totalSeats.message}</p>}
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
-                        <input
-                            {...register("address")}
-                            className={`w-full p-3 pl-10 rounded-lg border ${errors.address ? 'border-red-500' : 'border-gray-200 focus:border-[#ff5e00]'} outline-none`}
-                            placeholder="Full restaurant address"
-                        />
-                    </div>
-                    {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
-                </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">Restaurant Photos</h3>
+                    <p className="text-sm text-gray-500 mb-4">Upload 3-5 high-quality photos of your restaurant's interior, exterior, and popular dishes.</p>
 
-                <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Restaurant Photos</label>
                     <div
                         {...getRootProps()}
-                        className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors cursor-pointer group 
-                            ${isDragActive ? 'border-[#ff5e00] bg-orange-50' : 'border-gray-300 hover:bg-gray-50'}`}
+                        className={`block border-2 border-dashed rounded-2xl p-12 text-center transition-all cursor-pointer group relative ${isDragActive ? 'border-[#ff5e00] bg-orange-50/30' : 'border-gray-200 bg-[#FFFBF7] hover:bg-orange-50/30'}`}
                     >
                         <input {...getInputProps()} />
-                        <div className="bg-orange-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-100 transition-colors">
-                            <Upload className="text-[#ff5e00]" size={28} />
+                        <div className="mb-4">
+                            <Upload className="mx-auto text-gray-400 group-hover:text-[#ff5e00] transition-colors" size={40} />
                         </div>
-                        <p className="font-semibold text-gray-700">
-                            {isDragActive ? "Drop files here..." : "Click or drag images here"}
-                        </p>
-                        <p className="text-sm text-gray-400 mt-1">
-                            Upload at least 3 high-quality photos (JPG, PNG, WebP)
-                        </p>
+                        <p className="font-bold text-gray-800 mb-2">Drag & drop your photos here</p>
+                        <p className="text-sm text-gray-500 mb-6">or</p>
+                        <button type="button" className="px-6 py-2.5 bg-[#FFF0E5] text-[#ff5e00] font-bold rounded-lg group-hover:bg-[#ff5e00] group-hover:text-white transition-all">
+                            Browse Files
+                        </button>
                     </div>
 
-                    {/* Previews */}
                     {currentImages?.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                             {Array.from(currentImages).map((file, i) => (
-                                <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border">
-                                    {file.preview ? (
-                                        <img src={file.preview} alt="preview" className="w-full h-full object-cover" />
+                                <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-gray-200 group">
+                                    {file.preview || (typeof file === 'string') ? (
+                                        <img src={file.preview || file} alt="preview" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs break-all p-2">
-                                            {file.name}
+                                            {file.name || "Image"}
                                         </div>
                                     )}
-                                    <button
-                                        onClick={(e) => removeFile(e, i)}
-                                        className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:bg-white hover:shadow opacity-0 group-hover:opacity-100 transition-all"
-                                    >
-                                        <X size={14} />
-                                    </button>
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button onClick={(e) => removeFile(e, i)} type="button" className="p-2 bg-white rounded-full text-red-500 hover:bg-red-50 transition-colors">
+                                            <X size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     )}
-                    {errors.images && <p className="text-red-500 text-sm mt-1">{errors.images.message}</p>}
+                    {errors.images && <p className="text-red-500 text-xs mt-1 font-medium">{errors.images.message}</p>}
+                </div>
+
+                <div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tight mb-2">Set Your Restaurant's Location</h3>
+                    <p className="text-sm text-[#ff5e00] mb-6">Drag the pin to your exact location or use your current location.</p>
+
+                    <div className="border border-orange-100 rounded-2xl p-6 bg-[#FFFBF7] space-y-6">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-800 mb-2">Enter latitude</label>
+                            <input
+                                {...register("latitude")}
+                                className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-300"
+                                placeholder="Latitude"
+                            />
+                            {errors.latitude && <p className="text-red-500 text-xs mt-1 font-medium">{errors.latitude.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-gray-800 mb-2">Enter longitude</label>
+                            <input
+                                {...register("longitude")}
+                                className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-300"
+                                placeholder="Longitude"
+                            />
+                            {errors.longitude && <p className="text-red-500 text-xs mt-1 font-medium">{errors.longitude.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-gray-800 mb-2">Address</label>
+                            <input
+                                {...register("address")}
+                                className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-300"
+                                placeholder="123 Main Street, New York, NY 10001"
+                            />
+                            {errors.address && <p className="text-red-500 text-xs mt-1 font-medium">{errors.address.message}</p>}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

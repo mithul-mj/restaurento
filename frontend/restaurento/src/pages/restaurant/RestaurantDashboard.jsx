@@ -27,7 +27,7 @@ const RestaurantDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    // Mock Data
+
     const weeklyData = [
         { name: 'Mon', bookings: 12, revenue: 150 },
         { name: 'Tue', bookings: 19, revenue: 230 },
@@ -57,13 +57,13 @@ const RestaurantDashboard = () => {
             case 'dashboard':
                 return (
                     <div className="space-y-8 animate-in fade-in duration-500">
-                        {/* Welcome Section */}
+
                         <div>
                             <h2 className="text-3xl font-extrabold text-gray-900">Welcome back, Chef!</h2>
                             <p className="text-gray-500 mt-1">Here's a summary of your restaurant's activity today.</p>
                         </div>
 
-                        {/* Stats Cards */}
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <StatsCard
                                 title="Today's Bookings"
@@ -85,10 +85,10 @@ const RestaurantDashboard = () => {
                             />
                         </div>
 
-                        {/* Charts & Top Items Grid */}
+
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                            {/* Chart */}
+
                             <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-lg font-bold text-gray-800">Booking Trends</h3>
@@ -125,7 +125,7 @@ const RestaurantDashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Top Selling Dishes */}
+
                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                                 <h3 className="text-lg font-bold text-gray-800 mb-6">Top Selling Dishes</h3>
                                 <div className="space-y-6">
@@ -147,7 +147,7 @@ const RestaurantDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Recent Bookings Table */}
+
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-bold text-gray-800">Recent Bookings</h3>
@@ -199,7 +199,7 @@ const RestaurantDashboard = () => {
     return (
         <div className="flex h-screen bg-gray-50 text-gray-800 font-sans">
 
-            {/* Mobile Sidebar Overlay */}
+
             {isMobileSidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-20 md:hidden"
@@ -207,7 +207,7 @@ const RestaurantDashboard = () => {
                 />
             )}
 
-            {/* Sidebar */}
+
             <aside
                 className={`
           fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:flex flex-col
@@ -278,10 +278,10 @@ const RestaurantDashboard = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
+
             <main className="flex-1 overflow-y-auto h-screen">
 
-                {/* Header */}
+
                 <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
                     <div className="flex items-center gap-4">
                         <button className="md:hidden text-gray-500 p-1" onClick={() => setIsMobileSidebarOpen(true)}>
@@ -309,13 +309,13 @@ const RestaurantDashboard = () => {
     );
 };
 
-// Sub-components
+
 const SidebarItem = ({ icon, text, active, onClick }) => (
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${active
-                ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+            ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
             }`}
     >
         <span className={`${active ? 'text-white' : 'text-gray-400 group-hover:text-gray-600'}`}>

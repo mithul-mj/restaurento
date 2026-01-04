@@ -22,10 +22,10 @@ const AdminDashboard = () => {
         { label: "Pending Reports", value: "8", badge: "8" },
     ];
 
-    // Smooth curve path for the revenue chart
+
     const revenuePath = "M0,100 C20,100 20,40 40,40 C60,40 60,60 80,60 C100,60 100,20 120,20 C140,20 140,80 160,80 C180,80 180,50 200,50 C240,50 240,120 280,120 C300,120 300,20 320,20 C340,20 340,80 360,80 C380,80 380,110 400,110 C420,110 420,40 440,40";
 
-    // Fill path for the gradient area under the curve
+
     const revenueFillPath = `${revenuePath} L440,150 L0,150 Z`;
 
     const rankingData = [
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
     return (
         <div className="flex min-h-screen bg-gray-50 font-sans">
 
-            {/* Sidebar for Desktop */}
+
             <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="h-full flex flex-col">
                     <div className="px-6 py-6 border-b border-gray-50 flex items-center gap-3">
@@ -84,10 +84,10 @@ const AdminDashboard = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
+
             <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
 
-                {/* Mobile Header */}
+
                 <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between md:hidden">
                     <div className="flex items-center gap-2">
                         <div className="bg-[#ff5e00] text-white p-1 rounded-md flex items-center justify-center">
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
                         <p className="text-gray-500 text-sm mt-1">High-level overview of platform activity.</p>
                     </div>
 
-                    {/* Stats Grid */}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                         {stats.map((stat, index) => (
                             <div key={index} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -123,7 +123,7 @@ const AdminDashboard = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                        {/* Booking Trends Chart (Bar Chart Representation) */}
+
                         <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
                             <div className="flex items-center justify-between mb-8">
                                 <div>
@@ -155,7 +155,7 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Revenue Trends Chart (Simulated Line Chart) */}
+
                         <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
                             <div className="mb-6">
                                 <h3 className="font-bold text-lg text-gray-900">Revenue Trends</h3>
@@ -173,9 +173,9 @@ const AdminDashboard = () => {
                                             <stop offset="100%" stopColor="#ff5e00" stopOpacity="0" />
                                         </linearGradient>
                                     </defs>
-                                    {/* Area Fill */}
+
                                     <path d={revenueFillPath} fill="url(#revenueGradient)" />
-                                    {/* Line Stroke */}
+
                                     <path
                                         d={revenuePath}
                                         fill="none"
@@ -187,7 +187,7 @@ const AdminDashboard = () => {
                                     />
                                 </svg>
 
-                                {/* X-Axis Labels */}
+
                                 <div className="absolute top-full left-0 w-full flex justify-between px-2 pt-2 text-[10px] text-gray-400 uppercase font-medium">
                                     <span>Jan</span>
                                     <span>Feb</span>

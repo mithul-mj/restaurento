@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Click Map for Address</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h3>Click anywhere on the map to see the address</h3>
+    <div id="map"></div>
+
+    <script>
+        // 1. Initialize the map
+        var map = L.map('map').setView([20.5937, 78.9629], 5); // Centered on India
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        var popup = L.popup();
+
+        // 2. Function to handle clicks
+        function onMapClick(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            // 3. Fetch address from Nominatim (Free API)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    var address = data.display_name;
+                    popup
+                        .setLatLng(e.latlng)
+                        .setContent("<b>Address:</b><br>" + address)
+                        .openOn(map);
+                })
+                .catch(err => console.error("Error fetching address:", err));
+        }
+
+        map.on('click', onMapClick);
+    </script>
+</body>
+
+</html>

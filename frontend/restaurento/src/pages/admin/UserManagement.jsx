@@ -33,7 +33,7 @@ const UserManagement = () => {
     return (
         <div className="flex min-h-screen bg-gray-50 font-sans">
 
-            {/* Sidebar Reused */}
+
             <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="h-full flex flex-col">
                     <div className="px-6 py-6 border-b border-gray-50 flex items-center gap-3">
@@ -78,10 +78,10 @@ const UserManagement = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
+
             <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
 
-                {/* Mobile Header */}
+
                 <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between md:hidden">
                     <div className="flex items-center gap-2">
                         <div className="bg-[#ff5e00] text-white p-1 rounded-md flex items-center justify-center">
@@ -97,7 +97,7 @@ const UserManagement = () => {
                 <main className="p-6 md:p-10 flex-1 overflow-x-hidden">
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">User Management</h1>
 
-                    {/* Stats */}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-start justify-between">
                             <div>
@@ -126,7 +126,7 @@ const UserManagement = () => {
                         <p className="text-gray-500 text-sm">Manage all active and inactive users on the platform.</p>
                     </div>
 
-                    {/* Filters & Search */}
+
                     <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
                         <form onSubmit={handleSubmit(onSearch)} className="w-full md:w-96 relative">
                             <input
@@ -153,7 +153,7 @@ const UserManagement = () => {
                         </div>
                     </div>
 
-                    {/* Users List */}
+
                     <div className="space-y-4 mb-8">
                         {users.map((user) => (
                             <div key={user.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
@@ -192,7 +192,7 @@ const UserManagement = () => {
                         ))}
                     </div>
 
-                    {/* Pagination */}
+
                     <div className="flex items-center justify-between border-t border-gray-100 pt-6">
                         <p className="text-xs text-gray-500">Showing <span className="font-bold text-gray-900">1</span> to <span className="font-bold text-gray-900">4</span> of <span className="font-bold text-gray-900">27</span> results</p>
                         <div className="flex gap-2">

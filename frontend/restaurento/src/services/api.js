@@ -25,10 +25,8 @@ api.interceptors.response.use(
       try {
         await api.post("/auth/refresh-token");
 
-        // Retry the original request that failed
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh token is also expired, log out the user
         store.dispatch(logout());
         return Promise.reject(refreshError);
       }

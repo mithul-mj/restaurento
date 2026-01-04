@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import restaurantService from "../../services/restaurant.service";
 import { useForm, FormProvider } from "react-hook-form";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +15,7 @@ import Step5Review from "../../components/onboarding/Step5Review";
 const STEPS = ["Basic Info", "Seating & Photos", "Legal", "Menu", "Review"];
 
 const Onboarding = () => {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
     const methods = useForm({
         resolver: zodResolver(onboardingSchema),
@@ -23,19 +26,29 @@ const Onboarding = () => {
             tags: [],
             openingHours: {
                 isSameEveryDay: false,
-                slots: [
-                    { day: "Monday", open: "09:00", close: "22:00", isClosed: false },
-                    { day: "Tuesday", open: "09:00", close: "22:00", isClosed: false },
-                    { day: "Wednesday", open: "09:00", close: "22:00", isClosed: false },
-                    { day: "Thursday", open: "09:00", close: "22:00", isClosed: false },
-                    { day: "Friday", open: "09:00", close: "23:00", isClosed: false },
-                    { day: "Saturday", open: "10:00", close: "23:00", isClosed: false },
-                    { day: "Sunday", open: "10:00", close: "22:00", isClosed: false },
+                days: [
+                    { startTime: "09:00", endTime: "22:00", isClosed: false, generatedSlots: [] }, // Monday
+                    { startTime: "09:00", endTime: "22:00", isClosed: false, generatedSlots: [] }, // Tuesday
+                    { startTime: "09:00", endTime: "22:00", isClosed: false, generatedSlots: [] }, // Wednesday
+                    { startTime: "09:00", endTime: "22:00", isClosed: false, generatedSlots: [] }, // Thursday
+                    { startTime: "09:00", endTime: "23:00", isClosed: false, generatedSlots: [] }, // Friday
+                    { startTime: "10:00", endTime: "23:00", isClosed: false, generatedSlots: [] }, // Saturday
+                    { startTime: "10:00", endTime: "22:00", isClosed: false, generatedSlots: [] }, // Sunday
                 ]
+            },
+            slotConfig: {
+                duration: 60,
+                gap: 0
             },
             totalSeats: 0,
             images: [],
             address: "",
+            latitude: 0,
+            longitude: 0,
+            restaurantLicense: null,
+            businessCert: null,
+            fssaiCert: null,
+            ownerIdCert: null,
             menuItems: [],
             slotPrice: 0,
             termsAccepted: false
@@ -47,20 +60,14 @@ const Onboarding = () => {
     const { handleSubmit, trigger } = methods;
 
     const handleNext = async () => {
-        // Validate current step fields
         const currentSchema = stepSchemas[currentStep];
         if (currentSchema) {
-            // Get keys from the Zod object shape
-            // Note: If using complex Zod types (refines/intersections), this might need adjustment.
-            // But for our simple objects, .shape or keyof override works.
-            // safely accessing keys:
             const keys = Object.keys(currentSchema.shape);
             const isStepValid = await trigger(keys);
             if (isStepValid) {
                 setCurrentStep((prevStep) => prevStep + 1);
             }
         } else {
-            // Fallback or final step
             setCurrentStep((prevStep) => prevStep + 1);
         }
     }
@@ -68,88 +75,65 @@ const Onboarding = () => {
     const onSubmit = async (data) => {
         const formData = new FormData();
 
-        // Helper to append data
-        const appendData = (data, rootKey) => {
-            if (data instanceof FileList) {
-                Array.from(data).forEach((file, index) => {
-                    // For multiple files, we might stick to the same key or array notation depending on backend
-                    // Here we assume 'images' -> multiple files
-                    formData.append(rootKey, file);
-                });
-                return;
-            } else if (data instanceof File) {
-                formData.append(rootKey, data);
-            } else if (Array.isArray(data)) {
-                data.forEach((item, index) => {
-                    appendData(item, `${rootKey}[${index}]`);
-                });
-            } else if (typeof data === 'object' && data !== null) {
-                Object.keys(data).forEach(key => {
-                    const value = data[key];
-                    if (rootKey) {
-                        appendData(value, `${rootKey}.${key}`);
-                    } else {
-                        appendData(value, key);
-                    }
-                });
-            } else {
-                formData.append(rootKey, data);
-            }
-        };
-
-        // Handle specific fields manually for better backend parsing if generic recursion is too messy
-        // Basic Fields
         formData.append("restaurantName", data.restaurantName);
         formData.append("restaurantPhone", data.restaurantPhone);
         formData.append("description", data.description);
         formData.append("address", data.address);
         formData.append("totalSeats", data.totalSeats);
         formData.append("slotPrice", data.slotPrice);
-        formData.append("licenseNumber", data.licenseNumber);
 
-        // Tags
+        formData.append("latitude", data.latitude);
+        formData.append("longitude", data.longitude);
+
+        formData.append("slotConfig", JSON.stringify(data.slotConfig));
+
         data.tags.forEach(tag => formData.append("tags[]", tag));
 
-        // JSON fields (if backend prefers JSON string for complex objects)
         formData.append("openingHours", JSON.stringify(data.openingHours));
 
-        // Files - Step 2
         if (data.images && data.images.length > 0) {
             Array.from(data.images).forEach(file => {
                 formData.append("images", file);
             });
         }
 
-        // Files - Step 3
+        if (data.restaurantLicense && data.restaurantLicense.length > 0) formData.append("restaurantLicense", data.restaurantLicense[0]);
         if (data.businessCert && data.businessCert.length > 0) formData.append("businessCert", data.businessCert[0]);
         if (data.fssaiCert && data.fssaiCert.length > 0) formData.append("fssaiCert", data.fssaiCert[0]);
+        if (data.ownerIdCert && data.ownerIdCert.length > 0) formData.append("ownerIdCert", data.ownerIdCert[0]);
 
-        // Menu Items - Complex array with files
-        // Strategy: Send metadata as JSON, files separately keyed
-        // OR: use deep index keys
-
-        // Approach A: classic index keys
         data.menuItems.forEach((item, index) => {
             formData.append(`menuItems[${index}].name`, item.name);
             formData.append(`menuItems[${index}].price`, item.price);
             formData.append(`menuItems[${index}].description`, item.description || "");
+
+            if (item.categories && item.categories.length > 0) {
+                item.categories.forEach((cat, catIndex) => {
+                    formData.append(`menuItems[${index}].categories[${catIndex}]`, cat);
+                });
+            }
+
             if (item.image && item.image.length > 0) {
                 formData.append(`menuItems[${index}].image`, item.image[0]);
             }
         });
 
-        console.log("Submitting FormData:");
-        for (let pair of formData.entries()) {
-            console.log(pair[0], pair[1]);
-        }
+        try {
+            const response = await restaurantService.onboard(formData);
 
-        alert("Check console for FormData payload! Ready for backend.");
-        // TODO: await axios.post('/api/restaurant/onboarding', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+            if (response.status === 200 || response.status === 201) {
+                navigate('/restaurant/dashboard');
+            }
+        } catch (error) {
+            console.error("Onboarding failed:", error);
+            const message = error.response?.data?.message || "Failed to submit onboarding details. Please try again.";
+            alert(message);
+        }
     }
 
     return (
         <div className="min-h-screen bg-gray-50 p-6 md:p-12">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto transition-all duration-300">
 
                 <div className="flex justify-between mb-12 relative">
                     {STEPS.map((label, index) => (
@@ -190,7 +174,7 @@ const Onboarding = () => {
                                     type="button"
                                     onClick={() => setCurrentStep(s => s - 1)}
                                     disabled={currentStep === 0}
-                                    className="px-6 py-2 text-gray-500 font-semibold disabled:opacity-0 hover:bg-gray-50 rounded-lg transition-colors"
+                                    className="px-8 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg disabled:opacity-0 hover:bg-gray-200 transition-colors"
                                 >
                                     Back
                                 </button>
@@ -199,18 +183,18 @@ const Onboarding = () => {
                                     <button
                                         type="button"
                                         onClick={handleNext}
-                                        className="px-8 py-2 bg-[#ff5e00] text-white rounded-lg font-bold hover:bg-[#e05200] transition-colors shadow-md hover:shadow-lg"
+                                        className="px-8 py-2.5 bg-[#ff5e00] text-white rounded-lg font-bold hover:bg-[#e05200] transition-colors shadow-md hover:shadow-lg"
                                     >
                                         Next Step
                                     </button>
-                                ) : (
+                                ) : currentStep !== 4 ? (
                                     <button
                                         type="submit"
-                                        className="px-8 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+                                        className="px-8 py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
                                     >
                                         Finish Setup
                                     </button>
-                                )}
+                                ) : null}
                             </div>
                         </form>
                     </FormProvider>

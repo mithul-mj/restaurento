@@ -41,7 +41,7 @@ function App() {
           role: response.data.role?.toUpperCase()
         }))
       } catch (error) {
-        // 401 is expected if user is not logged in
+
         if (error.response?.status !== 401) {
           console.error("Auth init failed:", error);
         }

@@ -14,12 +14,12 @@ const EditProfile = () => {
 
     const onSubmit = (data) => {
         console.log("Updated Profile:", data);
-        // Logic to update profile
+
     };
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] font-sans">
-            {/* Navbar */}
+
             <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Link to="/" className="flex items-center gap-2">
@@ -56,7 +56,7 @@ const EditProfile = () => {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
-                    {/* Avatar Section */}
+
                     <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex justify-center">
                         <div className="relative">
                             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#fff0e3]">
@@ -72,7 +72,7 @@ const EditProfile = () => {
                         </div>
                     </div>
 
-                    {/* Basic Information */}
+
                     <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100">
                         <h2 className="text-lg font-bold text-gray-900 mb-6">Basic Information</h2>
 

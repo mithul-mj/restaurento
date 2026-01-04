@@ -90,11 +90,11 @@ const Home = () => {
 
     return (
         <div className="min-h-screen bg-[#fcfcfc]">
-            {/* Navbar */}
+
             <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-                        {/* Simple Logo Icon */}
+
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
                             <path d="M7 2v20" />
@@ -122,7 +122,7 @@ const Home = () => {
                         </Link>
                     </div>
 
-                    {/* Profile placeholder */}
+
                     <div className="w-9 h-9 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
                         <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile" className="w-full h-full object-cover" />
                     </div>
@@ -130,10 +130,10 @@ const Home = () => {
                 </div>
             </nav>
 
-            {/* Main Content */}
+
             <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
 
-                {/* Hero Section */}
+
                 <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-8 group">
                     <img
                         src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1974&auto=format&fit=crop"
@@ -147,7 +147,7 @@ const Home = () => {
                     </div>
                 </div>
 
-                {/* Search Bar */}
+
                 <div className="w-full max-w-4xl mx-auto -mt-14 relative z-10 mb-10 px-2">
                     <form onSubmit={handleSubmit(onSearch)} className="relative flex shadow-xl shadow-gray-200/50 rounded-lg overflow-hidden">
                         <div className="bg-white flex-1 flex items-center px-4 py-4">
@@ -166,7 +166,7 @@ const Home = () => {
                     </form>
                 </div>
 
-                {/* Filters */}
+
                 <div className="flex flex-wrap items-center gap-3 mb-10 overflow-x-auto pb-2 scrollbar-hide">
                     {filters.map((filter, index) => (
                         <button
@@ -185,16 +185,16 @@ const Home = () => {
                     ))}
                 </div>
 
-                {/* Section Title */}
+
                 <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                     Restaurants Near You
                 </h3>
 
-                {/* Grid */}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
                     {restaurants.map((item) => (
                         <div key={item.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                            {/* Card Image */}
+
                             <div className="relative h-48 w-full overflow-hidden">
                                 <img
                                     src={item.image}
@@ -206,7 +206,7 @@ const Home = () => {
                                 </div>
                             </div>
 
-                            {/* Card Content */}
+
                             <div className="p-5">
                                 <div className="flex justify-between items-start mb-2">
                                     <h4 className="text-lg font-bold text-gray-900 line-clamp-1">{item.name}</h4>
@@ -234,7 +234,7 @@ const Home = () => {
                     ))}
                 </div>
 
-                {/* Pagination - Dummy */}
+
                 <div className="flex justify-center items-center gap-2 mt-8">
                     <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-[#ff5e00] hover:border-[#ff5e00] transition-colors">
                         <ChevronLeft size={16} />

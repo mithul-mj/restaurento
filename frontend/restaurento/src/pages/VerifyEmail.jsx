@@ -15,26 +15,23 @@ const VerifyEmail = () => {
         formState: { errors }
     } = useForm();
 
-    // Handle input change
+
     const handleChange = (e, index) => {
         const value = e.target.value;
-        if (isNaN(value)) return; // Only allow numbers
+        if (isNaN(value)) return;
 
         const newOtp = [...otp];
-        // Allow only one char
         newOtp[index] = value.substring(value.length - 1);
         setOtp(newOtp);
 
-        // Update the hidden form value
         setValue("otp", newOtp.join(""));
 
-        // Move to next input if value is entered
         if (value && index < 5 && inputRefs.current[index + 1]) {
             inputRefs.current[index + 1].focus();
         }
     };
 
-    // Handle backspace
+
     const handleKeyDown = (e, index) => {
         if (e.key === 'Backspace' && !otp[index] && index > 0 && inputRefs.current[index - 1]) {
             inputRefs.current[index - 1].focus();
@@ -43,12 +40,10 @@ const VerifyEmail = () => {
 
     const onSubmit = (data) => {
         console.log('OTP Submitted:', data);
-        // Logic to verify OTP
     };
 
     return (
         <div className="flex min-h-screen w-full overflow-hidden bg-white">
-            {/* Left side - Image (Desktop) */}
             <div className="hidden md:block md:w-1/2 lg:w-1/2 relative bg-gray-900">
                 <img
                     src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop"
@@ -58,10 +53,10 @@ const VerifyEmail = () => {
                 <div className="absolute inset-0 bg-black/30"></div>
             </div>
 
-            {/* Right side - Form */}
+
             <div className="w-full md:w-1/2 lg:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 relative">
 
-                {/* Mobile Background Image & Overlay */}
+
                 <div className="absolute inset-0 z-0 md:hidden">
                     <img
                         src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop"
@@ -71,7 +66,7 @@ const VerifyEmail = () => {
                     <div className="absolute inset-0 bg-black/80"></div>
                 </div>
 
-                {/* Modal Card content */}
+
                 <div className="w-full max-w-[450px] relative z-10 bg-white md:bg-transparent rounded-2xl p-8 md:p-0 shadow-2xl md:shadow-none">
 
                     <div className="text-center mb-8">
@@ -99,7 +94,7 @@ const VerifyEmail = () => {
                             ))}
                         </div>
 
-                        {/* Hidden Input for React Hook Form */}
+
                         <input
                             type="hidden"
                             {...register("otp", {

@@ -17,7 +17,7 @@ const RestaurantDetails = () => {
         { id: 2, name: "Lasagna Bolognese", price: 20.00, qty: 1 }
     ]);
 
-    const activeTab = "About"; // Static for this demo
+    const activeTab = "About";
     const selectedTimeSlot = watch("timeSlot");
 
     const updateQty = (id, delta) => {
@@ -42,7 +42,7 @@ const RestaurantDetails = () => {
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] font-sans">
-            {/* Navbar (Resused from Home) */}
+
             <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Link to="/" className="flex items-center gap-2">
@@ -79,9 +79,9 @@ const RestaurantDetails = () => {
 
             <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
 
-                {/* Image Grid */}
+
                 <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[300px] md:h-[450px] mb-8 rounded-3xl overflow-hidden">
-                    {/* Large Left Image */}
+
                     <div className="md:col-span-2 md:row-span-2 relative group overflow-hidden">
                         <img
                             src="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop"
@@ -89,7 +89,7 @@ const RestaurantDetails = () => {
                             alt="Interior"
                         />
                     </div>
-                    {/* Top Middle */}
+
                     <div className="md:col-span-1 md:row-span-1 relative group overflow-hidden">
                         <img
                             src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=2080&auto=format&fit=crop"
@@ -97,7 +97,7 @@ const RestaurantDetails = () => {
                             alt="Food 1"
                         />
                     </div>
-                    {/* Top Right */}
+
                     <div className="md:col-span-1 md:row-span-1 relative group overflow-hidden">
                         <img
                             src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop"
@@ -105,7 +105,7 @@ const RestaurantDetails = () => {
                             alt="Interior 2"
                         />
                     </div>
-                    {/* Bottom Middle */}
+
                     <div className="md:col-span-1 md:row-span-1 relative group overflow-hidden">
                         <img
                             src="https://images.unsplash.com/photo-1555126634-323283e090fa?q=80&w=1964&auto=format&fit=crop"
@@ -113,7 +113,7 @@ const RestaurantDetails = () => {
                             alt="Food 2"
                         />
                     </div>
-                    {/* Bottom Right */}
+
                     <div className="md:col-span-1 md:row-span-1 relative group overflow-hidden">
                         <img
                             src="https://images.unsplash.com/photo-1621256794692-0f048259d3e8?q=80&w=1964&auto=format&fit=crop"
@@ -123,7 +123,7 @@ const RestaurantDetails = () => {
                     </div>
                 </div>
 
-                {/* Breadcrumb */}
+
                 <div className="text-sm text-gray-400 mb-4 flex items-center gap-2">
                     <Link to="/" className="hover:text-gray-600">Home</Link>
                     <span>/</span>
@@ -134,7 +134,7 @@ const RestaurantDetails = () => {
 
                 <div className="flex flex-col lg:flex-row gap-8 relative">
 
-                    {/* Left Content Column */}
+
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">The Golden Spoon</h1>
                         <div className="flex items-center gap-2 mb-6 text-sm">
@@ -145,7 +145,7 @@ const RestaurantDetails = () => {
                             <span className="text-gray-500">$6.00 per person</span>
                         </div>
 
-                        {/* Tabs */}
+
                         <div className="flex items-center gap-8 border-b border-gray-100 mb-6">
                             {["About", "Menu", "Reviews"].map(tab => (
                                 <button
@@ -162,14 +162,14 @@ const RestaurantDetails = () => {
                             ))}
                         </div>
 
-                        {/* About Content */}
+
                         <div className="mb-8">
                             <h3 className="text-lg font-bold text-gray-900 mb-3">About The Golden Spoon</h3>
                             <p className="text-gray-600 leading-relaxed text-sm mb-6">
                                 Experience the heart of Italy right here. The Golden Spoon offers a culinary journey through authentic Italian flavors, crafted with passion from the freshest local ingredients. Our warm, inviting ambiance is perfect for romantic dinners, family gatherings, or a delightful evening with friends. Join us and discover why we are a celebrated dining destination.
                             </p>
 
-                            {/* Tags */}
+
                             <div className="flex flex-wrap gap-3">
                                 {["Fine Dining", "Authentic Italian", "Romantic", "Outdoor Seating"].map(tag => (
                                     <span key={tag} className="px-3 py-1 bg-[#ffe8d6] text-[#ff5e00] text-xs font-semibold rounded-full">
@@ -179,7 +179,7 @@ const RestaurantDetails = () => {
                             </div>
                         </div>
 
-                        {/* Details Grid */}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Details</h3>
@@ -201,18 +201,18 @@ const RestaurantDetails = () => {
                                     </div>
                                 </div>
                             </div>
-                            {/* Map Image Placeholder */}
+
                             <div className="h-48 rounded-xl overflow-hidden relative">
                                 <img
                                     src="https://api.mapbox.com/styles/v1/mapbox/light-v10/static/pin-s-l+ff5e00(121.0,14.5)/121.0,14.5,14/600x300?access_token=YOUR_TOKEN_HERE"
                                     alt="Map Location"
                                     className="w-full h-full object-cover bg-gray-100"
                                     onError={(e) => {
-                                        // Fallback if mapbox fails or no token
+
                                         e.target.src = "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop"
                                     }}
                                 />
-                                {/* Static pin overlay just in case mapbox doesn't render pin nicely without token or valid coords */}
+
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#ff5e00]">
                                     <MapPin size={32} fill="#ff5e00" stroke="white" />
                                 </div>
@@ -220,7 +220,7 @@ const RestaurantDetails = () => {
                         </div>
                     </div>
 
-                    {/* Right Sidebar - Booking Form */}
+
                     <div className="lg:w-[400px]">
                         <div className="bg-white p-6 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 sticky top-24">
                             <h2 className="text-xl font-bold text-gray-900 mb-6">Pre-Order Summary</h2>
@@ -276,7 +276,7 @@ const RestaurantDetails = () => {
                                     </div>
                                 </div>
 
-                                {/* Warning Box */}
+
                                 <div className="bg-[#fff9e6] border border-[#ffe082] rounded-lg p-3 flex gap-3 items-start mb-6">
                                     <AlertTriangle size={18} className="text-[#f5ad00] shrink-0 mt-0.5" />
                                     <p className="text-xs text-[#b87a00] leading-relaxed font-medium">
@@ -284,7 +284,7 @@ const RestaurantDetails = () => {
                                     </p>
                                 </div>
 
-                                {/* Order Summary */}
+
                                 <div className="mb-6">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="font-bold text-gray-900 text-sm">Your Order</h3>
@@ -322,7 +322,7 @@ const RestaurantDetails = () => {
                                     </div>
                                 </div>
 
-                                {/* Totals */}
+
                                 <div className="border-t border-gray-100 pt-4 space-y-2 mb-6">
                                     <div className="flex justify-between text-xs text-gray-500">
                                         <span>Food Total</span>

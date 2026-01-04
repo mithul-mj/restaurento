@@ -27,8 +27,8 @@ const RestaurantLogin = () => {
             const response = await authService.restaurantLogin(data);
 
             dispatch(setCredentials({
-                user: response.data.restaurant, // Assuming backend returns 'restaurant' object
-                role: 'RESTAURANT' // Setting role explicitly for consistency
+                user: response.data.restaurant,
+                role: 'RESTAURANT'
             }));
 
             navigate('/restaurant/dashboard');
