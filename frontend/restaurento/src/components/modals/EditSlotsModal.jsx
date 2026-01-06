@@ -14,7 +14,6 @@ const EditSlotsModal = ({ onClose }) => {
     const isSameEveryDay = openingHours?.isSameEveryDay;
     const days = openingHours?.days || [];
 
-    // Helper format 24h to 12h AM/PM
     const formatTime = (time) => {
         if (!time) return "";
         const [h, m] = time.split(':');

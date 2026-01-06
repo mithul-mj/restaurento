@@ -35,7 +35,6 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
             if (initialData.image) {
                 if (Array.isArray(initialData.image)) {
                     processedImages = Promise.all(initialData.image.map(async (img) => {
-                        // If it's a File object, create a stable data URL preview
                         if (img instanceof File) {
                             const dataUrl = await new Promise((resolve) => {
                                 const reader = new FileReader();
@@ -44,13 +43,10 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                             });
                             return Object.assign(img, { preview: dataUrl });
                         }
-                        // If it's just a string in an array (rare but possible)
                         if (typeof img === 'string') return { preview: img };
-                        // Otherwise return as is
                         return img;
                     }));
                 } else if (typeof initialData.image === 'string') {
-                    // Handle single URL string case
                     processedImages = Promise.resolve([{ preview: initialData.image }]);
                 }
             }
@@ -85,7 +81,6 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
 
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length > 0) {
-            // Convert to stable data URLs instead of blob URLs
             const filesWithPreview = await Promise.all(
                 acceptedFiles.map(async (file) => {
                     const dataUrl = await new Promise((resolve) => {
@@ -173,7 +168,6 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                         </div>
 
                         <div>
-                            {/* Visual alignment: This column should take height. Dropzone takes full height. */}
                             <div
                                 {...getRootProps()}
                                 className={`h-full min-h-[160px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-4 transition-all cursor-pointer ${isDragActive ? 'border-[#ff5e00] bg-orange-50' : 'border-gray-200 bg-white hover:border-orange-200'} `}

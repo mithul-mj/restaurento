@@ -5,22 +5,18 @@ import { MapPin, Clock, Phone, Search, ChefHat } from "lucide-react";
 // Day names constant - index determines the day (0=Monday, 1=Tuesday, etc.)
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// Helper to safely get image URL
 const getImageUrl = (img) => {
     if (!img) return null;
     if (typeof img === 'string') return img;
-    // Check for dropzone preview (now using data URLs, not blob URLs)
     if (img.preview) return img.preview;
     if (Array.isArray(img) && img.length > 0) {
         const first = img[0];
         if (typeof first === 'string') return first;
         if (first.preview) return first.preview;
     }
-    // If no preview found, return null (all files should have .preview now)
     return null;
 };
 
-// Helper format 24h to 12h AM/PM
 const formatTime = (time) => {
     if (!time) return "";
     const [h, m] = time.split(':');
@@ -30,7 +26,6 @@ const formatTime = (time) => {
     return `${hour12.toString().padStart(2, '0')}:${m} ${ampm}`;
 };
 
-// Helper component for images - Fixed dimensions, no image-dependent sizing
 const ImgDiv = ({ src, className }) => (
     <div className={`overflow-hidden w-full h-full ${className || ''} bg-gray-100 flex-shrink-0`}>
         {src ? (
@@ -54,71 +49,59 @@ const Step5Review = () => {
     const [activeTab, setActiveTab] = useState("Dinner");
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 
-    // Mock tags if not sufficient in values
     const displayTags = values.tags && values.tags.length > 0
         ? values.tags
         : ["Fine Dining", "Authentic", "Romantic"];
 
-    // Filter menu items
     const menuItems = values.menuItems || [];
     const filteredItems = menuItems.filter(item => {
         const cats = item.categories || [item.category];
         return cats.includes(activeTab);
     });
 
-    // Safely get hero images (expecting values.images to be array of files/blobs)
     const heroImages = values.images || [];
 
-    // Manage Image Previews (All files should have .preview property with data URLs)
     const previewUrls = React.useMemo(() => {
-        // Flatten the array in case heroImages is an array of arrays (common with dropzone)
         const flatImages = Array.isArray(heroImages) ? heroImages.flat() : [];
 
         console.log("Raw Images from Form:", flatImages);
 
         const urls = flatImages.map(img => {
-            if (typeof img === 'string') return img; // It's already a URL
-            if (img?.preview) return img.preview;    // Use the data URL preview we created in upload steps
+            if (typeof img === 'string') return img;
+            if (img?.preview) return img.preview;
 
-            // All files should have .preview now, but log if missing
             console.warn('Image missing preview property:', img);
             return null;
-        }).filter(Boolean); // Filter out any nulls so count is accurate
+        }).filter(Boolean);
 
         console.log("Generated Previews:", urls);
         return urls;
     }, [heroImages]);
 
-    // Slot Logic
     const days = values.openingHours?.days || [];
     const selectedDay = days[selectedDayIndex];
     const slots = selectedDay?.generatedSlots || [];
 
-    // Find first open day to select initially
     useEffect(() => {
         if (days.length > 0) {
             const firstOpen = days.findIndex(d => !d.isClosed);
             if (firstOpen !== -1) setSelectedDayIndex(firstOpen);
         }
-    }, [values.openingHours]); // Run once when data loads/changes
+    }, [values.openingHours]);
 
 
     return (
         <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-8 font-inter">
 
-            {/* Header / Hero Section */}
             <div className="space-y-6">
-                {/* Dynamic Hero Grid */}
                 {(() => {
                     let displayImages = [];
 
                     if (previewUrls.length > 0) {
                         displayImages = previewUrls.slice(0, 5);
                     } else if (heroImages.length > 0) {
-                        // Creating previews... show empty/loading placeholders
                         displayImages = Array(Math.min(heroImages.length, 5)).fill(null);
                     } else {
-                        // Mocks
                         displayImages = [
                             "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200",
                             "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600",
@@ -168,7 +151,7 @@ const Step5Review = () => {
                             </div>
                         );
                     }
-                    // Layout for 5+ Images
+
                     return (
                         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr] gap-2 h-[300px] md:h-[400px] rounded-3xl overflow-hidden">
                             <div className="h-full w-full"><ImgDiv src={displayImages[0]} /></div>
@@ -200,9 +183,7 @@ const Step5Review = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                {/* Left Column: Details & Menu */}
                 <div className="lg:col-span-2 space-y-10">
-                    {/* About Section */}
                     <section>
                         <h2 className="text-xl font-bold text-gray-900 mb-3">About {values.restaurantName || "The Restaurant"}</h2>
                         <p className="text-gray-600 leading-relaxed text-sm">
@@ -217,7 +198,6 @@ const Step5Review = () => {
                         </div>
                     </section>
 
-                    {/* Details Section */}
                     <section>
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Details</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,7 +231,6 @@ const Step5Review = () => {
                                 </div>
                             </div>
 
-                            {/* Map Preview Placeholder */}
                             <div className="w-full h-32 md:h-full min-h-[140px] bg-green-100 rounded-xl overflow-hidden relative">
                                 <img
                                     src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/77.5946,12.9716,13,0/400x200?access_token=YOUR_TOKEN"
@@ -272,7 +251,6 @@ const Step5Review = () => {
                         </div>
                     </section>
 
-                    {/* Menu Section */}
                     <section className="space-y-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
                             <div className="flex gap-2">
@@ -326,7 +304,6 @@ const Step5Review = () => {
                     </section>
                 </div>
 
-                {/* Right Sidebar: Cart & Booking Mockup */}
                 <div className="space-y-6">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-100/50 p-6 sticky top-6">
                         <h3 className="font-bold text-lg text-gray-900 mb-6">Cart & Pre-Order Summary</h3>
@@ -341,7 +318,6 @@ const Step5Review = () => {
                         <div className="mb-8">
                             <div className="text-sm font-medium text-gray-500 mb-3">Time Slots</div>
 
-                            {/* Scrollable Days */}
                             <div className="flex justify-between mb-4 overflow-x-auto gap-2 pb-2 scrollbar-none">
                                 {days.map((day, index) => (
                                     <button
@@ -359,7 +335,6 @@ const Step5Review = () => {
                                 ))}
                             </div>
 
-                            {/* Render Actual Slots */}
                             <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
                                 {selectedDay?.isClosed ? (
                                     <div className="col-span-2 text-center py-6 text-gray-400 text-sm bg-gray-50 rounded-lg">
@@ -398,7 +373,6 @@ const Step5Review = () => {
                                 </div>
                             </div>
 
-                            {/* This button submits the form because it is inside the form context in Onboarding.jsx */}
                             <button type="submit" className="w-full py-3.5 bg-[#ff5e00] text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-[#e05200] transition-all transform active:scale-95">
                                 Submit Details
                             </button>

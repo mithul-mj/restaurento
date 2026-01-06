@@ -57,7 +57,6 @@ const Step1BasicInfo = () => {
 
         const newSlots = updateSlotsForDay(index, currentDays, currentDuration, currentGap);
 
-        // Propagate if Same Every Day
         if (isSame && index === 0) {
             const masterDay = currentDays[0];
             for (let i = 1; i < currentDays.length; i++) {

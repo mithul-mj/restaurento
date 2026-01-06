@@ -1,16 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import restaurantService from "../../services/restaurant.service";
 import { useForm, FormProvider } from "react-hook-form";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { onboardingSchema, stepSchemas } from "../../schemas/onboardingSchema";
 import { Check } from "lucide-react";
+import axios from "axios";
+
 
 import Step1BasicInfo from "../../components/onboarding/Step1BasicInfo";
 import Step2Seating from "../../components/onboarding/Step2Seating";
 import Step3Legal from "../../components/onboarding/Step3Legal";
 import Step4Menu from "../../components/onboarding/Step4Menu";
 import Step5Review from "../../components/onboarding/Step5Review";
+import restaurantService from '../../services/restaurant.service.js'
 
 const STEPS = ["Basic Info", "Seating & Photos", "Legal", "Menu", "Review"];
 
@@ -119,11 +121,8 @@ const Onboarding = () => {
         });
 
         try {
-            const response = await restaurantService.onboard(formData);
-
-            if (response.status === 200 || response.status === 201) {
-                navigate('/restaurant/dashboard');
-            }
+            await restaurantService.onboard(formData);
+            navigate('/restaurant/dashboard');
         } catch (error) {
             console.error("Onboarding failed:", error);
             const message = error.response?.data?.message || "Failed to submit onboarding details. Please try again.";
