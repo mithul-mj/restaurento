@@ -1,0 +1,193 @@
+import {
+  registerUserService,
+  loginUserService,
+  refreshUserTokenService,
+} from "../../services/userAuth.service.js";
+import ROLES from "../../constants/roles.js";
+import { env } from "../../config/env.config.js";
+import { OAuth2Client } from "google-auth-library";
+import { User } from "../../models/User.model.js";
+import { Restaurant } from "../../models/Restaurant.model.js";
+import { createAccount } from "../../services/commonAuth.service.js";
+
+export const registerUser = async (req, res, next) => {
+  try {
+    const newUser = await registerUserService(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        role: ROLES.USER,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+
+export const googleAuthUser = async (req, res, next) => {
+  const { token } = req.body;
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to verify Google token");
+    }
+
+    const payload = await response.json();
+
+    const { email, name, picture } = payload;
+
+    const existingRestaurant = await Restaurant.findOne({ email });
+    if (existingRestaurant) {
+      return res.status(400).json({
+        success: false,
+        message: `Email already registered as RESTAURANT. Please login via restaurant portal.`,
+      });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await createAccount(User, {
+        fullName: name,
+        email,
+        avatar: picture,
+        isEmailVerified: true,
+        password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
+        role: ROLES.USER
+      })
+    }
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      maxAge: 15 * 60 * 1000, // 15 Min
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      maxAge: 24 * 60 * 60 * 1000, // 1 Day
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: ROLES.USER,
+      },
+    });
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    next(error);
+  }
+};
+
+export const loginUser = async (req, res, next) => {
+  try {
+    const { account, accessToken, refreshToken } = await loginUserService(
+      req.body
+    );
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      maxAge: 15 * 60 * 1000, // 15 Min
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      maxAge: 24 * 60 * 60 * 1000, // 1 Day
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      user: {
+        _id: account._id,
+        fullName: account.fullName,
+        email: account.email,
+        role: ROLES.USER,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refreshAccessToken = async (req, res, next) => {
+  try {
+    const incomingRefreshToken =
+      req.cookies?.refreshToken || req.body?.refreshToken;
+
+    const { account, accessToken, refreshToken } =
+      await refreshUserTokenService(incomingRefreshToken);
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      maxAge: 15 * 60 * 1000, // 15 Min
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      maxAge: 24 * 60 * 60 * 1000, // 1 Day
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Access token refreshed",
+      accessToken,
+      refreshToken,
+      user: {
+        _id: account._id,
+        fullName: account.fullName,
+        email: account.email,
+        role: ROLES.USER,
+      },
+      role: ROLES.USER,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+    });
+    return res.json({ success: true, message: "Logged out" });
+  } catch (error) {
+    next(error);
+  }
+};
