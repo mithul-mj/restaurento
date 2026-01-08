@@ -2,11 +2,16 @@ import React, { useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
+import authService from '../../services/auth.service.js';
 
 const VerifyEmailModal = ({ email, onClose, onVerify }) => {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const inputRefs = useRef([]);
     const [localError, setLocalError] = useState("");
+    const [timeLeft, setTimeLeft] = useState(120);
+
+    const [endTime, setEndTime] = useState(Date.now() + 120000);
 
     const {
         register,
@@ -15,6 +20,24 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
         formState: { errors }
     } = useForm();
 
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const now = Date.now();
+            const difference = endTime - now;
+
+            if (difference <= 0) {
+                setTimeLeft(0);
+                clearInterval(timer);
+            } else {
+                setTimeLeft(Math.ceil(difference / 1000));
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [endTime]);
+
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = Math.floor(timeLeft % 60)
 
     const handleChange = (e, index) => {
         const value = e.target.value;
@@ -55,6 +78,9 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
                     </h2>
                     <p className="text-gray-500 text-sm">
                         We've sent a 6-digit code to <span className="font-semibold text-gray-700">{email}</span>
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                        Didn't receive code? {timeLeft === 0 ? <span className="font-semibold text-blue-700 underline cursor-pointer" onClick={async () => { setTimeLeft(120); setEndTime(Date.now() + 120000); await authService.resendOtp({ email }); }}>Resend Otp</span> : <span className="font-semibold text-gray-700">Resend Otp in {minutes}:{seconds.toString().padStart(2, '0')}</span>}
                     </p>
                 </div>
 

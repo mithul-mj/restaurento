@@ -5,11 +5,15 @@ import { useForm } from 'react-hook-form';
 import AuthLayout from '../../components/layouts/AuthLayout';
 import authService from '../../services/auth.service';
 import VerifyEmailModal from '../../components/modals/VerifyEmailModal';
+import { useGoogleLogin } from "@react-oauth/google";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../redux/slices/authSlice";
 
 const UserSignup = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const dispatch = useDispatch();
 
     const [serverError, setServerError] = useState("");
 
@@ -45,7 +49,7 @@ const UserSignup = () => {
 
     const handleVerifyOtp = async (otp) => {
         try {
-            await authService.verifyEmail({ email: registeredEmail, otp,role:'USER'});
+            await authService.verifyEmail({ email: registeredEmail, otp, role: 'USER' });
 
             navigate('/login');
         } catch (error) {
@@ -53,6 +57,24 @@ const UserSignup = () => {
             alert(error.response?.data?.message || "Verification failed");
         }
     };
+
+    const handleGoogleSuccess = async (tokenResponse) => {
+        try {
+            const response = await authService.googleLogin(tokenResponse.access_token, 'USER');
+            dispatch(setCredentials({
+                user: response.data.user,
+                role: 'USER'
+            }))
+        } catch (error) {
+            setServerError(error.response?.data?.message || "Google login failed. Please try again.");
+        }
+    }
+
+    const loginWithGoogle = useGoogleLogin({
+        onSuccess: handleGoogleSuccess,
+        onError: () => setServerError("Google login failed")
+    })
+
 
     return (
         <AuthLayout
@@ -200,7 +222,7 @@ const UserSignup = () => {
                 <div className="h-px bg-gray-300 md:bg-gray-200 flex-1"></div>
             </div>
 
-            <button className="w-full py-3 bg-white border border-gray-200 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-sm group">
+            <button onClick={() => loginWithGoogle()} className="w-full py-3 bg-white border border-gray-200 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-sm group">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />

@@ -25,6 +25,10 @@ const authService = {
     const response = await api.post("/auth/verify-email", data);
     return response;
   },
+  resendOtp: async (data) => {
+    const response = await api.post("/auth/resend-otp", data);
+    return response;
+  },
   refreshToken: async () => {
     const response = await api.post("/auth/refresh-token");
     return response;
@@ -40,6 +44,15 @@ const authService = {
   resetPasword: async (data) => {
     const response = await api.post("/auth/reset/password");
     return response;
+  },
+  googleLogin: async (googleToken, role = 'USER') => {
+    if (role === 'RESTAURANT') {
+      const response = await api.post("/restaurant/auth/google", { token: googleToken });
+      return response;
+    } else {
+      const response = await api.post("/auth/google", { token: googleToken });
+      return response;
+    }
   },
 };
 
