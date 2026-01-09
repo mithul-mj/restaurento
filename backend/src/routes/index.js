@@ -6,6 +6,7 @@ import restaurantAuthRoutes from "./restaurant/auth.routes.js";
 import errorHandler from "../middlewares/errorHandler.middleware.js";
 import commonAuthRoutes from "./common/auth.routes.js";
 import onboardingRoutes from "./restaurant/onboarding.routes.js";
+import adminUserMangementRoutes from "../routes/admin/userManagement.routes.js";
 
 const router = express.Router();
 
@@ -13,7 +14,9 @@ router.use("/api/v1/auth/", commonAuthRoutes);
 router.use("/api/v1/", userAuthRoutes);
 router.use("/api/v1/admin", adminAuthRoutes);
 router.use("/api/v1/restaurant", restaurantAuthRoutes);
-router.use("/api/v1/restaurant", onboardingRoutes);
+
+router.use("/api/v1/admin/users", adminUserMangementRoutes);
+
 
 router.use(errorHandler);
 

@@ -19,22 +19,19 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    phone: {
-      type: String,
-    },
-    profilePictureUrl: {
-      type: String,
-    },
     walletBalance: {
       type: Number,
       default: 0,
       required: true,
     },
     location: {
-      address: { type: String },
       coordinates: {
         type: [Number], // [longitude, latitude]
         index: "2dsphere",
+      },
+      address: {
+        type: String,
+        default: null,
       },
     },
     isEmailVerified: {
@@ -51,9 +48,6 @@ const userSchema = new Schema(
       enum: ["active", "suspended"],
       default: "active",
       required: true,
-    },
-    refreshToken: {
-      type: String,
     },
   },
   { timestamps: true }

@@ -45,9 +45,11 @@ const authService = {
     const response = await api.post("/auth/reset/password");
     return response;
   },
-  googleLogin: async (googleToken, role = 'USER') => {
-    if (role === 'RESTAURANT') {
-      const response = await api.post("/restaurant/auth/google", { token: googleToken });
+  googleLogin: async (googleToken, role = "USER") => {
+    if (role === "RESTAURANT") {
+      const response = await api.post("/restaurant/auth/google", {
+        token: googleToken,
+      });
       return response;
     } else {
       const response = await api.post("/auth/google", { token: googleToken });

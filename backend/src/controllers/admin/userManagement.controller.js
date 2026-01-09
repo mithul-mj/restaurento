@@ -1,0 +1,100 @@
+import { email } from "zod";
+import { User } from "../../models/User.model.js";
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const search = req.query.search || "";
+    const sortBy = req.query.sortBy || "newest";
+    const status = req.query.status || "all";
+
+    const skip = (page - 1) * limit;
+
+    const listFilter = {
+      $or: [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    if (status !== "all") {
+      listFilter.status = status;
+    }
+
+    let sortOptions = {};
+    if (sortBy === "newest") {
+      sortOptions = { createdAt: -1 };
+    } else if (sortBy === "oldest") {
+      sortOptions = { createdAt: 1 };
+    } else if (sortBy === "a-z") {
+      sortOptions = { fullName: 1 };
+    } else if (sortBy === "z-a") {
+      sortOptions = { fullName: -1 };
+    }
+
+    const [users, totalFilteredCount, totalCount, suspendedCount] =
+      await Promise.all([
+        User.find(listFilter, {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          avatar: 1,
+          status: 1,
+          createdAt: 1,
+          isEmailVerified: 1,
+          location: 1,
+        })
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        User.countDocuments(listFilter),
+        User.countDocuments({}),
+        User.countDocuments({ status: "suspended" }),
+      ]);
+
+    res.status(200).json({
+      status: "success",
+      meta: {
+        totalCount,
+        suspendedCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalFilteredCount / limit),
+        perPage: limit,
+      },
+      data: users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const newStatus = user.status === "active" ? "suspended" : "active";
+    user.status = newStatus;
+
+    await user.save();
+
+    res.status(200).json({
+      message: `User status updated to ${newStatus}`,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        status: user.status,
+      },
+    });
+  } catch (error) {
+    console.error("Error toggling status:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
