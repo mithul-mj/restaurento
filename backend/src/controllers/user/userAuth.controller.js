@@ -73,14 +73,14 @@ export const googleAuthUser = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 15 * 60 * 1000, // 15 Min
+      maxAge: env.ACCESS_TOKEN_MAX_AGE,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 24 * 60 * 60 * 1000, // 1 Day
+      maxAge: env.REFRESH_TOKEN_MAX_AGE,
     });
 
     return res.status(200).json({
@@ -109,14 +109,14 @@ export const loginUser = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 15 * 60 * 1000, // 15 Min
+      maxAge: env.ACCESS_TOKEN_MAX_AGE,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 24 * 60 * 60 * 1000, // 1 Day
+      maxAge: env.REFRESH_TOKEN_MAX_AGE,
     });
 
     return res.status(200).json({
@@ -146,14 +146,14 @@ export const refreshAccessToken = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 15 * 60 * 1000, // 15 Min
+      maxAge: env.ACCESS_TOKEN_MAX_AGE,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 24 * 60 * 60 * 1000, // 1 Day
+      maxAge: env.REFRESH_TOKEN_MAX_AGE,
     });
 
     return res.status(200).json({

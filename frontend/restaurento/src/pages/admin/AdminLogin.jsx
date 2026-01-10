@@ -6,9 +6,11 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
 import { setCredentials } from '../../redux/slices/authSlice';
+import ForgotPasswordModal from "../../components/modals/ForgotPasswordModal";
 
 const AdminLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
+    const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [serverError, setServerError] = useState("");
@@ -87,7 +89,7 @@ const AdminLogin = () => {
                 </div>
 
                 <div className="flex justify-between items-center">
-                    <button type="button" className="text-gray-300 md:text-[#ff5e00] text-xs font-bold hover:underline">
+                    <button type="button" onClick={() => setShowForgotPasswordModal(true)} className="text-gray-300 md:text-[#ff5e00] text-xs font-bold hover:underline">
                         Forgot Password?
                     </button>
                 </div>
@@ -103,6 +105,11 @@ const AdminLogin = () => {
             <div className="mt-8 text-center">
                 <p className="text-xs text-gray-400">© 2024 Restauranto. All rights reserved.</p>
             </div>
+            {showForgotPasswordModal && (
+                <ForgotPasswordModal
+                    onClose={() => setShowForgotPasswordModal(false)}
+                />
+            )}
         </AuthLayout>
     );
 };

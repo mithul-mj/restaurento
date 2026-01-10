@@ -37,14 +37,14 @@ export const loginRestaurant = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 15 * 60 * 1000, // 15 Min
+      maxAge: env.ACCESS_TOKEN_MAX_AGE,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
+      maxAge: env.REFRESH_TOKEN_MAX_AGE,
     });
 
     return res.status(200).json({
@@ -109,14 +109,14 @@ export const googleAuthRestaurant = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      maxAge: 15 * 60 * 1000, // 15 Min
+      maxAge: env.ACCESS_TOKEN_MAX_AGE,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
+      maxAge: env.REFRESH_TOKEN_MAX_AGE,
     });
 
     return res.status(200).json({

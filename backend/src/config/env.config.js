@@ -30,15 +30,26 @@ const envSchema = z.object({
   REDIS_PORT: z.string().min(1, "REDIS_PORT is required"),
 
   MONGO_URI: z.string().min(1, "MONGO_URI is required"),
-  JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
+  JWT_FORGOT_PASSWORD_SECRET: z
+    .string()
+    .min(1, "JWT_FORGOT_PASSWORD_SECRET is required"),
+  JWT_ACCESS_SECRET: z.string().min(1, "JWT_ACCESS_SECRET is required"),
+  JWT_REFRESH_SECRET: z.string().min(1, "JWT_REFRESH_SECRET is required"),
+  JWT_FORGOT_PASSWORD_TOKEN_EXPIRE: z
+    .string()
+    .min(1, "JWT_FORGOT_PASSWORD_TOKEN_EXPIRE is required"),
   JWT_ACCESS_TOKEN_EXPIRE: z
     .string()
     .min(1, "JWT_ACCESS_TOKEN_EXPIRE is required"),
   JWT_REFRESH_TOKEN_EXPIRE: z
     .string()
     .min(1, "JWT_REFRESH_TOKEN_EXPIRE is required"),
-  REFRESH_TOKEN_MAX_AGE: z
-    .string()
+  ACCESS_TOKEN_MAX_AGE: z.coerce
+    .number()
+    .min(1, "ACCESS_TOKEN_MAX_AGE is required (in milliseconds)"),
+
+  REFRESH_TOKEN_MAX_AGE: z.coerce
+    .number()
     .min(1, "REFRESH_TOKEN_MAX_AGE is required (in milliseconds)"),
 
   DEFAULT_ADMIN_EMAIL: z.string().min(1, "DEFAULT_ADMIN_EMAIL is required"),

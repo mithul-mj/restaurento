@@ -21,7 +21,7 @@ export const authPlugin = (schema, options = {}) => {
         email: this.email,
         role: overrideRole || role || this.role || "USER",
       },
-      env.JWT_SECRET,
+      env.JWT_ACCESS_SECRET,
       {
         expiresIn: env.JWT_ACCESS_TOKEN_EXPIRE,
       }
@@ -34,7 +34,7 @@ export const authPlugin = (schema, options = {}) => {
         _id: this._id,
         role: overrideRole || role || this.role || "USER",
       },
-      env.JWT_SECRET,
+      env.JWT_REFRESH_SECRET,
       {
         expiresIn: env.JWT_REFRESH_TOKEN_EXPIRE,
       }

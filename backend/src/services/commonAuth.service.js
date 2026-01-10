@@ -117,7 +117,7 @@ export const verifyOtp = async (identifier, otp) => {
   return false;
 };
 
-const sendEmail = async (to, subject, text, html) => {
+export const sendEmail = async (to, subject, text, html) => {
   const info = await transporter.sendMail({
     from: env.SENDER_EMAIL,
     to,
@@ -135,7 +135,7 @@ export const verifyAndRefreshToken = async (Model, token) => {
   }
 
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
     const account = await Model.findById(decoded._id);
 
     if (!account) {

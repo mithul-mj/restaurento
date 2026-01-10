@@ -22,7 +22,7 @@ import ProtectedRoutes from './components/routes/ProtectedRoutes';
 import PublicRoutes from './components/routes/PublicRoutes';
 import authService from './services/auth.service';
 import { setCredentials } from './redux/slices/authSlice';
-
+import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
 function App() {
@@ -69,6 +69,8 @@ function App() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/restaurant/login" element={<RestaurantLogin />} />
           <Route path="/restaurant/signup" element={<RestaurantSignup />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={['USER']} />}>

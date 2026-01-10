@@ -37,12 +37,12 @@ const authService = {
     const response = await api.post("/logout");
     return response;
   },
-  forgotPassword: async (email) => {
-    const response = await api.post("/auth/forgot-password");
+  forgotPassword: async (data) => {
+    const response = await api.patch("/auth/forgot-password", data);
     return response;
   },
-  resetPasword: async (data) => {
-    const response = await api.post("/auth/reset/password");
+  resetPassword: async (data) => {
+    const response = await api.post("/auth/reset-password-link", data);
     return response;
   },
   googleLogin: async (googleToken, role = "USER") => {

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
 import { setCredentials } from '../../redux/slices/authSlice';
 import { useGoogleLogin } from "@react-oauth/google";
+import ForgotPasswordModal from "../../components/modals/ForgotPasswordModal";
 
 const RestaurantLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +16,8 @@ const RestaurantLogin = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [serverError, setServerError] = useState("");
+
+    const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
     const {
         register,
@@ -121,9 +124,9 @@ const RestaurantLogin = () => {
                     </div>
                     {errors.password && <span className="text-red-500 text-xs mt-1">{errors.password.message}</span>}
                     <div className="flex justify-end mt-2">
-                        <Link to="/forgot-password" className="text-xs text-gray-300 md:text-gray-500 hover:text-[#ff5e00] underline">
+                        <button type="button" onClick={() => setShowForgotPasswordModal(true)} className="text-xs text-gray-300 md:text-gray-500 hover:text-[#ff5e00] underline">
                             Forgot Password?
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -154,6 +157,11 @@ const RestaurantLogin = () => {
             <p className="text-center mt-8 text-sm text-gray-300 md:text-gray-500">
                 Partner with us? <Link to="/restaurant/signup" className="text-[#ff5e00] font-semibold hover:underline">Register your Restaurant</Link>
             </p>
+            {showForgotPasswordModal && (
+                <ForgotPasswordModal
+                    onClose={() => setShowForgotPasswordModal(false)}
+                />
+            )}
         </AuthLayout>
     );
 };
