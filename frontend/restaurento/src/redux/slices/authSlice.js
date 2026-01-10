@@ -5,6 +5,7 @@ const initialState = {
   user: null,
   isAuthenticated: false,
   role: null,
+  avatar: null,
   isInitializing: true,
 };
 
@@ -13,9 +14,10 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { user, role } = action.payload;
+      const { user, role, avatar } = action.payload;
       state.user = user;
       state.role = role;
+      state.avatar = avatar;
       state.isAuthenticated = true;
       state.isInitializing = false;
     },

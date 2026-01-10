@@ -33,6 +33,7 @@ const UserLogin = () => {
         setCredentials({
           user: response.data.user,
           role: "USER",
+          avatar: response.data.user.avatar,
         })
       );
 
@@ -55,12 +56,13 @@ const UserLogin = () => {
         setCredentials({
           user: response.data.user,
           role: "USER",
+          avatar: response.data.user.avatar,
         })
       );
     } catch (error) {
       setServerError(
         error.response?.data?.message ||
-          "Google login failed. Please try again."
+        "Google login failed. Please try again."
       );
     }
   };
@@ -92,11 +94,10 @@ const UserLogin = () => {
               id="email"
               autoComplete="email"
               className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
-                            ${
-                              errors.email
-                                ? "border-red-500 bg-red-50 focus:border-red-500"
-                                : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
-                            }
+                            ${errors.email
+                  ? "border-red-500 bg-red-50 focus:border-red-500"
+                  : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
+                }
                             text-gray-900 placeholder-gray-400 text-sm`}
               placeholder="Enter your email address"
               {...register("email", {
@@ -127,11 +128,10 @@ const UserLogin = () => {
               id="password"
               autoComplete="current-password"
               className={`w-full px-4 py-3.5 pr-10 rounded-lg border focus:outline-none transition-colors
-                            ${
-                              errors.password
-                                ? "border-red-500 bg-red-50 focus:border-red-500"
-                                : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
-                            }
+                            ${errors.password
+                  ? "border-red-500 bg-red-50 focus:border-red-500"
+                  : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
+                }
                             text-gray-900 placeholder-gray-400 text-sm`}
               placeholder="Enter your password"
               {...register("password", {

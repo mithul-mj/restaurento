@@ -38,7 +38,8 @@ function App() {
         }
         dispatch(setCredentials({
           user: response.data.user,
-          role: response.data.role?.toUpperCase()
+          role: response.data.role?.toUpperCase(),
+          avatar: response.data.user.avatar
         }))
       } catch (error) {
 

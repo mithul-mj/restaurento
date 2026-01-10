@@ -61,9 +61,11 @@ export const googleAuthUser = async (req, res, next) => {
         email,
         avatar: picture,
         isEmailVerified: true,
-        password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
-        role: ROLES.USER
-      })
+        password:
+          Math.random().toString(36).slice(-8) +
+          Math.random().toString(36).slice(-8),
+        role: ROLES.USER,
+      });
     }
 
     const accessToken = user.generateAccessToken();
@@ -91,6 +93,7 @@ export const googleAuthUser = async (req, res, next) => {
         fullName: user.fullName,
         email: user.email,
         role: ROLES.USER,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
@@ -127,6 +130,7 @@ export const loginUser = async (req, res, next) => {
         fullName: account.fullName,
         email: account.email,
         role: ROLES.USER,
+        avatar: account.avatar,
       },
     });
   } catch (error) {
@@ -166,6 +170,7 @@ export const refreshAccessToken = async (req, res, next) => {
         fullName: account.fullName,
         email: account.email,
         role: ROLES.USER,
+        avatar: account.avatar,
       },
       role: ROLES.USER,
     });
@@ -187,6 +192,30 @@ export const logout = async (req, res, next) => {
       sameSite: "lax", // Protects against CSRF
     });
     return res.json({ success: true, message: "Logged out" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        walletBalance: user.walletBalance,
+        address: user.location.address,
+        createdAt: user.createdAt,
+        isEmailVerified: user.isEmailVerified,
+      },
+    });
   } catch (error) {
     next(error);
   }
