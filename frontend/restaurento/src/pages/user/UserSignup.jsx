@@ -24,7 +24,7 @@ const UserSignup = () => {
         register,
         handleSubmit,
         watch,
-        formState: { errors }
+        formState: { errors, isSubmitting }
     } = useForm();
 
     const onSubmit = async (data) => {
@@ -210,9 +210,10 @@ const UserSignup = () => {
 
                 <button
                     type="submit"
-                    className="w-full py-3.5 bg-[#ff5e00] hover:bg-[#e05200] text-white rounded-lg font-semibold text-sm transition-colors shadow-sm mt-2"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 bg-[#ff5e00] hover:bg-[#e05200] text-white rounded-lg font-semibold text-sm transition-colors shadow-sm mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                    Sign Up
+                    {isSubmitting ? "Signing Up..." : "Sign Up"}
                 </button>
             </form>
 

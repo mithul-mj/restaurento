@@ -182,6 +182,7 @@ export const refreshAccessToken = async (req, res, next) => {
         fullName: account.fullName || account.name,
         email: account.email,
         role: role,
+        avatar: account.avatar,
       },
       role: role,
     });

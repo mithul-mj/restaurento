@@ -59,7 +59,7 @@ const Onboarding = () => {
         shouldUnregister: false,
     });
 
-    const { handleSubmit, trigger } = methods;
+    const { handleSubmit, trigger, formState: { isSubmitting } } = methods;
 
     const handleNext = async () => {
         const currentSchema = stepSchemas[currentStep];
@@ -189,9 +189,10 @@ const Onboarding = () => {
                                 ) : currentStep !== 4 ? (
                                     <button
                                         type="submit"
-                                        className="px-8 py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+                                        disabled={isSubmitting}
+                                        className="px-8 py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        Finish Setup
+                                        {isSubmitting ? "Submitting..." : "Finish Setup"}
                                     </button>
                                 ) : null}
                             </div>

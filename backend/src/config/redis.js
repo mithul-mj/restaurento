@@ -1,5 +1,6 @@
 import { env } from './env.config.js';
 import { createClient } from 'redis';
+import Redis from 'ioredis'
 
 const redisClient = createClient({
     username: 'default',

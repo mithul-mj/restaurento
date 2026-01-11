@@ -68,6 +68,13 @@ export const googleAuthUser = async (req, res, next) => {
       });
     }
 
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Please contact support.",
+      });
+    }
+
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
@@ -107,6 +114,13 @@ export const loginUser = async (req, res, next) => {
     const { account, accessToken, refreshToken } = await loginUserService(
       req.body
     );
+
+    if (account.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Please contact support.",
+      });
+    }
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -192,30 +206,6 @@ export const logout = async (req, res, next) => {
       sameSite: "lax", // Protects against CSRF
     });
     return res.json({ success: true, message: "Logged out" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getProfile = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id).select("-password");
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    return res.status(200).json({
-      success: true,
-      user: {
-        walletBalance: user.walletBalance,
-        address: user.location.address,
-        createdAt: user.createdAt,
-        isEmailVerified: user.isEmailVerified,
-      },
-    });
   } catch (error) {
     next(error);
   }

@@ -14,7 +14,7 @@ const AdminLogin = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [serverError, setServerError] = useState("");
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
 
     const onSubmit = async (data) => {
         try {
@@ -96,9 +96,10 @@ const AdminLogin = () => {
 
                 <button
                     type="submit"
-                    className="w-full py-3 bg-[#e05200] hover:bg-[#c94a00] text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-orange-900/20"
+                    disabled={isSubmitting}
+                    className="w-full py-3 bg-[#e05200] hover:bg-[#c94a00] text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-orange-900/20 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                    Sign In
+                    {isSubmitting ? "Signing In..." : "Sign In"}
                 </button>
             </form>
 

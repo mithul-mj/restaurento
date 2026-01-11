@@ -44,7 +44,7 @@ const ImgDiv = ({ src, className }) => (
 );
 
 const Step5Review = () => {
-    const { watch, register, formState: { errors } } = useFormContext();
+    const { watch, register, formState: { errors, isSubmitting } } = useFormContext();
     const values = watch();
     const [activeTab, setActiveTab] = useState("Dinner");
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -373,8 +373,12 @@ const Step5Review = () => {
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full py-3.5 bg-[#ff5e00] text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-[#e05200] transition-all transform active:scale-95">
-                                Submit Details
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full py-3.5 bg-[#ff5e00] text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-[#e05200] transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting ? "Submitting..." : "Submit Details"}
                             </button>
                         </div>
                     </div>

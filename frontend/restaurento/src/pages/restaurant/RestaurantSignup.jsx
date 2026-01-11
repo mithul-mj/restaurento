@@ -22,7 +22,7 @@ const RestaurantSignup = () => {
         register,
         handleSubmit,
         watch,
-        formState: { errors }
+        formState: { errors, isSubmitting }
     } = useForm();
 
     const onSubmit = async (data) => {
@@ -208,9 +208,10 @@ const RestaurantSignup = () => {
 
                 <button
                     type="submit"
-                    className="w-full py-3.5 bg-[#ff5e00] hover:bg-[#e05200] text-white rounded-lg font-semibold text-sm transition-colors shadow-sm mt-2"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 bg-[#ff5e00] hover:bg-[#e05200] text-white rounded-lg font-semibold text-sm transition-colors shadow-sm mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                    Register Restaurant
+                    {isSubmitting ? "Registering..." : "Register Restaurant"}
                 </button>
             </form>
 

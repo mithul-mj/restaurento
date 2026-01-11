@@ -13,7 +13,7 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
         setValue,
         watch,
         reset,
-        formState: { errors }
+        formState: { errors, isSubmitting }
     } = useForm({
         resolver: zodResolver(singleDishSchema),
         defaultValues: {
@@ -250,9 +250,10 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                         </button>
                         <button
                             type="submit"
-                            className="px-8 py-2.5 bg-[#ff5e00] text-white font-bold rounded-lg hover:bg-[#e05200] transition-colors shadow-lg shadow-orange-100"
+                            disabled={isSubmitting}
+                            className="px-8 py-2.5 bg-[#ff5e00] text-white font-bold rounded-lg hover:bg-[#e05200] transition-colors shadow-lg shadow-orange-100 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            Save
+                            {isSubmitting ? "Saving..." : "Save"}
                         </button>
                     </div>
                 </form>

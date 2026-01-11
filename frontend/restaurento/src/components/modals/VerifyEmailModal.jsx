@@ -17,7 +17,7 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm();
 
   useEffect(() => {
@@ -131,8 +131,9 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-[#ff5e00] hover:bg-[#e05200] text-white rounded-lg font-bold text-base transition-colors shadow-lg shadow-orange-200">
-            Verify
+            disabled={isSubmitting}
+            className="w-full py-3.5 bg-[#ff5e00] hover:bg-[#e05200] text-white rounded-lg font-bold text-base transition-colors shadow-lg shadow-orange-200 disabled:opacity-70 disabled:cursor-not-allowed">
+            {isSubmitting ? "Verifying..." : "Verify"}
           </button>
         </form>
 

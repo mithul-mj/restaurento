@@ -17,8 +17,9 @@ import authService from "../../services/auth.service";
 import userService from "../../services/user.service";
 
 const Profile = () => {
-  const { user: reduxUser } = useSelector((state) => state.auth);
-  const [user, setUser] = useState(reduxUser);
+  const { user: reduxUser, avatar } = useSelector((state) => state.auth);
+  // Merge Redux user (name/email) with Redux avatar (which is separate)
+  const [user, setUser] = useState({ ...reduxUser, avatar });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const referralCode = "WELCOME50";

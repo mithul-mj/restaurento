@@ -1,5 +1,7 @@
 import { email } from "zod";
 import { User } from "../../models/User.model.js";
+import redisClient from "../../config/redis.js";
+import { env } from "../../config/env.config.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
@@ -84,6 +86,13 @@ export const toggleUserStatus = async (req, res) => {
     user.status = newStatus;
 
     await user.save();
+
+    if (newStatus === "suspended") {
+      await redisClient.set(`blacklist:user:${user._id}`, 'suspended', 'EX', env.REFRESH_TOKEN_MAX_AGE / 1000); //to convert to seconds
+    } else {
+      await redisClient.del(`blacklist:user:${user._id}`);
+    }
+
 
     res.status(200).json({
       message: `User status updated to ${newStatus}`,

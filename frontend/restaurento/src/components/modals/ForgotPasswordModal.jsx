@@ -10,7 +10,7 @@ const ForgotPasswordModal = ({ onClose }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -71,8 +71,9 @@ const ForgotPasswordModal = ({ onClose }) => {
 
           <button
             type="submit"
-            className="w-full bg-[#FF6616] hover:bg-[#E55A12] text-white font-bold py-4 rounded-xl transition-colors text-lg shadow-lg hover:shadow-xl transform active:scale-95 duration-200">
-            Send Reset Link
+            disabled={isSubmitting}
+            className="w-full bg-[#FF6616] hover:bg-[#E55A12] text-white font-bold py-4 rounded-xl transition-colors text-lg shadow-lg hover:shadow-xl transform active:scale-95 duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
+            {isSubmitting ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 

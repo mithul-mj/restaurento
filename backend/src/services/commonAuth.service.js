@@ -142,6 +142,10 @@ export const verifyAndRefreshToken = async (Model, token) => {
       throw new ApiError(401, "Invalid refresh token");
     }
 
+    if (account.status === "suspended") {
+      throw new ApiError(403, "Your account has been suspended. Please contact support.");
+    }
+
     const accessToken = account.generateAccessToken();
     const newRefreshToken = account.generateRefreshToken();
 
