@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { showToast, showError, showConfirm } from "../../utils/alert";
 import { useForm } from "react-hook-form";
 import { Bell, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -50,10 +51,11 @@ const EditProfile = () => {
             avatar: response.user.avatar,
           })
         );
-        alert("Profile updated successfully!");
+        showToast("Profile updated successfully!", "success");
       }
     } catch (error) {
       console.error("Update failed", error);
+      showError("Update Failed", "Something went wrong");
     }
   };
 
@@ -208,12 +210,24 @@ const EditProfile = () => {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (window.confirm(`Are you sure you want to reset your password? \nWe will send a password reset link to ${user.email}`)) {
+                      const result = await showConfirm(
+                        "Reset Password?",
+                        `We will send a password reset link to ${user.email}`,
+                        "Yes, Send Link"
+                      );
+                      if (result.isConfirmed) {
                         try {
-                          await authService.forgotPassword({ email: user.email, role: user.role || "USER" });
-                          alert("Password reset link sent to your email!");
+                          await authService.forgotPassword({
+                            email: user.email,
+                            role: user.role || "USER",
+                          });
+                          showToast("Reset Link Sent", "success");
                         } catch (error) {
-                          alert(error.response?.data?.message || "Failed to send reset link");
+                          showError(
+                            "Error",
+                            error.response?.data?.message ||
+                            "Failed to send reset link"
+                          );
                         }
                       }
                     }}

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import crypto from "crypto";
 import { authPlugin } from "./plugins/auth.plugin.js";
 
 const userSchema = new Schema(
@@ -49,11 +50,26 @@ const userSchema = new Schema(
       default: "active",
       required: true,
     },
+    referralCode: {
+      type: String,
+      unique: true,
+    },
   },
   { timestamps: true }
 );
 
-// Apply the authentication plugin
 userSchema.plugin(authPlugin, { role: "USER" });
+
+userSchema.pre("save", function (next) {
+  if (!this.referralCode) {
+    const hash = crypto
+      .createHash("sha256")
+      .update(this._id.toString())
+      .digest("base64url");
+
+    this.referralCode = "RESTO" + hash.slice(0, 6).toUpperCase();
+  }
+  next();
+});
 
 export const User = mongoose.model("User", userSchema);

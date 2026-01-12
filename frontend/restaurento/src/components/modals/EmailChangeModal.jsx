@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { showToast, showSuccess } from "../../utils/alert";
 import { useForm } from "react-hook-form";
 import { X, Mail, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 import userService from "../../services/user.service";
@@ -78,6 +79,7 @@ const EmailChangeModal = ({
                 setStep(2);
                 setEndTime(Date.now() + 120000);
                 setTimeLeft(120);
+                showToast("Verification Code Sent", "success");
             } else {
                 setError("root", { message: response.message || "Failed to send OTP" });
             }
@@ -100,6 +102,7 @@ const EmailChangeModal = ({
             if (response.success) {
                 onEmailUpdated(newEmail);
                 onClose();
+                showSuccess("Email Updated", "Your email address has been successfully changed.");
             } else {
                 setError("root", { message: response.message || "Invalid OTP" });
             }
@@ -138,8 +141,8 @@ const EmailChangeModal = ({
         setTimeLeft(120);
         setEndTime(Date.now() + 120000);
         try {
-            // Re-trigger request
             await userService.requestEmailChange(newEmail);
+            showToast("Code Resent", "success");
         } catch (err) {
             console.error("Resend failed", err);
         }

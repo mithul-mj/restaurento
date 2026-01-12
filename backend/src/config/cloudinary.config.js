@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "restaurento/onboading",
-    allowed_formats: ["jpg", "png", "jpeg", "pdf"],
+    allowed_formats: ["jpg", "png", "jpeg", "pdf", "avif", "webp"],
     transformation: [{ width: 1000, height: 1000, crop: "limit" }],
   },
 });

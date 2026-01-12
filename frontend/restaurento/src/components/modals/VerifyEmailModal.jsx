@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { showToast } from "../../utils/alert";
 import { ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { createPortal } from "react-dom";
@@ -93,6 +94,7 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
                   setTimeLeft(120);
                   setEndTime(Date.now() + 120000);
                   await authService.resendOtp({ email });
+                  showToast("OTP Resent Successfully", "success");
                 }}>
                 Resend Otp
               </span>

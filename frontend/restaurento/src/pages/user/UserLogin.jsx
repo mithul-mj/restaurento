@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { showError, showToast } from "../../utils/alert";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -36,13 +37,14 @@ const UserLogin = () => {
           avatar: response.data.user.avatar,
         })
       );
-
+      showToast("Login Successful", "success");
       navigate(from, { replace: true });
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
       setServerError(message);
+      showError("Login Failed", message);
       console.log("Login failed", error.message);
     }
   };
@@ -59,17 +61,20 @@ const UserLogin = () => {
           avatar: response.data.user.avatar,
         })
       );
+      showToast("Login Successful", "success");
     } catch (error) {
-      setServerError(
+      const message =
         error.response?.data?.message ||
-        "Google login failed. Please try again."
-      );
+        "Google login failed. Please try again.";
+      setServerError(message);
+      showError("Login Failed", message);
     }
   };
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
-    onError: () => setServerError("Google login failed"),
+    onSuccess: handleGoogleSuccess,
+    onError: () => showError("Login Failed", "Google login failed"),
   });
 
   return (

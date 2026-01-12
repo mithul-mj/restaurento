@@ -1,7 +1,7 @@
 import { User } from "../models/User.model.js";
 import { Restaurant } from "../models/Restaurant.model.js";
 import { Admin } from "../models/Admin.model.js";
-import RefreshToken from "../models/RefreshToken.model.js";
+
 import { ApiError } from "../utils/errors/ApiError.js";
 import {
   verifyOtp,

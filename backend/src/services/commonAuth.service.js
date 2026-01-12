@@ -1,6 +1,6 @@
 import bcrypt, { genSalt } from "bcryptjs";
 import jwt from "jsonwebtoken";
-import RefreshToken from "../models/RefreshToken.model.js";
+
 import crypto from "crypto";
 import redisClient from "../config/redis.js";
 import transporter from "../config/nodeMailer.js";
@@ -65,33 +65,12 @@ export const loginAccount = async (Model, email, password, avatar, role) => {
   const accessToken = account.generateAccessToken(role);
   const refreshToken = account.generateRefreshToken(role);
 
-  // Save refresh token to DB - REMOVED per user request
-  // await RefreshToken.create({
-  //   token: refreshToken,
-  //   user: account._id,
-  //   onModel: role,
-  // });
+
 
   return { account, accessToken, refreshToken };
 };
 
-const refreshToken = async (user) => {
-  const newRefreshToken = await generateRefreshToken(user);
-  await RefreshToken.create({
-    token: newRefreshToken,
-    user: user._id,
-    onModel: user.role,
-  });
-};
 
-export const revokeRefreshToken = async (tokenString) => {
-  const result = await RefreshToken.deleteOne({ token: tokenString });
-
-  if (result.deletedCount === 0) {
-    throw new Error("Token not found or already revoked.");
-  }
-  return true;
-};
 
 export const generateOtp = (length = 6) => {
   const max = Math.pow(10, 6);

@@ -14,23 +14,29 @@ export const onboardingSchema = z.object({
 
   tags: z.array(z.string()).optional(),
 
-  slotConfig: z.object({
-    duration: z.coerce.number().default(60),
-    gap: z.coerce.number().default(0),
-  }),
+  slotConfig: z.preprocess(
+    (val) => (typeof val === "string" ? JSON.parse(val) : val),
+    z.object({
+      duration: z.coerce.number().default(60),
+      gap: z.coerce.number().default(0),
+    })
+  ),
 
-  openingHours: z.object({
-    isSameEveryDay: z.boolean().default(false),
-    days: z
-      .array(
-        z.object({
-          startTime: z.string().optional(),
-          endTime: z.string().optional(),
-          isClosed: z.boolean().default(false),
-        })
-      )
-      .length(7, "Opening hours for all 7 days are required"),
-  }),
+  openingHours: z.preprocess(
+    (val) => (typeof val === "string" ? JSON.parse(val) : val),
+    z.object({
+      isSameEveryDay: z.boolean().default(false),
+      days: z
+        .array(
+          z.object({
+            startTime: z.string().optional(),
+            endTime: z.string().optional(),
+            isClosed: z.boolean().default(false),
+          })
+        )
+        .length(7, "Opening hours for all 7 days are required"),
+    })
+  ),
 
   menuItems: z
     .array(

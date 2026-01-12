@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { showError, showToast, showSuccess } from "../../utils/alert";
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -33,28 +34,30 @@ const UserSignup = () => {
             await authService.userSignup(data);
 
             setRegisteredEmail(data.email);
+            showSuccess("Signup Successful", "Please verify your email to continue.");
             setShowVerifyModal(true);
         } catch (error) {
 
             if (error.response?.status === 403) {
                 setRegisteredEmail(data.email);
+                showToast("Please verify your email", "info");
                 setShowVerifyModal(true);
                 return;
             }
 
             const message = error.response?.data?.message || "Something went wrong. Please try again.";
             setServerError(message);
+            showError("Signup Failed", message);
         }
     };
 
     const handleVerifyOtp = async (otp) => {
         try {
             await authService.verifyEmail({ email: registeredEmail, otp, role: 'USER' });
-
+            showToast("Email Verified Successfully", "success");
             navigate('/login');
         } catch (error) {
-
-            alert(error.response?.data?.message || "Verification failed");
+            showError("Verification Failed", error.response?.data?.message || "Verification failed");
         }
     };
 
@@ -65,14 +68,17 @@ const UserSignup = () => {
                 user: response.data.user,
                 role: 'USER'
             }))
+            showToast("Login Successful", "success");
         } catch (error) {
-            setServerError(error.response?.data?.message || "Google login failed. Please try again.");
+            const message = error.response?.data?.message || "Google login failed. Please try again.";
+            setServerError(message);
+            showError("Login Failed", message);
         }
     }
 
     const loginWithGoogle = useGoogleLogin({
         onSuccess: handleGoogleSuccess,
-        onError: () => setServerError("Google login failed")
+        onError: () => showError("Login Failed", "Google login failed")
     })
 
 

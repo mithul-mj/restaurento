@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { showToast, showError, showConfirm } from "../../utils/alert";
 
 import {
   Bell,
   Copy,
-  Share2,
-  LogOut,
-  ChevronRight,
-  User,
   Wallet,
   MapPinIcon,
 } from "lucide-react";
@@ -22,7 +19,7 @@ const Profile = () => {
   const [user, setUser] = useState({ ...reduxUser, avatar });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const referralCode = "WELCOME50";
+  const referralCode = user?.referralCode || "WELCOME50";
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -45,16 +42,26 @@ const Profile = () => {
   const handleCopy = () => {
     navigator.clipboard.writeText(referralCode);
     setCopied(true);
+    showToast("Referral Code Copied", "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleLogout = async () => {
-    try {
-      await authService.logout();
-      dispatch(logout());
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed", error);
+    const result = await showConfirm(
+      "Logout",
+      "Are you sure you want to logout?",
+      "Yes, Logout"
+    );
+    if (result.isConfirmed) {
+      try {
+        await authService.logout();
+        dispatch(logout());
+        showToast("Logged out successfully", "success");
+        navigate("/login");
+      } catch (error) {
+        console.error("Logout failed", error);
+        showError("Logout Failed", "please try again");
+      }
     }
   };
 

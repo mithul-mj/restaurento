@@ -28,7 +28,7 @@ export const submitOnboarding = async (req, res, next) => {
       restaurantLicense: files["restaurantLicense"]?.[0].path || null,
       businessCert: files["businessCert"]?.[0].path || null,
       fssaiCert: files["fssaiCert"]?.[0].path || null,
-      ownerIdCert: files["ownerIdCert"?.[0].path || null],
+      ownerIdCert: files["ownerIdCert"]?.[0]?.path || null,
     };
     const menuItems = [];
     let i = 0;
@@ -45,13 +45,32 @@ export const submitOnboarding = async (req, res, next) => {
       i++;
     }
 
-    const tags = Object.keys(body)
-      .filter((key) => key.startsWith("tags["))
-      .map((key) => body[key]);
+    let tags = [];
+    if (body.tags) {
+      // Case 1: body.tags is already an array or a single value
+      if (Array.isArray(body.tags)) {
+        tags = body.tags;
+      } else {
+        // Case 2: body.tags might be '["Italian", "Pizza"]' string
+        try {
+          const parsed = JSON.parse(body.tags);
+          if (Array.isArray(parsed)) tags = parsed;
+          else tags = [body.tags];
+        } catch (e) {
+          tags = [body.tags];
+        }
+      }
+    } else {
+      // Case 3: tags[0], tags[1] format
+      tags = Object.keys(body)
+        .filter((key) => key.startsWith("tags["))
+        .map((key) => body[key])
+        .flat();
+    }
 
     const restaurantData = {
-      name: body.restaurantName,
-      phone: body.restaurantPhone,
+      restaurantName: body.restaurantName,
+      restaurantPhone: body.restaurantPhone,
       description: body.description,
       address: body.address,
       location: {
@@ -73,7 +92,7 @@ export const submitOnboarding = async (req, res, next) => {
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       user._id,
       restaurantData,
-      { new: true, runValidators: true }
+      { new: true }
     );
 
     console.log("=== DEBUG INFO ===");

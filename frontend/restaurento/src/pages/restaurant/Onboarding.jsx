@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { onboardingSchema, stepSchemas } from "../../schemas/onboardingSchema";
 import { Check } from "lucide-react";
 import axios from "axios";
+import { showSuccess, showError, showConfirm } from "../../utils/alert.js";
 
 
 import Step1BasicInfo from "../../components/onboarding/Step1BasicInfo";
@@ -75,8 +76,15 @@ const Onboarding = () => {
     }
 
     const onSubmit = async (data) => {
-        const formData = new FormData();
+        const result = await showConfirm(
+            "Submit Application?",
+            "Are you sure you want to submit your restaurant details? You won't be able to edit them until approved.",
+            "Yes, Submit"
+        );
 
+        if (!result.isConfirmed) return;
+
+        const formData = new FormData();
         formData.append("restaurantName", data.restaurantName);
         formData.append("restaurantPhone", data.restaurantPhone);
         formData.append("description", data.description);
@@ -122,11 +130,12 @@ const Onboarding = () => {
 
         try {
             await restaurantService.onboard(formData);
+            await showSuccess("Submission Successful!", "Your restaurant application has been submitted and is pending approval.");
             navigate('/restaurant/dashboard');
         } catch (error) {
             console.error("Onboarding failed:", error);
-            const message = error.response?.data?.message || "Failed to submit onboarding details. Please try again.";
-            alert(message);
+            const message = error.response?.data?.message || error.response?.data?.error || "Failed to submit onboarding details. Please try again.";
+            showError("Submission Failed", message);
         }
     }
 

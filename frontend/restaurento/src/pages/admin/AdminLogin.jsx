@@ -38,7 +38,7 @@ const AdminLogin = () => {
         <AuthLayout
             title="Administrator Login"
             subtitle="Please enter your credentials to access the admin portal."
-            image="https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=2070&auto=format&fit=crop"
+            image="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop"
             reverse={true}
         >
             {serverError && (

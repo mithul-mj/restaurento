@@ -1,4 +1,5 @@
 import React from "react";
+import { showSuccess, showError, showToast } from "../../utils/alert";
 import { useForm } from "react-hook-form";
 import { ArrowLeft } from "lucide-react"; // Optional: using lucide-react for the back arrow
 import { createPortal } from "react-dom";
@@ -23,8 +24,16 @@ const ForgotPasswordModal = ({ onClose }) => {
 
       await authService.forgotPassword({ email: data.email, role });
       onClose();
+      showSuccess(
+        "Link Sent!",
+        "Check your email to reset your password"
+      );
     } catch (error) {
       console.error("Forgot password error:", error);
+      showError(
+        "Request Failed",
+        error.response?.data?.message || "Failed to send reset link"
+      );
     }
   };
 

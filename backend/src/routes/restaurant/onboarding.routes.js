@@ -7,9 +7,10 @@ import { onboardingSchema } from "../../validators/restaurantValidation.js";
 const router = express.Router();
 
 router.post(
-    "/complete-onboarding", validate(onboardingSchema),
+    "/complete-onboarding",
     verifyJWT,
     onboardingUploads,
+    validate(onboardingSchema),
     submitOnboarding
 );
 
