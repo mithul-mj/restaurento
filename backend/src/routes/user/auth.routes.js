@@ -5,7 +5,7 @@ import {
   logout,
   googleAuthUser,
 } from "../../controllers/user/userAuth.controller.js";
-import { verifyJWT } from "../../middlewares/auth.middleware.js";
+import { verifyRole } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import {
   registerSchema,

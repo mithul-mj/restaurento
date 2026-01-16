@@ -60,3 +60,16 @@ export const onboardingSchema = z.object({
       ownerIdCert: z.array(z.any()).min(1, "Owner ID Certificate is required"),
     }),
 });
+
+export const preApprovalSchema = z.object({
+  restaurantName: z.string().min(3, "Restaurant Name must be at least 3 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  latitude: z.coerce.number().optional(),
+  longitude: z.coerce.number().optional(),
+  files: z.object({
+    restaurantLicense: z.array(z.any()).min(1, "Restaurant License is required"),
+    businessCert: z.array(z.any()).min(1, "Business Certificate is required"),
+    fssaiCert: z.array(z.any()).min(1, "FSSAI Certificate is required"),
+    ownerIdCert: z.array(z.any()).min(1, "Owner ID is required"),
+  })
+});

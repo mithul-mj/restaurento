@@ -73,7 +73,7 @@ const UserLogin = () => {
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
-    onSuccess: handleGoogleSuccess,
+
     onError: () => showError("Login Failed", "Google login failed"),
   });
 

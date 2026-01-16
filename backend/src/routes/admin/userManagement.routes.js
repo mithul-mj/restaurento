@@ -3,11 +3,12 @@ import {
   getAllUsers,
   toggleUserStatus,
 } from "../../controllers/admin/userManagement.controller.js";
-import { verifyJWT } from "../../middlewares/auth.middleware.js";
+import { verifyRole } from "../../middlewares/auth.middleware.js";
+import ROLES from "../../constants/roles.js";
 
 const router = Router();
 
-router.use(verifyJWT);
+router.use(verifyRole(ROLES.ADMIN));
 
 router.route("/").get(getAllUsers);
 

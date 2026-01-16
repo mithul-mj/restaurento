@@ -22,7 +22,13 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
-        await authService.refreshToken();
+        let role = "USER";
+        if (originalRequest.url.includes("admin")) role = "ADMIN";
+        else if (originalRequest.url.includes("restaurant")) role = "RESTAURANT";
+
+        console.log(`Refreshing token for role: ${role} based on URL: ${originalRequest.url}`);
+
+        await authService.refreshToken(role);
 
         return api(originalRequest);
       } catch (refreshError) {

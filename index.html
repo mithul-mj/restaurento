@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>API Key Check</title>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+            background-color: #cccccc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h3>If you see a map below, your API key is WORKING.</h3>
+    <div id="map"></div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlIaBUm74EBURy4Ehxs5pu2HASKVeECZ8&callback=initMap"
+        async defer></script>
+
+    <script>
+        function initMap() {
+            // New York Coordinates
+            const myLatLng = { lat: 40.7128, lng: -74.006 };
+
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: myLatLng,
+            });
+
+            // A simple marker that doesn't need a Map ID
+            new google.maps.Marker({
+                position: myLatLng,
+                map: map,
+                title: "Hello World!",
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,9 +1,34 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Store, Users, Flag, Calendar, DollarSign, Megaphone, Menu, X, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LayoutDashboard, Store, Users, Flag, Calendar, DollarSign, Megaphone, Menu, X, ChevronRight, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../redux/slices/authSlice';
+import authService from '../../services/auth.service';
+import { showConfirm, showToast } from '../../utils/alert';
 
 const AdminDashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        const result = await showConfirm(
+            "Logout",
+            "Are you sure you want to logout?",
+            "Yes, Logout"
+        );
+        if (result.isConfirmed) {
+            try {
+                await authService.logout("ADMIN");
+                showToast("Logged out successfully", "success");
+            } catch (error) {
+                console.error("Logout failed", error);
+            } finally {
+                dispatch(logout());
+                navigate("/admin/login");
+            }
+        }
+    };
 
     const menuItems = [
         { icon: LayoutDashboard, label: "Dashboard", active: true, link: "/admin/dashboard" },
@@ -79,6 +104,9 @@ const AdminDashboard = () => {
                                 <p className="text-sm font-bold text-gray-900 truncate">Admin Name</p>
                                 <p className="text-xs text-gray-400 truncate">Administrator</p>
                             </div>
+                            <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors" title="Logout">
+                                <LogOut size={20} />
+                            </button>
                         </div>
                     </div>
                 </div>

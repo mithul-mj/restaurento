@@ -15,6 +15,13 @@ export const onboardingUploads = upload.fields([
   })),
 ]);
 
+export const preApprovalUploads = upload.fields([
+  { name: "restaurantLicense", maxCount: 1 },
+  { name: "businessCert", maxCount: 1 },
+  { name: "fssaiCert", maxCount: 1 },
+  { name: "ownerIdCert", maxCount: 1 },
+]);
+
 export const submitOnboarding = async (req, res, next) => {
   try {
     const { body, files, user } = req;

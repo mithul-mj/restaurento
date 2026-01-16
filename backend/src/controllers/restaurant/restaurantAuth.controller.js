@@ -33,18 +33,20 @@ export const loginRestaurant = async (req, res, next) => {
       req.body
     );
 
-    res.cookie("accessToken", accessToken, {
+    res.cookie("restaurant_accessToken", accessToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
       maxAge: env.ACCESS_TOKEN_MAX_AGE,
+      path: "/",
     });
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("restaurant_refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
+      path: "/",
     });
 
     return res.status(200).json({
@@ -55,6 +57,7 @@ export const loginRestaurant = async (req, res, next) => {
         fullName: account.fullName,
         email: account.email,
         role: ROLES.RESTAURANT,
+        status: account.status,
       },
       tokens: {
         accessToken,
@@ -105,18 +108,20 @@ export const googleAuthRestaurant = async (req, res, next) => {
     const accessToken = restaurant.generateAccessToken();
     const refreshToken = restaurant.generateRefreshToken();
 
-    res.cookie("accessToken", accessToken, {
+    res.cookie("restaurant_accessToken", accessToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
       maxAge: env.ACCESS_TOKEN_MAX_AGE,
+      path: "/",
     });
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("restaurant_refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
+      path: "/",
     });
 
     return res.status(200).json({
@@ -135,6 +140,27 @@ export const googleAuthRestaurant = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Google Auth Restaurant Error:", error);
+    next(error);
+  }
+};
+
+
+export const logout = async (req, res, next) => {
+  try {
+    res.clearCookie("restaurant_accessToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      path: "/",
+    });
+    res.clearCookie("restaurant_refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax", // Protects against CSRF
+      path: "/",
+    });
+    return res.json({ success: true, message: "Logged out" });
+  } catch (error) {
     next(error);
   }
 };

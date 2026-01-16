@@ -52,7 +52,7 @@ const RestaurantSignup = () => {
         try {
             await authService.verifyEmail({ email: registeredEmail, otp, role: 'RESTAURANT' });
 
-            navigate('/login');
+            navigate('restaurant/login');
         } catch (error) {
 
             alert(error.response?.data?.message || "Verification failed");

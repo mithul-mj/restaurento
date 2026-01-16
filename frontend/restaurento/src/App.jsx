@@ -21,7 +21,14 @@ import PublicRoutes from "./components/routes/PublicRoutes";
 import authService from "./services/auth.service";
 import { setCredentials } from "./redux/slices/authSlice";
 import ResetPassword from "./pages/ResetPassword";
+import { Toaster } from "sonner";
 import "./App.css";
+import UserLayout from "./components/layouts/UserLayout";
+import RestaurantSettings from "./pages/restaurant/RestaurentSettings";
+import PreApproval from "./pages/restaurant/PreApproval";
+import VerificationPending from "./pages/restaurant/VerificationPending";
+import RestaurantStatusGuard from "./components/routes/RestaurantStatusGuard";
+
 
 function App() {
   const dispatch = useDispatch();
@@ -30,7 +37,12 @@ function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const response = await authService.refreshToken();
+        let role = "USER";
+        if (window.location.pathname.startsWith("/admin")) role = "ADMIN";
+        else if (window.location.pathname.startsWith("/restaurant")) role = "RESTAURANT";
+
+        console.log("App.jsx: Refreshing token for role:", role); // DEBUG LOG
+        const response = await authService.refreshToken(role);
         if (!response.data.role) {
           throw new Error("Role missing in refresh response");
         }
@@ -42,7 +54,7 @@ function App() {
           })
         );
       } catch (error) {
-        if (error.response?.status !== 401) {
+        if (error.response?.status !== 401 && error.code !== "ECONNABORTED") {
           console.error("Auth init failed:", error);
         }
         dispatch(setAuthFailed());
@@ -61,6 +73,7 @@ function App() {
 
   return (
     <Router>
+      <Toaster position="top-right" richColors />
       <Routes>
         <Route element={<PublicRoutes />}>
           <Route path="/login" element={<UserLogin />} />
@@ -72,21 +85,28 @@ function App() {
 
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route element={<ProtectedRoutes allowedRoles={["USER"]} />}>
+        <Route element={<UserLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route element={<ProtectedRoutes allowedRoles={["USER"]} />}>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["RESTAURANT"]} />}>
-          <Route
-            path="/restaurant/dashboard"
-            element={<RestaurantDashboard />}
-          />
-          <Route
-            path="/restaurant/onboarding"
-            element={<RestaurantOnboarding />}
-          />
+          <Route element={< RestaurantStatusGuard />}>
+            <Route
+              path="/restaurant/dashboard"
+              element={<RestaurantDashboard />}
+            />
+            <Route path="/restaurant/pre-approval" element={<PreApproval />} />
+            <Route path="/restaurant/verification-pending" element={<VerificationPending />} />
+            <Route path="/restaurant/settings" element={<RestaurantSettings />} />
+            <Route
+              path="/restaurant/onboarding"
+              element={<RestaurantOnboarding />}
+            />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>

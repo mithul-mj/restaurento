@@ -7,20 +7,22 @@ import restaurantAuthRoutes from "./restaurant/auth.routes.js";
 import errorHandler from "../middlewares/errorHandler.middleware.js";
 import commonAuthRoutes from "./common/auth.routes.js";
 import onboardingRoutes from "./restaurant/onboarding.routes.js";
+import restaurantRoutes from "./restaurant/restaurant.routes.js";
 import adminUserMangementRoutes from "../routes/admin/userManagement.routes.js";
 
 const router = express.Router();
 
+// Specific routes first to prevent broad matches from intercepting
 router.use("/api/v1/auth/", commonAuthRoutes);
-
-router.use("/api/v1/", userAuthRoutes);
-router.use("/api/v1/", userProfileRoutes);
-
+router.use("/api/v1/admin/users", adminUserMangementRoutes);
+router.use("/api/v1/admin", adminAuthRoutes);
 router.use("/api/v1/restaurant", restaurantAuthRoutes);
 router.use("/api/v1/restaurant", onboardingRoutes);
+router.use("/api/v1/restaurant", restaurantRoutes);
 
-router.use("/api/v1/admin", adminAuthRoutes);
-router.use("/api/v1/admin/users", adminUserMangementRoutes);
+router.use("/api/v1/", userAuthRoutes);
+// User profile routes last as they likely have broad matching or looser permissions
+router.use("/api/v1/", userProfileRoutes);
 
 
 router.use(errorHandler);

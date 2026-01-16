@@ -10,16 +10,21 @@ const menuSchema = new Schema({
   isAvailable: { type: Boolean, default: true },
 });
 
-const dayHoursSchema = new Schema({
-  // No dayName - index determines day (0=Monday, 1=Tuesday, etc.)
-  startTime: { type: String }, // "09:00" format
-  endTime: { type: String },   // "22:00" format
-  isClosed: { type: Boolean, default: false },
-  generatedSlots: [{
-    startTime: { type: String },
-    endTime: { type: String }
-  }]
-}, { _id: false });
+const dayHoursSchema = new Schema(
+  {
+    // No dayName - index determines day (0=Monday, 1=Tuesday, etc.)
+    startTime: { type: String }, // "09:00" format
+    endTime: { type: String }, // "22:00" format
+    isClosed: { type: Boolean, default: false },
+    generatedSlots: [
+      {
+        startTime: { type: String },
+        endTime: { type: String },
+      },
+    ],
+  },
+  { _id: false }
+);
 
 const restaurantSchema = new Schema(
   {
@@ -60,12 +65,12 @@ const restaurantSchema = new Schema(
 
     openingHours: {
       isSameEveryDay: { type: Boolean, default: false },
-      days: [dayHoursSchema] // Array of 7 days (index 0=Monday to 6=Sunday)
+      days: [dayHoursSchema], // Array of 7 days (index 0=Monday to 6=Sunday)
     },
 
     slotConfig: {
       duration: { type: Number, default: 60 }, // Minutes per slot
-      gap: { type: Number, default: 0 },       // Gap between slots
+      gap: { type: Number, default: 0 }, // Gap between slots
     },
 
     // Onboarding Step 2: Seating & Location
@@ -107,9 +112,12 @@ const restaurantSchema = new Schema(
     // System fields
     status: {
       type: String,
-      enum: ["pending", "approved", "suspended"],
-      default: "pending",
+      enum: ["new", "pending", "approved", "suspended", "rejected"],
+      default: "new",
       required: true,
+    },
+    rejectionReason: {
+      type: String,
     },
     isCurrentlyOpen: {
       type: Boolean,

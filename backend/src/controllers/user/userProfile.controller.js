@@ -21,6 +21,7 @@ export const getProfile = async (req, res, next) => {
         address: user.location.address,
         createdAt: user.createdAt,
         isEmailVerified: user.isEmailVerified,
+        referralCode: user.referralCode,
       },
     });
   } catch (error) {

@@ -39,23 +39,23 @@ export const showConfirm = (title, text, confirmButtonText = "Yes, do it!") => {
     });
 };
 
-export const showToast = (title, icon = "success") => {
-    const Toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-        },
-        customClass: {
-            popup: "dark:bg-gray-800 dark:text-white",
-        },
-    });
-    Toast.fire({
-        icon,
-        title,
-    });
+import { toast } from "sonner";
+
+export const showToast = (message, type = "success") => {
+    switch (type) {
+        case "success":
+            toast.success(message);
+            break;
+        case "error":
+            toast.error(message);
+            break;
+        case "info":
+            toast.info(message);
+            break;
+        case "warning":
+            toast.warning(message);
+            break;
+        default:
+            toast(message);
+    }
 };

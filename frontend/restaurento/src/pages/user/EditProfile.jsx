@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { showToast, showError, showConfirm } from "../../utils/alert";
 import { useForm } from "react-hook-form";
 import { Bell, Camera } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import userService from "../../services/user.service";
 import authService from "../../services/auth.service";
@@ -10,8 +10,9 @@ import { setCredentials } from "../../redux/slices/authSlice";
 import EmailChangeModal from "../../components/modals/EmailChangeModal";
 
 const EditProfile = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user, avatar } = useSelector((state) => state.auth);
+  const { user, avatar, role } = useSelector((state) => state.auth);
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -49,9 +50,11 @@ const EditProfile = () => {
           setCredentials({
             user: { ...user, fullName: response.user.fullName },
             avatar: response.user.avatar,
+            role,
           })
         );
         showToast("Profile updated successfully!", "success");
+        navigate("/profile");
       }
     } catch (error) {
       console.error("Update failed", error);
@@ -61,64 +64,7 @@ const EditProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
-      <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round">
-                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
-                <path d="M7 2v20" />
-                <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
-              </svg>
-            </div>
-            <span className="font-bold text-xl text-gray-900 tracking-tight">
-              Restauranto
-            </span>
-          </Link>
-        </div>
 
-        <div className="hidden md:flex items-center gap-8">
-          <Link
-            to="/"
-            className="text-gray-500 hover:text-[#ff5e00] transition-colors">
-            Explore
-          </Link>
-          <Link
-            to="/bookings"
-            className="text-gray-500 hover:text-[#ff5e00] transition-colors">
-            My Bookings
-          </Link>
-          <Link
-            to="/profile"
-            className="text-gray-900 font-medium hover:text-[#ff5e00] transition-colors">
-            Profile
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button className="relative text-gray-500 hover:text-gray-700">
-            <Bell size={20} />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-          </button>
-          <Link
-            to="/profile"
-            className="w-9 h-9 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
-            <img
-              src="https://ui-avatars.com/api/?name=Rishi+Sharma&background=random"
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-          </Link>
-        </div>
-      </nav>
 
       <main className="max-w-3xl mx-auto px-4 md:px-8 py-10">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center md:text-left">
@@ -259,7 +205,7 @@ const EditProfile = () => {
           dispatch(setCredentials({
             user: { ...user, email: newEmail },
             avatar,
-            role: user.role
+            role
           }));
         }}
       />

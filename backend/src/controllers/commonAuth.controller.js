@@ -120,7 +120,19 @@ export const resetPasswordWithLink = async (req, res, next) => {
 
 export const refreshAccessToken = async (req, res, next) => {
   try {
-    const incomingRefreshToken = req.cookies?.refreshToken;
+    let incomingRefreshToken;
+    let role = req.body.role || req.query.role;
+
+    if (role) {
+      if (role === 'ADMIN') incomingRefreshToken = req.cookies.admin_refreshToken;
+      else if (role === 'RESTAURANT') incomingRefreshToken = req.cookies.restaurant_refreshToken;
+      else incomingRefreshToken = req.cookies.user_refreshToken;
+    }
+    else {
+      if (req.cookies.admin_refreshToken) { incomingRefreshToken = req.cookies.admin_refreshToken; role = 'ADMIN'; }
+      else if (req.cookies.restaurant_refreshToken) { incomingRefreshToken = req.cookies.restaurant_refreshToken; role = 'RESTAURANT'; }
+      else if (req.cookies.user_refreshToken) { incomingRefreshToken = req.cookies.user_refreshToken; role = 'USER'; }
+    }
 
     if (!incomingRefreshToken) {
       throw new ApiError(401, "Refresh token is missing");
@@ -129,48 +141,42 @@ export const refreshAccessToken = async (req, res, next) => {
     let decoded;
     try {
       decoded = jwt.verify(incomingRefreshToken, env.JWT_REFRESH_SECRET);
-      console.log("[Refresh] Decoded Token:", decoded);
     } catch (err) {
-      console.error("[Refresh] Token verification failed:", err.message);
       throw new ApiError(401, "Invalid refresh token");
     }
 
-    let account = null;
-    let role = decoded.role;
-    console.log("[Refresh] Detected Role:", role);
-
-    if (role) {
-      const Model = getModelByRole(role);
-      if (Model) {
-        account = await Model.findById(decoded._id);
-        console.log("[Refresh] Account found by role:", !!account);
-      }
+    if (role && decoded.role !== role) {
+      throw new ApiError(401, "Role mismatch during refresh");
     }
-
-    if (!account) {
-      throw new ApiError(401, "Invalid refresh token");
-    }
+    role = decoded.role;
 
     const Model = getModelByRole(role);
+    if (!Model) throw new ApiError(400, "Invalid role");
 
     const { accessToken, refreshToken } = await verifyAndRefreshToken(
       Model,
       incomingRefreshToken
     );
 
-    res.cookie("accessToken", accessToken, {
+    const cookiePrefix = role === 'ADMIN' ? 'admin_' : role === 'RESTAURANT' ? 'restaurant_' : 'user_';
+
+    res.cookie(`${cookiePrefix}accessToken`, accessToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
       maxAge: env.ACCESS_TOKEN_MAX_AGE,
+      path: "/",
     });
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie(`${cookiePrefix}refreshToken`, refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
+      path: "/",
     });
+
+    const userDetails = await Model.findById(decoded._id);
 
     return res.status(200).json({
       success: true,
@@ -178,11 +184,12 @@ export const refreshAccessToken = async (req, res, next) => {
       accessToken,
       refreshToken,
       user: {
-        _id: account._id,
-        fullName: account.fullName || account.name,
-        email: account.email,
+        _id: userDetails._id,
+        fullName: userDetails.fullName || userDetails.name,
+        email: userDetails.email,
+        avatar: userDetails.avatar,
         role: role,
-        avatar: account.avatar,
+        status: userDetails.status,
       },
       role: role,
     });

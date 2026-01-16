@@ -60,7 +60,7 @@ const userSchema = new Schema(
 
 userSchema.plugin(authPlugin, { role: "USER" });
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", async function () {
   if (!this.referralCode) {
     const hash = crypto
       .createHash("sha256")
@@ -69,7 +69,6 @@ userSchema.pre("save", function (next) {
 
     this.referralCode = "RESTO" + hash.slice(0, 6).toUpperCase();
   }
-  next();
 });
 
 export const User = mongoose.model("User", userSchema);

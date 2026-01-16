@@ -2,51 +2,131 @@
 <html>
 
 <head>
-    <title>Click Map for Address</title>
+    <title>OSM Map Search & Pin</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
     <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
         #map {
             height: 500px;
             width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .data-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #address,
+        #coords {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 2px;
         }
     </style>
 </head>
 
 <body>
 
-    <h3>Click anywhere on the map to see the address</h3>
+    <h2>Map Search & Address Finder</h2>
     <div id="map"></div>
 
-    <script>
-        // 1. Initialize the map
-        var map = L.map('map').setView([20.5937, 78.9629], 5); // Centered on India
+    <div class="info-panel">
+        <div class="data-row">
+            <div class="label">Selected Address:</div>
+            <div id="address">Click the map or search for a place...</div>
+        </div>
+        <div class="data-row">
+            <div class="label">Coordinates (Lat, Lng):</div>
+            <div id="coords">-</div>
+        </div>
+    </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script>
+        // 1. Initialize Map
+        const map = L.map('map').setView([20.5937, 78.9629], 5); // Center of India
+
+        // 2. Add OpenStreetMap Tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
+            attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        var popup = L.popup();
+        let marker;
 
-        // 2. Function to handle clicks
-        function onMapClick(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
+        // 3. Add the Search Bar (Geocoder)
+        const geocoder = L.Control.Geocoder.nominatim();
+        const searchControl = L.Control.geocoder({
+            geocoder: geocoder,
+            defaultMarkGeocode: false
+        })
+            .on('markgeocode', function (e) {
+                const latlng = e.geocode.center;
+                updateMap(latlng, e.geocode.name);
+                map.setView(latlng, 16);
+            })
+            .addTo(map);
 
-            // 3. Fetch address from Nominatim (Free API)
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        // 4. Handle Clicks on Map
+        map.on('click', function (e) {
+            reverseGeocode(e.latlng);
+        });
+
+        function reverseGeocode(latlng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}`)
                 .then(response => response.json())
                 .then(data => {
-                    var address = data.display_name;
-                    popup
-                        .setLatLng(e.latlng)
-                        .setContent("<b>Address:</b><br>" + address)
-                        .openOn(map);
+                    const address = data.display_name || "Address not found";
+                    updateMap(latlng, address);
                 })
-                .catch(err => console.error("Error fetching address:", err));
+                .catch(err => console.error(err));
         }
 
-        map.on('click', onMapClick);
+        // Function to update Marker and Text (Updated to show Lat/Lng)
+        function updateMap(latlng, address) {
+            // Format coordinates to 6 decimal places
+            const lat = latlng.lat.toFixed(6);
+            const lng = latlng.lng.toFixed(6);
+            const coordsString = `${lat}, ${lng}`;
+
+            if (marker) {
+                marker.setLatLng(latlng);
+            } else {
+                marker = L.marker(latlng).addTo(map);
+            }
+
+            // Update UI elements
+            document.getElementById('address').innerText = address;
+            document.getElementById('coords').innerText = coordsString;
+
+            // Update Marker Popup with both Address and Coords
+            marker.bindPopup(`<b>Address:</b> ${address}<br><b>Coords:</b> ${coordsString}`).openPopup();
+        }
     </script>
 </body>
 

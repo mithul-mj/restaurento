@@ -14,12 +14,11 @@ import authService from "../../services/auth.service";
 import userService from "../../services/user.service";
 
 const Profile = () => {
-  const { user: reduxUser, avatar } = useSelector((state) => state.auth);
+  const { user: reduxUser, avatar, referralCode } = useSelector((state) => state.auth);
   // Merge Redux user (name/email) with Redux avatar (which is separate)
-  const [user, setUser] = useState({ ...reduxUser, avatar });
+  const [user, setUser] = useState({ ...reduxUser, avatar, referralCode });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const referralCode = user?.referralCode || "WELCOME50";
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -40,7 +39,7 @@ const Profile = () => {
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(referralCode);
+    navigator.clipboard.writeText(user.referralCode);
     setCopied(true);
     showToast("Referral Code Copied", "success");
     setTimeout(() => setCopied(false), 2000);
@@ -54,80 +53,20 @@ const Profile = () => {
     );
     if (result.isConfirmed) {
       try {
-        await authService.logout();
-        dispatch(logout());
+        await authService.logout("USER");
         showToast("Logged out successfully", "success");
-        navigate("/login");
       } catch (error) {
         console.error("Logout failed", error);
-        showError("Logout Failed", "please try again");
+      } finally {
+        dispatch(logout());
+        navigate("/login");
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
-      <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round">
-                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
-                <path d="M7 2v20" />
-                <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
-              </svg>
-            </div>
-            <span className="font-bold text-xl text-gray-900 tracking-tight">
-              Restauranto
-            </span>
-          </Link>
-        </div>
 
-        <div className="hidden md:flex items-center gap-8">
-          <Link
-            to="/"
-            className="text-gray-500 hover:text-[#ff5e00] transition-colors">
-            Explore
-          </Link>
-          <Link
-            to="/bookings"
-            className="text-gray-500 hover:text-[#ff5e00] transition-colors">
-            My Bookings
-          </Link>
-          <Link
-            to="/profile"
-            className="text-gray-900 font-medium hover:text-[#ff5e00] transition-colors">
-            Profile
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button className="relative text-gray-500 hover:text-gray-700">
-            <Bell size={20} />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-          </button>
-          <div className="w-9 h-9 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
-            <img
-              src={
-                user?.avatar ||
-                "https://ui-avatars.com/api/?name=" +
-                (user?.fullName || "User") +
-                "&background=random"
-              }
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </nav>
 
       <main className="max-w-4xl mx-auto px-4 md:px-8 py-10">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center md:text-left">
@@ -166,13 +105,15 @@ const Profile = () => {
                 Joined in{" "}
                 {user?.createdAt
                   ? new Date(user.createdAt).getFullYear()
-                  : "2023"}
+                  : "0000"}
               </p>
             </div>
             <div>
-              <button className="px-5 py-2 bg-[#fff5eb] text-[#ff5e00] text-sm font-semibold rounded-lg hover:bg-[#ffe0cc] transition-colors">
-                Edit Profile
-              </button>
+              <Link to="/edit-profile">
+                <button className="px-5 py-2 bg-[#fff5eb] text-[#ff5e00] text-sm font-semibold rounded-lg hover:bg-[#ffe0cc] transition-colors">
+                  Edit Profile
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -187,7 +128,7 @@ const Profile = () => {
             </div>
             <div className="text-center sm:text-right">
               <div className="text-3xl font-extrabold text-gray-900">
-                ₹{user?.walletBalance ?? 20}
+                ₹{user?.walletBalance ?? 0}
               </div>
               <button className="text-[#ff5e00] text-xs font-bold hover:underline">
                 View Transactions
@@ -224,7 +165,7 @@ const Profile = () => {
 
                 <div className="flex items-center bg-[#f5f5f5] rounded-lg p-1.5 border border-dashed border-gray-300">
                   <span className="flex-1 px-4 font-mono font-bold text-gray-700 tracking-wider text-sm">
-                    {referralCode}
+                    {user.referralCode}
                   </span>
                   <button
                     onClick={handleCopy}

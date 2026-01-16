@@ -29,13 +29,18 @@ const authService = {
     const response = await api.post("/auth/resend-otp", data);
     return response;
   },
-  refreshToken: async () => {
-    const response = await api.post("/auth/refresh-token");
+  refreshToken: async (role) => {
+    const response = await api.post("/auth/refresh-token", { role: role?.toUpperCase() });
     return response;
   },
-  logout: async () => {
-    const response = await api.post("/logout");
-    return response;
+  logout: async (role = "USER") => {
+    if (role === 'ADMIN') {
+      return await api.post("/admin/logout");
+    } else if (role === 'RESTAURANT') {
+      return await api.post("/restaurant/logout");
+    } else {
+      return await api.post("/logout");
+    }
   },
   forgotPassword: async (data) => {
     const response = await api.patch("/auth/forgot-password", data);

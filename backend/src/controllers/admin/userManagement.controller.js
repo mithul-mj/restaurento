@@ -2,6 +2,7 @@ import { email } from "zod";
 import { User } from "../../models/User.model.js";
 import redisClient from "../../config/redis.js";
 import { env } from "../../config/env.config.js";
+import ROLES from "../../constants/roles.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
@@ -88,9 +89,9 @@ export const toggleUserStatus = async (req, res) => {
     await user.save();
 
     if (newStatus === "suspended") {
-      await redisClient.set(`blacklist:user:${user._id}`, 'suspended', 'EX', env.REFRESH_TOKEN_MAX_AGE / 1000); //to convert to seconds
+      await redisClient.set(`blacklist:${ROLES.USER}:${user._id}`, 'suspended', 'EX', env.REFRESH_TOKEN_MAX_AGE / 1000); //to convert to seconds
     } else {
-      await redisClient.del(`blacklist:user:${user._id}`);
+      await redisClient.del(`blacklist:${ROLES.USER}:${user._id}`);
     }
 
 
