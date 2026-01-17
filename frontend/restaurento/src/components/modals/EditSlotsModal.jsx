@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X, Trash2, Clock } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 
+import { minutesToTime } from '../../utils/timeUtils';
+
 // Day names constant - index determines the day (0=Monday, 1=Tuesday, etc.)
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const EditSlotsModal = ({ onClose }) => {
@@ -15,8 +17,14 @@ const EditSlotsModal = ({ onClose }) => {
     const days = openingHours?.days || [];
 
     const formatTime = (time) => {
-        if (!time) return "";
-        const [h, m] = time.split(':');
+        if (time === undefined || time === null) return "";
+
+        let timeStr = time;
+        if (typeof time === 'number') {
+            timeStr = minutesToTime(time);
+        }
+
+        const [h, m] = timeStr.toString().split(':');
         const hour = parseInt(h, 10);
         const ampm = hour >= 12 ? 'PM' : 'AM';
         const hour12 = hour % 12 || 12;

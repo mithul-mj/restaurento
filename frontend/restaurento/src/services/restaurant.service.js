@@ -10,11 +10,7 @@ const restaurantService = {
         return response.data;
     },
     preApproval: async (formData) => {
-        const response = await api.post("/restaurant/pre-approval", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
+        const response = await api.post("/restaurant/pre-approval", formData);
         return response.data;
     },
     getProfile: async () => {

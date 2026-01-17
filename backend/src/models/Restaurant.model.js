@@ -18,8 +18,8 @@ const dayHoursSchema = new Schema(
     isClosed: { type: Boolean, default: false },
     generatedSlots: [
       {
-        startTime: { type: String },
-        endTime: { type: String },
+        startTime: { type: Number },
+        endTime: { type: Number },
       },
     ],
   },
@@ -129,6 +129,10 @@ const restaurantSchema = new Schema(
     },
     refreshToken: {
       type: String,
+    },
+    isOnboardingCompleted: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

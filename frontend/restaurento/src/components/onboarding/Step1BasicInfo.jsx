@@ -101,17 +101,6 @@ const Step1BasicInfo = () => {
             <div className="space-y-6">
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">Restaurant Name</label>
-                    <input
-                        {...register("restaurantName")}
-                        className="w-full p-4 rounded-xl bg-[#FFFBF7] border border-orange-100 focus:bg-white focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-400"
-                        placeholder="e.g. The Cozy Italian Corner"
-                    />
-                    {errors.restaurantName && <p className="text-red-500 text-xs mt-1 font-medium">{errors.restaurantName.message}</p>}
-                </div>
-
-
-                <div>
                     <label className="block text-sm font-bold text-gray-800 mb-2">Restaurant Description</label>
                     <textarea
                         {...register("description")}
@@ -123,15 +112,7 @@ const Step1BasicInfo = () => {
                 </div>
 
 
-                <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">Restaurant Phone No</label>
-                    <input
-                        {...register("restaurantPhone")}
-                        className="w-full p-4 rounded-xl bg-[#FFFBF7] border border-orange-100 focus:bg-white focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-400"
-                        placeholder="+1 234 567 890"
-                    />
-                    {errors.restaurantPhone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.restaurantPhone.message}</p>}
-                </div>
+
 
 
                 <div className="p-1">

@@ -1,30 +1,29 @@
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useForm, FormProvider } from "react-hook-form";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { onboardingSchema, stepSchemas } from "../../schemas/onboardingSchema";
 import { Check } from "lucide-react";
-import axios from "axios";
 import { showSuccess, showError, showConfirm } from "../../utils/alert.js";
+import { updateUser } from "../../redux/slices/authSlice.js";
 
 
 import Step1BasicInfo from "../../components/onboarding/Step1BasicInfo";
 import Step2Seating from "../../components/onboarding/Step2Seating";
-import Step3Legal from "../../components/onboarding/Step3Legal";
 import Step4Menu from "../../components/onboarding/Step4Menu";
 import Step5Review from "../../components/onboarding/Step5Review";
 import restaurantService from '../../services/restaurant.service.js'
 
-const STEPS = ["Basic Info", "Seating & Photos", "Legal", "Menu", "Review"];
+const STEPS = ["Basic Info", "Seating & Photos", "Menu", "Review"];
 
 const Onboarding = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [currentStep, setCurrentStep] = useState(0);
     const methods = useForm({
         resolver: zodResolver(onboardingSchema),
         defaultValues: {
-            restaurantName: "",
-            restaurantPhone: "",
             description: "",
             tags: [],
             openingHours: {
@@ -45,13 +44,6 @@ const Onboarding = () => {
             },
             totalSeats: 0,
             images: [],
-            address: "",
-            latitude: 0,
-            longitude: 0,
-            restaurantLicense: null,
-            businessCert: null,
-            fssaiCert: null,
-            ownerIdCert: null,
             menuItems: [],
             slotPrice: 0,
             termsAccepted: false
@@ -85,15 +77,9 @@ const Onboarding = () => {
         if (!result.isConfirmed) return;
 
         const formData = new FormData();
-        formData.append("restaurantName", data.restaurantName);
-        formData.append("restaurantPhone", data.restaurantPhone);
         formData.append("description", data.description);
-        formData.append("address", data.address);
         formData.append("totalSeats", data.totalSeats);
         formData.append("slotPrice", data.slotPrice);
-
-        formData.append("latitude", data.latitude);
-        formData.append("longitude", data.longitude);
 
         formData.append("slotConfig", JSON.stringify(data.slotConfig));
 
@@ -106,11 +92,6 @@ const Onboarding = () => {
                 formData.append("images", file);
             });
         }
-
-        if (data.restaurantLicense && data.restaurantLicense.length > 0) formData.append("restaurantLicense", data.restaurantLicense[0]);
-        if (data.businessCert && data.businessCert.length > 0) formData.append("businessCert", data.businessCert[0]);
-        if (data.fssaiCert && data.fssaiCert.length > 0) formData.append("fssaiCert", data.fssaiCert[0]);
-        if (data.ownerIdCert && data.ownerIdCert.length > 0) formData.append("ownerIdCert", data.ownerIdCert[0]);
 
         data.menuItems.forEach((item, index) => {
             formData.append(`menuItems[${index}].name`, item.name);
@@ -131,6 +112,7 @@ const Onboarding = () => {
         try {
             await restaurantService.onboard(formData);
             await showSuccess("Submission Successful!", "Your restaurant application has been submitted and is pending approval.");
+            dispatch(updateUser({ isOnboardingCompleted: true }));
             navigate('/restaurant/dashboard');
         } catch (error) {
             console.error("Onboarding failed:", error);
@@ -168,12 +150,9 @@ const Onboarding = () => {
                                 <Step2Seating />
                             </div>
                             <div className={currentStep === 2 ? "block" : "hidden"}>
-                                <Step3Legal />
-                            </div>
-                            <div className={currentStep === 3 ? "block" : "hidden"}>
                                 <Step4Menu />
                             </div>
-                            <div className={currentStep === 4 ? "block" : "hidden"}>
+                            <div className={currentStep === 3 ? "block" : "hidden"}>
                                 <Step5Review />
                             </div>
 
@@ -195,7 +174,7 @@ const Onboarding = () => {
                                     >
                                         Next Step
                                     </button>
-                                ) : currentStep !== 4 ? (
+                                ) : (
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
@@ -203,7 +182,7 @@ const Onboarding = () => {
                                     >
                                         {isSubmitting ? "Submitting..." : "Finish Setup"}
                                     </button>
-                                ) : null}
+                                )}
                             </div>
                         </form>
                     </FormProvider>

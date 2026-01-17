@@ -32,6 +32,7 @@ const PreApproval = () => {
                     setRejectionReason(restaurant.rejectionReason);
 
                     setValue('restaurantName', restaurant.restaurantName);
+                    setValue('restaurantPhone', restaurant.restaurantPhone);
                     setValue('address', restaurant.address);
                     if (restaurant.location?.coordinates) {
                         setValue('longitude', restaurant.location.coordinates[0]);
@@ -72,6 +73,7 @@ const PreApproval = () => {
             try {
                 const formData = new FormData();
                 formData.append("restaurantName", data.restaurantName);
+                formData.append("restaurantPhone", data.restaurantPhone);
                 formData.append("address", data.address);
                 if (data.latitude) formData.append("latitude", data.latitude);
                 if (data.longitude) formData.append("longitude", data.longitude);
@@ -120,12 +122,19 @@ const PreApproval = () => {
                                         Basic Information
                                     </h3>
 
-                                    <div className="grid md:grid-cols gap-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
                                         <FormInput
                                             name="restaurantName"
                                             label="Restaurant Name"
                                             placeholder="e.g. The Gourmet Kitchen"
                                             icon={Building}
+                                            required
+                                        />
+                                        <FormInput
+                                            name="restaurantPhone"
+                                            label="Restaurant Phone"
+                                            placeholder="e.g. +1234567890"
+                                            icon={Building} // or Phone icon if available, but Building is fine for now as placeholder
                                             required
                                         />
                                     </div>

@@ -3,9 +3,8 @@ import { Restaurant } from "../../models/Restaurant.model.js";
 
 export const preApprovalRestaurant = async (req, res, next) => {
     try {
-        const { restaurantName, address, latitude, longitude } = req.body;
+        const { restaurantName, restaurantPhone, address, latitude, longitude } = req.body;
         const { restaurantLicense, businessCert, fssaiCert, ownerIdCert } = req.files;
-        // Check for existing documents to preserve them if not re-uploaded
         const currentRestaurant = await Restaurant.findById(req.user._id);
         const getFilePath = (fieldName) => {
             if (req.files && req.files[fieldName] && req.files[fieldName][0]) {
@@ -14,21 +13,33 @@ export const preApprovalRestaurant = async (req, res, next) => {
             return currentRestaurant?.documents?.[fieldName];
         };
 
+        const documents = {
+            restaurantLicense: getFilePath('restaurantLicense'),
+            businessCert: getFilePath('businessCert'),
+            fssaiCert: getFilePath('fssaiCert'),
+            ownerIdCert: getFilePath('ownerIdCert'),
+        };
+
+        const requiredDocs = ['restaurantLicense', 'businessCert', 'fssaiCert', 'ownerIdCert'];
+        const missingDocs = requiredDocs.filter(doc => !documents[doc]);
+
+        if (missingDocs.length > 0) {
+            return res.status(400).json({
+                message: `Missing required documents: ${missingDocs.join(', ')}`
+            });
+        }
+
         const restaurant = await Restaurant.findByIdAndUpdate(
             req.user._id,
             {
-                restaurantName: restaurantName,
+                restaurantName,
+                restaurantPhone,
                 address,
                 location: {
                     type: "Point",
                     coordinates: [Number(longitude), Number(latitude)]
                 },
-                documents: {
-                    restaurantLicense: getFilePath('restaurantLicense'),
-                    businessCert: getFilePath('businessCert'),
-                    fssaiCert: getFilePath('fssaiCert'),
-                    ownerIdCert: getFilePath('ownerIdCert'),
-                },
+                documents,
                 status: 'pending'
             },
             { new: true }

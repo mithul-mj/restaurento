@@ -1,22 +1,26 @@
-export const calculateSlots = (start, end, duration, gap) => {
-    if (!start || !end || !duration) return [];
+import { timeToMinutes } from './timeUtils';
+
+export const calculateSlots = (startStr, endStr, durationStr, gapStr) => {
+    const duration = Number(durationStr);
+    const gap = Number(gapStr || 0);
+
+    if (!startStr || !endStr || !duration) return [];
 
     const slots = [];
-    let current = new Date(`2000-01-01T${start}:00`);
-    const finish = new Date(`2000-01-01T${end}:00`);
+    const startMinutes = timeToMinutes(startStr);
+    const endMinutes = timeToMinutes(endStr);
 
-    const durationMs = duration * 60000;
-    const gapMs = gap * 60000;
+    let current = startMinutes;
 
-    while (current.getTime() + durationMs <= finish.getTime()) {
-        const slotEnd = new Date(current.getTime() + durationMs);
+    while (current + duration <= endMinutes) {
+        const slotEnd = current + duration;
 
         slots.push({
-            startTime: current.toTimeString().substring(0, 5),
-            endTime: slotEnd.toTimeString().substring(0, 5)
+            startTime: current,  // Store as total minutes (e.g., 540 for 09:00)
+            endTime: slotEnd     // Store as total minutes
         });
 
-        current = new Date(slotEnd.getTime() + gapMs);
+        current = slotEnd + gap;
     }
     return slots;
 };

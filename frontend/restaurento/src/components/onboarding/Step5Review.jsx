@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext } from "react-hook-form";
-import { MapPin, Clock, Phone, Search, ChefHat } from "lucide-react";
+import { MapPin, Clock, Phone, Search, ChefHat, Users, Wallet } from "lucide-react";
+import { minutesToTime } from '../../utils/timeUtils';
+import { calculateSlots } from '../../utils/slotGenerator';
 
 // Day names constant - index determines the day (0=Monday, 1=Tuesday, etc.)
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -18,8 +20,14 @@ const getImageUrl = (img) => {
 };
 
 const formatTime = (time) => {
-    if (!time) return "";
-    const [h, m] = time.split(':');
+    if (time === undefined || time === null) return "";
+
+    let timeStr = time;
+    if (typeof time === 'number') {
+        timeStr = minutesToTime(time);
+    }
+
+    const [h, m] = timeStr.toString().split(':');
     const hour = parseInt(h, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
@@ -44,7 +52,7 @@ const ImgDiv = ({ src, className }) => (
 );
 
 const Step5Review = () => {
-    const { watch, register, formState: { errors, isSubmitting } } = useFormContext();
+    const { watch, register, setValue, formState: { errors, isSubmitting } } = useFormContext();
     const values = watch();
     const [activeTab, setActiveTab] = useState("Dinner");
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -81,6 +89,29 @@ const Step5Review = () => {
     const days = values.openingHours?.days || [];
     const selectedDay = days[selectedDayIndex];
     const slots = selectedDay?.generatedSlots || [];
+    const slotConfig = values.slotConfig;
+
+    // Fallback: Calculate slots if they are missing
+    useEffect(() => {
+        if (!days.length || !slotConfig) return;
+
+        let hasUpdates = false;
+        const updatedDays = days.map((day) => {
+            if (!day.isClosed && day.startTime && day.endTime && (!day.generatedSlots || day.generatedSlots.length === 0)) {
+                const newSlots = calculateSlots(day.startTime, day.endTime, slotConfig.duration, slotConfig.gap);
+                if (newSlots.length > 0) {
+                    hasUpdates = true;
+                    return { ...day, generatedSlots: newSlots };
+                }
+            }
+            return day;
+        });
+
+        if (hasUpdates) {
+            console.log("Regenerating missing slots in Step5Review...");
+            setValue("openingHours.days", updatedDays);
+        }
+    }, [days.length, selectedDayIndex]);
 
     useEffect(() => {
         if (days.length > 0) {
@@ -167,54 +198,76 @@ const Step5Review = () => {
                     );
                 })()}
 
-                <div>
-                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{values.restaurantName || "Restaurant Name"}</h1>
-                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-2 font-medium">
-                        {displayTags.map((tag, i) => (
-                            <span key={i} className="flex items-center">
-                                {i > 0 && <span className="mx-2">•</span>}
-                                {tag}
-                            </span>
-                        ))}
-                        <span className="mx-2">•</span>
-                        <span>₹{values.slotPrice || "0"} per person</span>
-                    </div>
-                </div>
+
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                <div className="lg:col-span-2 space-y-10">
-                    <section>
-                        <h2 className="text-xl font-bold text-gray-900 mb-3">About {values.restaurantName || "The Restaurant"}</h2>
-                        <p className="text-gray-600 leading-relaxed text-sm">
-                            {values.description || "Experience culinary excellence with our carefully curated menu and ambiance. Join us for an unforgettable dining journey."}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-4">
-                            {displayTags.map((tag, i) => (
-                                <span key={i} className="px-3 py-1 bg-[#FFF0E5] text-[#ff5e00] text-xs font-bold rounded-full">
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    </section>
+            <div className="max-w-5xl mx-auto">
+                <div className="space-y-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+                        <section className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-full">
+                            <div className="flex items-center gap-2 mb-3">
+                                <ChefHat className="text-[#ff5e00]" size={20} />
+                                <h2 className="text-xl font-bold text-gray-900">About {values.restaurantName || "The Restaurant"}</h2>
+                            </div>
 
-                    <section>
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Details</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4 text-sm">
-                                <div className="flex items-start gap-3">
-                                    <MapPin className="text-gray-400 mt-0.5" size={18} />
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {displayTags.map((tag, i) => (
+                                    <span key={i} className="px-2.5 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full border border-orange-100">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                            <p className="text-gray-600 leading-relaxed text-sm">
+                                {values.description || "Experience culinary excellence with our carefully curated menu and ambiance. Join us for an unforgettable dining journey."}
+                            </p>
+                            <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-orange-50 rounded-lg">
+                                        <Users className="text-[#ff5e00]" size={16} />
+                                    </div>
                                     <div>
-                                        <p className="font-bold text-gray-900">{values.address || "123 Culinary Lane, Foodie City"}</p>
+                                        <p className="text-xs text-gray-500 font-medium">Seating Capacity</p>
+                                        <p className="font-bold text-gray-900 text-sm">{values.totalSeats || 0} Seats</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <Clock className="text-gray-400 mt-0.5" size={18} />
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-orange-50 rounded-lg">
+                                        <Wallet className="text-[#ff5e00]" size={16} />
+                                    </div>
                                     <div>
-                                        <div className="space-y-0.5">
+                                        <p className="text-xs text-gray-500 font-medium">Average Price</p>
+                                        <p className="font-bold text-gray-900 text-sm">₹{values.slotPrice || 0} / person</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-full">
+                            <div className="flex items-center gap-2 mb-4">
+                                <MapPin className="text-[#ff5e00]" size={20} />
+                                <h2 className="text-xl font-bold text-gray-900">Location & Hours</h2>
+                            </div>
+                            <div className="space-y-5 text-sm">
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-0.5 p-1.5 bg-orange-50 rounded-lg">
+                                        <MapPin className="text-[#ff5e00]" size={16} />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-gray-900">{values.address || "123 Culinary Lane, Foodie City"}</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">Restaurant Location</p>
+                                    </div>
+                                </div>
+                                <div className="border-t border-gray-100 my-2"></div>
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-0.5 p-1.5 bg-orange-50 rounded-lg">
+                                        <Clock className="text-[#ff5e00]" size={16} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-bold text-gray-900 mb-2">Opening Hours</p>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                                             {days.map((day, i) => (
-                                                <p key={i} className={`${day.isClosed ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                    <span className="font-medium text-gray-900 w-20 inline-block">{DAY_NAMES[i]}:</span>
+                                                <p key={i} className={`flex justify-between text-xs ${day.isClosed ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                    <span className="font-medium w-16">{DAY_NAMES[i].substring(0, 3)}</span>
                                                     {day.isClosed ? (
                                                         <span className="italic">Closed</span>
                                                     ) : (
@@ -225,28 +278,49 @@ const Step5Review = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <Phone className="text-gray-400 mt-0.5" size={18} />
-                                    <p className="text-gray-600">{values.restaurantPhone || "(555) 123-4567"}</p>
-                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Time Slots</h2>
+                        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                            <div className="flex gap-3 mb-6 overflow-x-auto pb-2 scrollbar-thin">
+                                {days.map((day, index) => (
+                                    <button
+                                        key={index}
+                                        type="button"
+                                        onClick={() => setSelectedDayIndex(index)}
+                                        className={`flex-shrink-0 flex flex-col items-center justify-center p-3 min-w-[4rem] rounded-xl border transition-all ${selectedDayIndex === index
+                                            ? 'border-[#ff5e00] bg-orange-50 text-[#ff5e00] shadow-sm'
+                                            : 'border-transparent text-gray-400 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <span className="text-xs uppercase font-bold tracking-wider">{DAY_NAMES[index].substring(0, 3)}</span>
+                                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 ${day.isClosed ? 'bg-gray-200' : 'bg-green-400'}`}></div>
+                                    </button>
+                                ))}
                             </div>
 
-                            <div className="w-full h-32 md:h-full min-h-[140px] bg-green-100 rounded-xl overflow-hidden relative">
-                                <img
-                                    src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/77.5946,12.9716,13,0/400x200?access_token=YOUR_TOKEN"
-                                    className="w-full h-full object-cover opacity-80"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.style.display = 'none';
-                                        e.target.parentElement.style.backgroundColor = '#e0f2fe';
-                                    }}
-                                    alt="Map Preview"
-                                />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-8 h-8 bg-red-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-                                        <MapPin className="text-white w-4 h-4" />
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {selectedDay?.isClosed ? (
+                                    <div className="col-span-full text-center py-10 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        Closed on {DAY_NAMES[selectedDayIndex]}
                                     </div>
-                                </div>
+                                ) : slots.length > 0 ? (
+                                    slots.map((slot, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="py-2.5 px-2 border border-gray-100 rounded-lg text-center text-sm font-medium text-gray-600 hover:border-orange-200 hover:bg-orange-50 hover:text-[#ff5e00] cursor-pointer transition-colors shadow-sm"
+                                        >
+                                            {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full text-center py-10 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        No slots generated
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </section>
@@ -271,7 +345,7 @@ const Step5Review = () => {
 
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredItems.length > 0 ? (
                                 filteredItems.map((item, index) => (
                                     <div key={index} className="bg-white border border-gray-100 rounded-xl p-3 flex gap-4 hover:shadow-lg hover:border-orange-100 transition-all duration-300 group">
@@ -302,87 +376,26 @@ const Step5Review = () => {
                             )}
                         </div>
                     </section>
-                </div>
 
-                <div className="space-y-6">
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-100/50 p-6 sticky top-6">
-                        <h3 className="font-bold text-lg text-gray-900 mb-6">Cart & Pre-Order Summary</h3>
-
-                        <div className="mb-6">
-                            <div className="text-sm font-medium text-gray-500 mb-2">Total Seats</div>
-                            <div className="p-3 bg-gray-50 rounded-xl font-bold text-gray-900">
-                                {values.totalSeats || 0} Seats
+                    <div className="pt-6 mt-8 border-t border-gray-100">
+                        <div className="flex items-start gap-3 p-5 bg-orange-50 rounded-xl mb-4 border border-orange-100/50">
+                            <input
+                                type="checkbox"
+                                {...register("termsAccepted")}
+                                id="terms"
+                                className="mt-1 w-4 h-4 accent-[#ff5e00] cursor-pointer"
+                            />
+                            <div>
+                                <label htmlFor="terms" className="text-sm text-gray-700 font-medium cursor-pointer leading-tight block">
+                                    I confirm that all the information provided is accurate and I grant permission to verify my business details.
+                                </label>
+                                {errors.termsAccepted && <p className="text-red-500 text-xs mt-1 font-bold">{errors.termsAccepted.message}</p>}
                             </div>
-                        </div>
-
-                        <div className="mb-8">
-                            <div className="text-sm font-medium text-gray-500 mb-3">Time Slots</div>
-
-                            <div className="flex justify-between mb-4 overflow-x-auto gap-2 pb-2 scrollbar-none">
-                                {days.map((day, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() => setSelectedDayIndex(index)}
-                                        className={`flex-shrink-0 flex flex-col items-center justify-center p-2 min-w-[3.5rem] rounded-lg border transition-all ${selectedDayIndex === index
-                                            ? 'border-[#ff5e00] bg-orange-50 text-[#ff5e00]'
-                                            : 'border-transparent text-gray-400 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <span className="text-[10px] uppercase font-bold tracking-wide">{DAY_NAMES[index].substring(0, 3)}</span>
-                                        <div className={`w-1 h-1 rounded-full mt-1 ${day.isClosed ? 'bg-gray-200' : 'bg-green-400'}`}></div>
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
-                                {selectedDay?.isClosed ? (
-                                    <div className="col-span-2 text-center py-6 text-gray-400 text-sm bg-gray-50 rounded-lg">
-                                        Closed on {DAY_NAMES[selectedDayIndex]}
-                                    </div>
-                                ) : slots.length > 0 ? (
-                                    slots.map((slot, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="p-2 border border-gray-100 rounded-lg text-center text-xs text-gray-600 hover:border-orange-200 hover:bg-orange-50 hover:text-[#ff5e00] cursor-pointer transition-colors"
-                                        >
-                                            {formatTime(slot.startTime)}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="col-span-2 text-center py-6 text-gray-400 text-sm bg-gray-50 rounded-lg">
-                                        No slots generated
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="pt-6 border-t border-gray-100">
-                            <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl mb-4">
-                                <input
-                                    type="checkbox"
-                                    {...register("termsAccepted")}
-                                    id="terms"
-                                    className="mt-1 w-4 h-4 accent-[#ff5e00] cursor-pointer"
-                                />
-                                <div>
-                                    <label htmlFor="terms" className="text-xs text-gray-700 font-medium cursor-pointer leading-tight block">
-                                        I confirm that all the information provided is accurate and I grant permission to verify my business details.
-                                    </label>
-                                    {errors.termsAccepted && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.termsAccepted.message}</p>}
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full py-3.5 bg-[#ff5e00] text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-[#e05200] transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {isSubmitting ? "Submitting..." : "Submit Details"}
-                            </button>
                         </div>
                     </div>
                 </div>
+
+
             </div>
         </div>
     );

@@ -14,10 +14,7 @@ export const singleDishSchema = z.object({
 
 
 export const stepSchemas = [
-    // Step 1: Basic Info & Time
     z.object({
-        restaurantName: z.string().min(2, "Name is required"),
-        restaurantPhone: z.string().min(10, "Invalid phone number"),
         description: z.string().min(10, "Description is required (min 10 characters)").max(500, "Max 500 characters"),
         tags: z.array(z.string()).min(1, "Select at least one cuisine tag"),
 
@@ -36,8 +33,8 @@ export const stepSchemas = [
                 isClosed: z.boolean(),
                 // Clean array for automated slots
                 generatedSlots: z.array(z.object({
-                    startTime: z.string(),
-                    endTime: z.string()
+                    startTime: z.number(),
+                    endTime: z.number()
                 }))
             }))
         }).refine((data) => {
@@ -48,27 +45,17 @@ export const stepSchemas = [
             path: ["days"]
         }),
     }),
-    // Step 2: Seating & Photos & Location
+    // Step 2: Seating & Photos
     z.object({
         totalSeats: z.coerce.number().min(1, "Required"),
         images: z.any().refine((files) => files?.length >= 3, "Upload at least 3 photos"),
-        address: z.string().min(5, "Address is required"),
-        latitude: z.coerce.number({ invalidTypeError: "Latitude must be a number" }).min(-90, "Invalid latitude").max(90, "Invalid latitude"),
-        longitude: z.coerce.number({ invalidTypeError: "Longitude must be a number" }).min(-180, "Invalid longitude").max(180, "Invalid longitude")
     }),
-    // Step 3: Legal & Verification
-    z.object({
-        restaurantLicense: z.any().refine((files) => files && files.length > 0, "Restaurant License is required"),
-        businessCert: z.any().refine((files) => files && files.length > 0, "Business Certificate is required"),
-        fssaiCert: z.any().refine((files) => files && files.length > 0, "FSSAI Certificate is required"),
-        ownerIdCert: z.any().refine((files) => files && files.length > 0, "Owner ID Proof is required"),
-    }),
-    // Step 4: Menu & Slot Rates
+    // Step 3: Menu & Slot Rates
     z.object({
         menuItems: z.array(singleDishSchema).min(1, "Add at least one menu item"),
         slotPrice: z.coerce.number().min(0, "Slot price required"),
     }),
-    // Step 5: Final Review
+    // Step 4: Final Review
     z.object({
         termsAccepted: z.boolean().refine(val => val === true, "Must accept terms")
     })

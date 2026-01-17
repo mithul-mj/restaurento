@@ -5,10 +5,6 @@ export const upload = multer({ storage });
 
 export const onboardingUploads = upload.fields([
   { name: "images", maxCount: 10 },
-  { name: "restaurantLicense", maxCount: 1 },
-  { name: "businessCert", maxCount: 1 },
-  { name: "fssaiCert", maxCount: 1 },
-  { name: "ownerIdCert", maxCount: 1 },
   ...Array.from({ length: 20 }, (_, i) => ({
     name: `menuItems[${i}].image`,
     maxCount: 1,
@@ -28,15 +24,10 @@ export const submitOnboarding = async (req, res, next) => {
 
     console.log("Raw openingHours from frontend:", body.openingHours);
 
-    const slotConfig = JSON.parse(body.slotConfig || "{}");
-    const openingHours = JSON.parse(body.openingHours);
+    const slotConfig = typeof body.slotConfig === 'string' ? JSON.parse(body.slotConfig) : body.slotConfig;
+    const openingHours = typeof body.openingHours === 'string' ? JSON.parse(body.openingHours) : body.openingHours;
     const galleryUrls = files["images"]?.map((f) => f.path) || [];
-    const documents = {
-      restaurantLicense: files["restaurantLicense"]?.[0].path || null,
-      businessCert: files["businessCert"]?.[0].path || null,
-      fssaiCert: files["fssaiCert"]?.[0].path || null,
-      ownerIdCert: files["ownerIdCert"]?.[0]?.path || null,
-    };
+
     const menuItems = [];
     let i = 0;
     while (body[`menuItems[${i}].name`]) {
@@ -76,24 +67,18 @@ export const submitOnboarding = async (req, res, next) => {
     }
 
     const restaurantData = {
-      restaurantName: body.restaurantName,
-      restaurantPhone: body.restaurantPhone,
       description: body.description,
-      address: body.address,
-      location: {
-        type: "Point",
-        coordinates: [Number(body.longitude), Number(body.latitude)],
-      },
       totalSeats: Number(body.totalSeats),
       slotPrice: Number(body.slotPrice),
       tags: tags,
       openingHours,
       slotConfig,
       menuItems,
-      documents,
       images: galleryUrls,
-      status: "pending",
+      isOnboardingCompleted: true,
     };
+
+
 
 
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(

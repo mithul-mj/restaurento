@@ -97,45 +97,9 @@ const Step2Seating = () => {
                     )}
                     {errors.images && <p className="text-red-500 text-xs mt-1 font-medium">{errors.images.message}</p>}
                 </div>
-
-                <div>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tight mb-2">Set Your Restaurant's Location</h3>
-                    <p className="text-sm text-[#ff5e00] mb-6">Drag the pin to your exact location or use your current location.</p>
-
-                    <div className="border border-orange-100 rounded-2xl p-6 bg-[#FFFBF7] space-y-6">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-800 mb-2">Enter latitude</label>
-                            <input
-                                {...register("latitude")}
-                                className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-300"
-                                placeholder="Latitude"
-                            />
-                            {errors.latitude && <p className="text-red-500 text-xs mt-1 font-medium">{errors.latitude.message}</p>}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-800 mb-2">Enter longitude</label>
-                            <input
-                                {...register("longitude")}
-                                className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-300"
-                                placeholder="Longitude"
-                            />
-                            {errors.longitude && <p className="text-red-500 text-xs mt-1 font-medium">{errors.longitude.message}</p>}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-800 mb-2">Address</label>
-                            <input
-                                {...register("address")}
-                                className="w-full p-4 rounded-xl bg-white border border-gray-200 focus:border-[#ff5e00] outline-none transition-all placeholder:text-gray-300"
-                                placeholder="123 Main Street, New York, NY 10001"
-                            />
-                            {errors.address && <p className="text-red-500 text-xs mt-1 font-medium">{errors.address.message}</p>}
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
+
     );
 };
 

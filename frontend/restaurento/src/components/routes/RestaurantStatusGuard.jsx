@@ -17,10 +17,21 @@ const RestaurantStatusGuard = () => {
         return <Outlet />
     }
     if (status === 'approved') {
-        if (path === '/restaurant/verification-pending' || path === '/restaurant/pre-approval') {
-            return <Navigate to="/restaurant/dashboard" replace />
+        // Case 1: Onboarding NOT completed -> Force them to onboarding page
+        if (!user.isOnboardingCompleted) {
+            if (path !== '/restaurant/onboarding') {
+                return <Navigate to="/restaurant/onboarding" replace />
+            }
+            return <Outlet />
         }
-        return <Outlet />
+
+        // Case 2: Onboarding IS completed -> Block access to onboarding page, redirect to dashboard
+        if (user.isOnboardingCompleted) {
+            if (path === '/restaurant/onboarding' || path === '/restaurant/verification-pending' || path === '/restaurant/pre-approval') {
+                return <Navigate to="/restaurant/dashboard" replace />
+            }
+            return <Outlet />
+        }
     }
     if (status === 'rejected') {
         if (path !== '/restaurant/verification-pending' && path !== '/restaurant/pre-approval') {
