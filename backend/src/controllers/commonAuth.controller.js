@@ -173,7 +173,7 @@ export const refreshAccessToken = async (req, res, next) => {
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
 
     const userDetails = await Model.findById(decoded._id);
@@ -190,6 +190,7 @@ export const refreshAccessToken = async (req, res, next) => {
         avatar: userDetails.avatar,
         role: role,
         status: userDetails.status,
+        isOnboardingCompleted: userDetails.isOnboardingCompleted,
       },
       role: role,
     });

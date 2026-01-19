@@ -20,7 +20,7 @@ export const loginAdmin = async (req, res, next) => {
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
 
     return res.status(200).json({
@@ -54,7 +54,7 @@ export const logout = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
     return res.json({ success: true, message: "Logged out" });
   } catch (error) {

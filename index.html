@@ -21,23 +21,45 @@
         async defer></script>
 
     <script>
-        function initMap() {
-            // New York Coordinates
-            const myLatLng = { lat: 40.7128, lng: -74.006 };
+        let map;
+        let marker; // store marker globally
 
-            const map = new google.maps.Map(document.getElementById("map"), {
+        function initMap() {
+            const initialPos = { lat: 40.7128, lng: -74.006 };
+
+            map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 12,
-                center: myLatLng,
+                center: initialPos,
             });
 
-            // A simple marker that doesn't need a Map ID
-            new google.maps.Marker({
-                position: myLatLng,
-                map: map,
-                title: "Hello World!",
+            // Listen for click events on map
+            map.addListener("click", (event) => {
+                const lat = event.latLng.lat();
+                const lng = event.latLng.lng();
+
+                placeMarker(event.latLng);
+
+                console.log("Latitude:", lat);
+                console.log("Longitude:", lng);
+
+                alert(`Latitude: ${lat}\nLongitude: ${lng}`);
             });
         }
+
+        function placeMarker(location) {
+            if (marker) {
+                // Move existing marker
+                marker.setPosition(location);
+            } else {
+                // Create new marker
+                marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                });
+            }
+        }
     </script>
+
 </body>
 
 </html>

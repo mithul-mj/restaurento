@@ -244,26 +244,16 @@ const Step5Review = () => {
 
                         <section className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-full">
                             <div className="flex items-center gap-2 mb-4">
-                                <MapPin className="text-[#ff5e00]" size={20} />
-                                <h2 className="text-xl font-bold text-gray-900">Location & Hours</h2>
+                                <Clock className="text-[#ff5e00]" size={20} />
+                                <h2 className="text-xl font-bold text-gray-900">Opening Hours</h2>
                             </div>
                             <div className="space-y-5 text-sm">
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-0.5 p-1.5 bg-orange-50 rounded-lg">
-                                        <MapPin className="text-[#ff5e00]" size={16} />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">{values.address || "123 Culinary Lane, Foodie City"}</p>
-                                        <p className="text-xs text-gray-500 mt-0.5">Restaurant Location</p>
-                                    </div>
-                                </div>
-                                <div className="border-t border-gray-100 my-2"></div>
                                 <div className="flex items-start gap-3">
                                     <div className="mt-0.5 p-1.5 bg-orange-50 rounded-lg">
                                         <Clock className="text-[#ff5e00]" size={16} />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="font-bold text-gray-900 mb-2">Opening Hours</p>
+                                        <p className="font-bold text-gray-900 mb-2">Weekly Schedule</p>
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                                             {days.map((day, i) => (
                                                 <p key={i} className={`flex justify-between text-xs ${day.isClosed ? 'text-gray-400' : 'text-gray-600'}`}>

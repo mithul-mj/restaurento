@@ -46,7 +46,7 @@ export const loginRestaurant = async (req, res, next) => {
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
 
     return res.status(200).json({
@@ -58,6 +58,7 @@ export const loginRestaurant = async (req, res, next) => {
         email: account.email,
         role: ROLES.RESTAURANT,
         status: account.status,
+        isOnboardingCompleted: account.isOnboardingCompleted,
       },
       tokens: {
         accessToken,
@@ -121,7 +122,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
       secure: false,
       sameSite: "lax",
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
 
     return res.status(200).json({
@@ -132,6 +133,8 @@ export const googleAuthRestaurant = async (req, res, next) => {
         fullName: restaurant.fullName,
         email: restaurant.email,
         role: ROLES.RESTAURANT,
+        status: restaurant.status,
+        isOnboardingCompleted: restaurant.isOnboardingCompleted,
       },
       tokens: {
         accessToken,
@@ -157,7 +160,7 @@ export const logout = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
     return res.json({ success: true, message: "Logged out" });
   } catch (error) {

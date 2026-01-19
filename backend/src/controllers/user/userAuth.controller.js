@@ -1,7 +1,7 @@
 import {
   registerUserService,
   loginUserService,
-  refreshUserTokenService,
+
 } from "../../services/userAuth.service.js";
 import ROLES from "../../constants/roles.js";
 import { env } from "../../config/env.config.js";
@@ -92,7 +92,7 @@ export const googleAuthUser = async (req, res, next) => {
       secure: false,
       sameSite: "lax", // Protects against CSRF
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
 
     return res.status(200).json({
@@ -138,7 +138,7 @@ export const loginUser = async (req, res, next) => {
       secure: false,
       sameSite: "lax", // Protects against CSRF
       maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
 
     return res.status(200).json({
@@ -157,48 +157,7 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-export const refreshAccessToken = async (req, res, next) => {
-  try {
-    const incomingRefreshToken =
-      req.cookies?.refreshToken || req.body?.refreshToken;
 
-    const { account, accessToken, refreshToken } =
-      await refreshUserTokenService(incomingRefreshToken);
-
-    res.cookie("user_accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie("user_refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Access token refreshed",
-      accessToken,
-      refreshToken,
-      user: {
-        _id: account._id,
-        fullName: account.fullName,
-        email: account.email,
-        role: ROLES.USER,
-        avatar: account.avatar,
-      },
-      role: ROLES.USER,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const logout = async (req, res, next) => {
   try {
@@ -212,7 +171,7 @@ export const logout = async (req, res, next) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax", // Protects against CSRF
-      path: "/",
+      path: "/api/v1/auth/refresh-token",
     });
     return res.json({ success: true, message: "Logged out" });
   } catch (error) {

@@ -10,6 +10,7 @@ import FileUploadCard from '../../components/common/FileUploadCard';
 import FormInput from '../../components/common/FormInput';
 import preApprovalSchema from '../../schemas/preApprovalSchema';
 import restaurantService from '../../services/restaurant.service';
+import MapContainer from '../../components/restaurant/MapContainer';
 
 const PreApproval = () => {
     const navigate = useNavigate();
@@ -60,6 +61,18 @@ const PreApproval = () => {
             loadData();
         }
     }, [user, setValue]);
+
+    const handleLocationSelect = useCallback((loc) => {
+        console.log("Location Selected:", loc);
+        setValue('latitude', loc.lat);
+        setValue('longitude', loc.lng);
+        if (loc.address) {
+            console.log("Setting address to:", loc.address);
+            setValue('address', loc.address, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        } else {
+            console.warn("No address returned for location:", loc);
+        }
+    }, [setValue]);
 
     const onSubmit = async (data) => {
         const confirm = await showConfirm(
@@ -145,20 +158,22 @@ const PreApproval = () => {
                                         <div className="col-span-2">
                                             <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5 mb-2">
                                                 <MapPin size={16} className="text-[#ff5e00]" />
-                                                Location Coordinates (Optional)
+                                                Location Coordinates <span className="text-red-500">*</span>
                                             </label>
                                             <p className="text-xs text-gray-500 mb-4">Provide latitude and longitude for accurate map placement.</p>
                                         </div>
-                                        <FormInput
-                                            name="latitude"
-                                            label="Latitude"
-                                            placeholder="e.g. 12.9716"
-                                        />
-                                        <FormInput
-                                            name="longitude"
-                                            label="Longitude"
-                                            placeholder="e.g. 77.5946"
-                                        />
+                                        <div className="col-span-2">
+                                            <MapContainer onLocationSelect={handleLocationSelect} />
+                                        </div>
+                                        <div className="flex flex-col gap-1 text-xs text-gray-500 font-mono">
+                                            <div className="flex gap-4">
+                                                <span>Lat: {methods.watch('latitude') ? Number(methods.watch('latitude')).toFixed(6) : '—'}</span>
+                                                <span>Lng: {methods.watch('longitude') ? Number(methods.watch('longitude')).toFixed(6) : '—'}</span>
+                                            </div>
+                                            {methods.formState.errors.latitude && (
+                                                <span className="text-red-500">Location selection is required. Please click on the map.</span>
+                                            )}
+                                        </div>
 
                                     </div>
                                     <FormInput

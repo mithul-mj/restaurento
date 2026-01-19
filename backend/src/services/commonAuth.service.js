@@ -34,7 +34,7 @@ export const sendVerificationOtp = async (email) => {
   await storeOtp(email, otp);
 
   const subject = "Your Verification Code for Restaurento";
-  const text = `Your OTP is ${otp}. It is valid for 2 minutes.`; // Fallback for old devices
+  const text = `Your OTP is ${otp}. It is valid for 2 minutes.`;
   const html = getOtpEmailTemplate(otp, email);
   await sendEmail(email, subject, text, html);
 

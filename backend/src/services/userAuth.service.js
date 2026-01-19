@@ -5,7 +5,7 @@ import {
   createAccount,
   loginAccount,
   sendVerificationOtp,
-  verifyAndRefreshToken,
+
 } from "./commonAuth.service.js";
 
 export const registerUserService = async ({ fullName, email, password }) => {
@@ -26,6 +26,4 @@ export const loginUserService = async ({ email, password }) => {
   return result;
 };
 
-export const refreshUserTokenService = async (token) => {
-  return await verifyAndRefreshToken(User, token);
-};
+
