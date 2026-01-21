@@ -40,7 +40,7 @@ export const preApprovalRestaurant = async (req, res, next) => {
                     coordinates: [Number(longitude), Number(latitude)]
                 },
                 documents,
-                status: 'pending'
+                verificationStatus: 'pending'
             },
             { new: true }
         );

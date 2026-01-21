@@ -23,7 +23,7 @@ const dayHoursSchema = new Schema(
       },
     ],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const restaurantSchema = new Schema(
@@ -47,6 +47,7 @@ const restaurantSchema = new Schema(
     isEmailVerified: {
       type: Boolean,
       default: false,
+      required: true,
     },
 
     // Onboarding Step 1: Basic Info & Hours
@@ -112,7 +113,13 @@ const restaurantSchema = new Schema(
     // System fields
     status: {
       type: String,
-      enum: ["new", "pending", "approved", "suspended", "rejected"],
+      enum: ["active", "suspended"],
+      default: "active",
+      required: true,
+    },
+    verificationStatus: {
+      type: String,
+      enum: ["new", "pending", "approved", "rejected"],
       default: "new",
       required: true,
     },
@@ -135,7 +142,7 @@ const restaurantSchema = new Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Apply the authentication plugin with role "RESTAURANT"

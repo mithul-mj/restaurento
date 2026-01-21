@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
-  Users,
-  UserX,
+  Store,
+  Menu,
   X,
   Search,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   MapPin,
-  Menu,
+  Eye,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useUsers } from "../../hooks/useUsers";
+import { useRestaurants } from "../../hooks/useRestaurants";
 import Sidebar from "../../components/admin/Sidebar";
 
-const UserManagement = () => {
+const RestaurantManagement = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { register, handleSubmit, control, setValue } = useForm();
 
@@ -26,7 +26,7 @@ const UserManagement = () => {
 
   const searchValue = useWatch({ control, name: "search", defaultValue: "" });
 
-  const { data, isLoading, isError, toggleStatus } = useUsers({
+  const { data, isLoading, isError, toggleStatus } = useRestaurants({
     page,
     limit: 6,
     search,
@@ -35,9 +35,10 @@ const UserManagement = () => {
   });
 
   if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Error loading users</p>;
+  if (isError) return <p>Error loading restaurants</p>;
 
-  const { data: users, meta } = data;
+  // Ensure data structure matches what hook returns (data: { data: [], meta: {} })
+  const { data: restaurants, meta } = data;
 
   const onSearch = (data) => {
     setSearch(data.search);
@@ -49,7 +50,7 @@ const UserManagement = () => {
       <Sidebar
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
-        activePage="Users"
+        activePage="Restaurants"
       />
 
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
@@ -69,33 +70,33 @@ const UserManagement = () => {
 
         <main className="p-6 md:p-10 flex-1 overflow-x-hidden">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-            User Management
+            Restaurant Management
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-start justify-between">
               <div>
                 <div className="bg-[#fff5eb] text-[#ff5e00] w-10 h-10 rounded-lg flex items-center justify-center mb-4">
-                  <Users size={20} />
+                  <Store size={20} />
                 </div>
                 <p className="text-sm font-bold text-gray-900 mb-1">
-                  All Users
+                  All Restaurants
                 </p>
                 <h3 className="text-3xl font-bold text-gray-900">
                   {meta.totalCount}
                 </h3>
                 <p className="text-gray-400 text-xs mt-1">
-                  Total registered users
+                  Total registered restaurants
                 </p>
               </div>
             </div>
             <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-start justify-between">
               <div>
                 <div className="bg-[#fff5f5] text-red-500 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
-                  <UserX size={20} />
+                  <Store size={20} />
                 </div>
                 <p className="text-sm font-bold text-gray-900 mb-1">
-                  Suspended Users
+                  Suspended Restaurants
                 </p>
                 <h3 className="text-3xl font-bold text-gray-900">
                   {meta.suspendedCount}
@@ -108,9 +109,9 @@ const UserManagement = () => {
           </div>
 
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">All Users</h2>
+            <h2 className="text-xl font-bold text-gray-900">All Restaurants</h2>
             <p className="text-gray-500 text-sm">
-              Manage all active and inactive users on the platform.
+              Manage all active and inactive restaurants on the platform.
             </p>
           </div>
 
@@ -120,7 +121,7 @@ const UserManagement = () => {
               className="w-full md:w-96 relative">
               <input
                 type="text"
-                placeholder="Search by username, email"
+                placeholder="Search by name, cuisine"
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#ff5e00]"
                 {...register("search")}
               />
@@ -183,31 +184,41 @@ const UserManagement = () => {
           </div>
 
           <div className="space-y-4 mb-8">
-            {users.map((user) => (
+            {restaurants.map((restaurant) => (
               <div
-                key={user._id}
+                key={restaurant._id}
                 className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                 <div className="flex items-center gap-4 w-full md:col-span-5">
                   <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                     <img
                       src={
-                        user.avatar ||
-                        "https://ui-avatars.com/api/?name=" + user.fullName
+                        restaurant.logo ||
+                        "https://ui-avatars.com/api/?name=" +
+                          (restaurant.restaurantName || "R")
                       }
-                      alt={user.fullName}
+                      alt={restaurant.restaurantName}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="min-w-0">
                     <h4 className="text-sm font-bold text-gray-900">
-                      {user.fullName}
+                      <Link
+                        to={`/admin/restaurants/${restaurant._id}`}
+                        className="hover:text-[#ff5e00] transition-colors">
+                        {restaurant.restaurantName ||
+                          "(Restaurant Name not set)"}
+                      </Link>
                     </h4>
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
+                        <span className="text-gray-900 text-xs font-medium truncate">
+                          {restaurant.fullName}
+                        </span>
+                        <span className="text-gray-400 text-[10px]">•</span>
                         <p className="text-gray-500 text-xs truncate">
-                          {user.email}
+                          {restaurant.email}
                         </p>
-                        {user.isEmailVerified ? (
+                        {restaurant.isEmailVerified ? (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
                             Verified
                           </span>
@@ -216,12 +227,22 @@ const UserManagement = () => {
                             Unverified
                           </span>
                         )}
+                        {restaurant.isOnboardingCompleted ||
+                        restaurant.isOnbordingCompleted ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                            Onboarding Completed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                            Pending Onboarding
+                          </span>
+                        )}
                       </div>
-                      {user.location?.address && (
+                      {(restaurant.address || restaurant.location?.address) && (
                         <div className="flex items-center gap-1.5 md:hidden text-gray-500">
                           <MapPin size={12} className="text-[#ff5e00]" />
                           <span className="text-xs font-medium truncate max-w-[200px]">
-                            {user.location.address}
+                            {restaurant.address || restaurant.location?.address}
                           </span>
                         </div>
                       )}
@@ -230,15 +251,18 @@ const UserManagement = () => {
                 </div>
 
                 <div className="hidden md:flex items-center md:col-span-4">
-                  {user.location?.address ? (
+                  {restaurant.address || restaurant.location?.address ? (
                     <div className="flex items-start gap-2 group">
-                      <div className="p-1.5 rounded-md bg-gray-50 text-gray-400 group-hover:bg-[#fff5eb] group-hover:text-[#ff5e00] transition-colors">
-                        <MapPin size={14} />
-                      </div>
+                      <MapPin
+                        size={16}
+                        className="text-gray-400 group-hover:text-[#ff5e00] transition-colors shrink-0 mt-0.5"
+                      />
                       <span
                         className="text-xs font-medium text-gray-600 line-clamp-2"
-                        title={user.location.address}>
-                        {user.location.address}
+                        title={
+                          restaurant.address || restaurant.location?.address
+                        }>
+                        {restaurant.address || restaurant.location?.address}
                       </span>
                     </div>
                   ) : (
@@ -252,24 +276,31 @@ const UserManagement = () => {
                   <span
                     className={`px-3 py-1 text-xs font-semibold rounded-full
                                         ${
-                                          user.status === "active"
+                                          restaurant.status === "active"
                                             ? "bg-green-50 text-green-600"
                                             : "bg-red-50 text-red-500"
                                         }
                                     `}>
-                    {user.status}
+                    {restaurant.status}
                   </span>
 
+                  <Link
+                    to={`/admin/restaurants/${restaurant._id}`}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-[#ff5e00] hover:bg-[#fff5eb] transition-colors"
+                    title="View Details">
+                    <Eye size={18} />
+                  </Link>
+
                   <button
-                    onClick={() => toggleStatus(user._id)}
+                    onClick={() => toggleStatus(restaurant._id)}
                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors
                                         ${
-                                          user.status === "active"
+                                          restaurant.status === "active"
                                             ? "bg-red-50 text-red-500 hover:bg-red-100"
                                             : "bg-green-50 text-green-600 hover:bg-green-100"
                                         }
                                     `}>
-                    {user.status === "active" ? "Suspend" : "activate"}
+                    {restaurant.status === "active" ? "Suspend" : "Activate"}
                   </button>
                 </div>
               </div>
@@ -280,10 +311,12 @@ const UserManagement = () => {
             <p className="text-xs text-gray-500">
               Showing page{" "}
               <span className="font-bold text-gray-900">
-                {meta.currentPage}
+                {meta?.currentPage}
               </span>{" "}
               of{" "}
-              <span className="font-bold text-gray-900">{meta.totalPages}</span>
+              <span className="font-bold text-gray-900">
+                {meta?.totalPages}
+              </span>
             </p>
             <div className="flex gap-2">
               <button
@@ -295,9 +328,9 @@ const UserManagement = () => {
               </button>
               <button
                 onClick={() =>
-                  setPage((p) => (p < meta.totalPages ? p + 1 : p))
+                  setPage((p) => (p < meta?.totalPages ? p + 1 : p))
                 }
-                disabled={page >= meta.totalPages}
+                disabled={page >= meta?.totalPages}
                 className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
                 Next
                 <ChevronRight size={14} />
@@ -310,4 +343,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default RestaurantManagement;

@@ -56,6 +56,10 @@ export const loginAccount = async (Model, email, password, avatar, role) => {
     throw new ApiError(403, "Please verify your email before logging in");
   }
 
+  if (account.status === "suspended") {
+    throw new ApiError(403, "Your account has been suspended. Please contact support.");
+  }
+
   const isPasswordValid = await account.isPasswordCorrect(password);
 
   if (!isPasswordValid) {

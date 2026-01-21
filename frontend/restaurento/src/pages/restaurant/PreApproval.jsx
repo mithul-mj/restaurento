@@ -26,7 +26,7 @@ const PreApproval = () => {
     const { handleSubmit, setValue, formState: { isSubmitting } } = methods;
 
     useEffect(() => {
-        if (user?.status === 'rejected') {
+        if (user?.verificationStatus === 'rejected') {
             const loadData = async () => {
                 try {
                     const { restaurant } = await restaurantService.getProfile();
@@ -105,7 +105,7 @@ const PreApproval = () => {
                     throw new Error(response.message);
                 }
                 showSuccess("Submitted!", "Your application is under review.");
-                dispatch(updateUser({ status: 'pending' }));
+                dispatch(updateUser({ verificationStatus: 'pending' }));
                 navigate('/restaurant/verification-pending', { replace: true });
             } catch (error) {
                 console.error("Error submitting pre-approval:", error);

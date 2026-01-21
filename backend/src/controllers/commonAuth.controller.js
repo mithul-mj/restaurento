@@ -191,6 +191,8 @@ export const refreshAccessToken = async (req, res, next) => {
         role: role,
         status: userDetails.status,
         isOnboardingCompleted: userDetails.isOnboardingCompleted,
+        verificationStatus: userDetails.verificationStatus,
+        rejectionReason: userDetails.rejectionReason,
       },
       role: role,
     });

@@ -59,6 +59,8 @@ export const loginRestaurant = async (req, res, next) => {
         role: ROLES.RESTAURANT,
         status: account.status,
         isOnboardingCompleted: account.isOnboardingCompleted,
+        verificationStatus: account.verificationStatus,
+        rejectionReason: account.rejectionReason,
       },
       tokens: {
         accessToken,
@@ -102,7 +104,6 @@ export const googleAuthRestaurant = async (req, res, next) => {
         isEmailVerified: true,
         password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
         role: ROLES.RESTAURANT,
-        status: 'pending'
       });
     }
 
@@ -135,6 +136,8 @@ export const googleAuthRestaurant = async (req, res, next) => {
         role: ROLES.RESTAURANT,
         status: restaurant.status,
         isOnboardingCompleted: restaurant.isOnboardingCompleted,
+        verificationStatus: restaurant.verificationStatus,
+        rejectionReason: restaurant.rejectionReason,
       },
       tokens: {
         accessToken,

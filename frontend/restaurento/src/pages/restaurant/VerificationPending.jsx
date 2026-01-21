@@ -10,7 +10,7 @@ const VerificationPending = () => {
     const [rejectionReason, setRejectionReason] = useState(null);
 
     useEffect(() => {
-        if (user?.status === 'rejected') {
+        if (user?.verificationStatus === 'rejected') {
             const fetchReason = async () => {
                 try {
                     const { restaurant } = await restaurantService.getProfile();
@@ -23,7 +23,7 @@ const VerificationPending = () => {
         }
     }, [user]);
 
-    const isRejected = user?.status === 'rejected';
+    const isRejected = user?.verificationStatus === 'rejected';
 
     return (
         <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center p-6 text-center">

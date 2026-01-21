@@ -28,7 +28,8 @@ import RestaurantSettings from "./pages/restaurant/RestaurentSettings";
 import PreApproval from "./pages/restaurant/PreApproval";
 import VerificationPending from "./pages/restaurant/VerificationPending";
 import RestaurantStatusGuard from "./components/routes/RestaurantStatusGuard";
-
+import RestaurantManagement from "./pages/admin/RestaurantManagement";
+import RestaurantDetails from "./pages/admin/RestaurantDetails";
 
 function App() {
   const dispatch = useDispatch();
@@ -39,7 +40,8 @@ function App() {
       try {
         let role = "USER";
         if (window.location.pathname.startsWith("/admin")) role = "ADMIN";
-        else if (window.location.pathname.startsWith("/restaurant")) role = "RESTAURANT";
+        else if (window.location.pathname.startsWith("/restaurant"))
+          role = "RESTAURANT";
 
         console.log("App.jsx: Refreshing token for role:", role); // DEBUG LOG
         const response = await authService.refreshToken(role);
@@ -51,7 +53,7 @@ function App() {
             user: response.data.user,
             role: response.data.role?.toUpperCase(),
             avatar: response.data.user.avatar,
-          })
+          }),
         );
       } catch (error) {
         if (error.response?.status !== 401 && error.code !== "ECONNABORTED") {
@@ -94,14 +96,20 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["RESTAURANT"]} />}>
-          <Route element={< RestaurantStatusGuard />}>
+          <Route element={<RestaurantStatusGuard />}>
             <Route
               path="/restaurant/dashboard"
               element={<RestaurantDashboard />}
             />
             <Route path="/restaurant/pre-approval" element={<PreApproval />} />
-            <Route path="/restaurant/verification-pending" element={<VerificationPending />} />
-            <Route path="/restaurant/settings" element={<RestaurantSettings />} />
+            <Route
+              path="/restaurant/verification-pending"
+              element={<VerificationPending />}
+            />
+            <Route
+              path="/restaurant/settings"
+              element={<RestaurantSettings />}
+            />
             <Route
               path="/restaurant/onboarding"
               element={<RestaurantOnboarding />}
@@ -112,6 +120,11 @@ function App() {
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/restaurants" element={<RestaurantManagement />} />
+          <Route
+            path="/admin/restaurants/:restaurantId"
+            element={<RestaurantDetails />}
+          />
         </Route>
       </Routes>
     </Router>
