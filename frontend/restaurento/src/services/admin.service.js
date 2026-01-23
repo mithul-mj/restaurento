@@ -24,12 +24,18 @@ const adminService = {
     );
     return response;
   },
-  restaurantVerificationStatus: async (restaurantId) => {
+  toggleRestaurantVerificationStatus: async (restaurantId, data) => {
     const response = await api.patch(
       `admin/restaurants/${restaurantId}/verification-status`,
+      data
     );
-    return response;
+    return response.data;
+  },
+  getRestaurantDetails: async (restaurantId) => {
+    const response = await api.get(`/admin/restaurants/${restaurantId}`);
+    return response.data;
   },
 };
+
 
 export default adminService;

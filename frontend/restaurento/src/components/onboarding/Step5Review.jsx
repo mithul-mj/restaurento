@@ -5,6 +5,7 @@ import { minutesToTime, formatTime12Hour } from "../../utils/timeUtils";
 import { getImageUrl } from "../../utils/imageUtils";
 import ImageGallery from "../shared/ImageGallery";
 import MenuGrid from "../shared/MenuGrid";
+import TimeSlotViewer from "../shared/TimeSlotViewer";
 
 // Day names constant - index determines the day (0=Monday, 1=Tuesday, etc.)
 const DAY_NAMES = [
@@ -39,26 +40,7 @@ const Step5Review = () => {
 
   const days = openingHours?.days || [];
 
-  const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
-    const d = openingHours?.days || [];
-    if (d.length > 0) {
-      const firstOpen = d.findIndex((day) => !day.isClosed);
-      if (firstOpen !== -1) return firstOpen;
-    }
-    return 0;
-  });
-
-  const [prevOpeningHours, setPrevOpeningHours] = useState(openingHours);
-  if (openingHours !== prevOpeningHours) {
-    setPrevOpeningHours(openingHours);
-    const d = openingHours?.days || [];
-    if (d.length > 0) {
-      const firstOpen = d.findIndex((day) => !day.isClosed);
-      if (firstOpen !== -1) {
-        setSelectedDayIndex(firstOpen);
-      }
-    }
-  }
+  /* State related to slot viewing has been moved to TimeSlotViewer */
 
   const displayTags =
     tags && tags.length > 0 ? tags : ["Fine Dining", "Authentic", "Romantic"];
@@ -76,8 +58,7 @@ const Step5Review = () => {
   // ImageGallery component now handles fallbacks internally
   const displayImages = previewUrls;
 
-  const selectedDay = days[selectedDayIndex];
-  const slots = selectedDay?.generatedSlots || [];
+
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-8 font-inter">
@@ -182,47 +163,7 @@ const Step5Review = () => {
 
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-4">Time Slots</h2>
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-              <div className="flex gap-3 mb-6 overflow-x-auto pb-2 scrollbar-thin">
-                {days.map((day, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setSelectedDayIndex(index)}
-                    className={`flex-shrink-0 flex flex-col items-center justify-center p-3 min-w-[4rem] rounded-xl border transition-all ${selectedDayIndex === index
-                        ? "border-[#ff5e00] bg-orange-50 text-[#ff5e00] shadow-sm"
-                        : "border-transparent text-gray-400 hover:bg-gray-50"
-                      }`}>
-                    <span className="text-xs uppercase font-bold tracking-wider">
-                      {DAY_NAMES[index].substring(0, 3)}
-                    </span>
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full mt-1.5 ${day.isClosed ? "bg-gray-200" : "bg-green-400"}`}></div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {selectedDay?.isClosed ? (
-                  <div className="col-span-full text-center py-10 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    Closed on {DAY_NAMES[selectedDayIndex]}
-                  </div>
-                ) : slots.length > 0 ? (
-                  slots.map((slot, idx) => (
-                    <div
-                      key={idx}
-                      className="py-2.5 px-2 border border-gray-100 rounded-lg text-center text-sm font-medium text-gray-600 hover:border-orange-200 hover:bg-orange-50 hover:text-[#ff5e00] cursor-pointer transition-colors shadow-sm">
-                      {formatTime12Hour(slot.startTime)} -{" "}
-                      {formatTime12Hour(slot.endTime)}
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-10 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    No slots generated
-                  </div>
-                )}
-              </div>
-            </div>
+            <TimeSlotViewer days={days} />
           </section>
 
           <section className="space-y-6">
@@ -234,8 +175,8 @@ const Step5Review = () => {
                     type="button"
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeTab === tab
-                        ? "bg-gray-900 text-white shadow-md"
-                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                      ? "bg-gray-900 text-white shadow-md"
+                      : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                       }`}>
                     {tab}
                   </button>
