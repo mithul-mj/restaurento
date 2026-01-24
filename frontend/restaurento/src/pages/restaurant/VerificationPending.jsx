@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { UtensilsCrossed, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { UtensilsCrossed, XCircle, AlertCircle, ArrowRight, Ban, LogOut } from 'lucide-react';
 import restaurantService from '../../services/restaurant.service';
+import authService from '../../services/auth.service';
+import { logout } from '../../redux/slices/authSlice';
 
 const VerificationPending = () => {
     const { user } = useSelector(state => state.auth);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [rejectionReason, setRejectionReason] = useState(null);
 
     useEffect(() => {
-        if (user?.verificationStatus === 'rejected') {
+        if (user?.verificationStatus === 'rejected' || user?.verificationStatus === 'banned') {
             const fetchReason = async () => {
                 try {
                     const { restaurant } = await restaurantService.getProfile();
@@ -24,11 +27,23 @@ const VerificationPending = () => {
     }, [user]);
 
     const isRejected = user?.verificationStatus === 'rejected';
+    const isBanned = user?.verificationStatus === 'banned';
+
+    const handleSignOut = async () => {
+        try {
+            await authService.logout("RESTAURANT");
+            dispatch(logout());
+            navigate('/restaurant/login');
+        } catch (error) {
+            console.error("Logout failed:", error);
+            dispatch(logout());
+            navigate('/restaurant/login');
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center p-6 text-center">
 
-            {/* Logo Section */}
             <div className="flex items-center gap-2 mb-8 animate-fade-in-down">
                 <div className="w-8 h-8 bg-[#ff5e00] rounded-full flex items-center justify-center shadow-lg shadow-orange-200">
                     <span className="text-white font-bold text-lg">R</span>
@@ -36,8 +51,43 @@ const VerificationPending = () => {
                 <span className="text-xl font-bold text-gray-800 tracking-tight">Restauranto</span>
             </div>
 
-            {/* Main Content */}
-            {isRejected ? (
+            {isBanned ? (
+                <div className="max-w-2xl animate-fade-in-up">
+                    <div className="flex justify-center mb-6">
+                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                            <Ban className="text-red-600" size={40} />
+                        </div>
+                    </div>
+
+                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                        Account Suspended
+                    </h1>
+
+                    <div className="bg-red-50 border border-red-100 p-6 rounded-2xl mb-8 text-left max-w-lg mx-auto">
+                        <h3 className="font-bold text-red-900 mb-2 flex items-center gap-2">
+                            <AlertCircle size={18} />
+                            Notice:
+                        </h3>
+                        <p className="text-red-700 leading-relaxed font-medium mb-4">
+                            Your account has been permanently suspended due to repeated verification failures or policy violations.
+                        </p>
+                        {rejectionReason && (
+                            <div className="pt-4 border-t border-red-200">
+                                <h4 className="font-bold text-red-800 text-sm mb-1">Reason for Ban:</h4>
+                                <p className="text-red-600 text-sm italic">"{rejectionReason}"</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={handleSignOut}
+                        className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-200 hover:-translate-y-1 flex items-center justify-center gap-2 mx-auto"
+                    >
+                        Logout
+                        <LogOut size={20} />
+                    </button>
+                </div>
+            ) : isRejected ? (
                 <div className="max-w-2xl animate-fade-in-up">
                     <div className="flex justify-center mb-6">
                         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
@@ -77,7 +127,6 @@ const VerificationPending = () => {
                         The admin will respond within 24 hrs after the submission.
                     </p>
 
-                    {/* Subtle Pulse Animation for 'waiting' status */}
                     <div className="mt-12 flex justify-center">
                         <div className="relative">
                             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center animate-pulse">
@@ -89,7 +138,6 @@ const VerificationPending = () => {
                 </div>
             )}
 
-            {/* Footer / Copyright */}
             <div className="absolute bottom-6 text-gray-400 text-xs font-medium">
                 &copy; {new Date().getFullYear()} Restauranto Inc.
             </div>

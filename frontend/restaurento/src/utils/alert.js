@@ -39,6 +39,31 @@ export const showConfirm = (title, text, confirmButtonText = "Yes, do it!") => {
     });
 };
 
+export const showPrompt = (title, text, confirmButtonText = "Submit", inputPlaceholder = "Enter your reason") => {
+    return Swal.fire({
+        title,
+        text,
+        input: "textarea",
+        inputPlaceholder,
+        showCancelButton: true,
+        confirmButtonText,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        customClass: {
+            popup: "dark:bg-gray-800 dark:text-white",
+            title: "dark:text-white",
+            content: "dark:text-gray-300",
+            input: "dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600",
+        },
+        preConfirm: (value) => {
+            if (!value) {
+                Swal.showValidationMessage("You need to write something!");
+            }
+            return value;
+        }
+    });
+};
+
 import { toast } from "sonner";
 
 export const showToast = (message, type = "success") => {

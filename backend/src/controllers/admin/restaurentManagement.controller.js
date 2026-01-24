@@ -2,6 +2,8 @@ import ROLES from "../../constants/roles.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import redisClient from "../../config/redis.js";
 import { env } from "../../config/env.config.js";
+import { sendEmail } from "../../services/commonAuth.service.js";
+import { getVerificationStatusEmailTemplate } from "../../utils/emailTemplates.js";
 
 export const getAllRestaurants = async (req, res, next) => {
   try {
@@ -122,16 +124,58 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
   try {
     const { restaurantId } = req.params;
     const { verificationStatus, reason } = req.body;
-
     const restaurant = await Restaurant.findById(restaurantId);
 
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found." });
     }
 
-    restaurant.status = verificationStatus;
+    // Fix: Update verificationStatus, not status
+    restaurant.verificationStatus = verificationStatus;
+
+    // If rejected, store the reason
+    if (verificationStatus === "rejected") {
+      restaurant.rejectionReason = reason;
+    }
+
+    // Add to history
+    restaurant.verificationHistory.push({
+      status: verificationStatus,
+      reason: reason || "",
+      date: new Date(),
+    });
 
     await restaurant.save();
+
+    // Send email notification
+    try {
+      if (
+        verificationStatus === "approved" ||
+        verificationStatus === "rejected"
+      ) {
+        const recipientName = restaurant.fullName || "Restaurant Partner";
+        const subject =
+          verificationStatus === "approved"
+            ? "Restaurento - Application Approved! 🎉"
+            : "Restaurento - Application Status Update";
+
+        const html = getVerificationStatusEmailTemplate(
+          recipientName,
+          verificationStatus,
+          reason,
+        );
+
+        await sendEmail(
+          restaurant.email,
+          subject,
+          `Your application has been ${verificationStatus}.`,
+          html,
+        );
+      }
+    } catch (emailError) {
+      console.error("Failed to send verification status email:", emailError);
+      // Continue execution
+    }
 
     res.status(200).json({
       message: `Restaurant status updated to ${verificationStatus}`,
@@ -140,6 +184,7 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
         fullName: restaurant.fullName,
         status: restaurant.status,
         verificationStatus: restaurant.verificationStatus,
+        verificationHistory: restaurant.verificationHistory,
       },
     });
   } catch (error) {
@@ -148,14 +193,15 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
   }
 };
 
-export const RestaurantDetails = (req, res, next) => {
+export const RestaurantDetails = async (req, res, next) => {
   try {
-    const { restaurantId } = req.params.restaurantId;
-    const restaurant = Restaurant.findById(restaurantId, {
+    const { restaurantId } = req.params;
+    const restaurant = await Restaurant.findById(restaurantId, {
       _id: 1,
       fullName: 1,
       restaurantName: 1,
       restaurantPhone: 1,
+      phone: 1,
       email: 1,
       address: 1,
       location: 1,
@@ -166,6 +212,17 @@ export const RestaurantDetails = (req, res, next) => {
       status: 1,
       verificationStatus: 1,
       isOnboardingCompleted: 1,
+      description: 1,
+      tags: 1,
+      openingHours: 1,
+      slotConfig: 1,
+      totalSeats: 1,
+      images: 1,
+      menuItems: 1,
+      slotPrice: 1,
+      rejectionReason: 1,
+      verificationHistory: 1,
+      submissionAttempts: 1,
     });
 
     if (!restaurant) {

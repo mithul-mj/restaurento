@@ -194,7 +194,7 @@ const RestaurantManagement = () => {
                       src={
                         restaurant.logo ||
                         "https://ui-avatars.com/api/?name=" +
-                          (restaurant.restaurantName || "R")
+                        (restaurant.restaurantName || "R")
                       }
                       alt={restaurant.restaurantName}
                       className="w-full h-full object-cover"
@@ -210,33 +210,37 @@ const RestaurantManagement = () => {
                       </Link>
                     </h4>
                     <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-900 text-xs font-medium truncate">
-                          {restaurant.fullName}
-                        </span>
-                        <span className="text-gray-400 text-[10px]">•</span>
-                        <p className="text-gray-500 text-xs truncate">
-                          {restaurant.email}
-                        </p>
-                        {restaurant.isEmailVerified ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
-                            Verified
+                      <div className="flex flex-col gap-1.5 mt-0.5">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-gray-700 font-medium truncate max-w-[120px]">
+                            {restaurant.fullName}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                            Unverified
+                          <span className="text-gray-300">•</span>
+                          <span className="text-gray-500 truncate max-w-[150px]">
+                            {restaurant.email}
                           </span>
-                        )}
-                        {restaurant.isOnboardingCompleted ||
-                        restaurant.isOnbordingCompleted ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
-                            Onboarding Completed
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                            Pending Onboarding
-                          </span>
-                        )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {restaurant.isEmailVerified ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                              Unverified
+                            </span>
+                          )}
+                          {restaurant.isOnboardingCompleted ||
+                            restaurant.isOnbordingCompleted ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                              Onboarding Done
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                              Pending Onboarding
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {(restaurant.address || restaurant.location?.address) && (
                         <div className="flex items-center gap-1.5 md:hidden text-gray-500">
@@ -275,11 +279,10 @@ const RestaurantManagement = () => {
                 <div className="w-full md:col-span-3 flex items-center justify-between md:justify-end gap-3 md:gap-8">
                   <span
                     className={`px-3 py-1 text-xs font-semibold rounded-full
-                                        ${
-                                          restaurant.status === "active"
-                                            ? "bg-green-50 text-green-600"
-                                            : "bg-red-50 text-red-500"
-                                        }
+                                        ${restaurant.status === "active"
+                        ? "bg-green-50 text-green-600"
+                        : "bg-red-50 text-red-500"
+                      }
                                     `}>
                     {restaurant.status}
                   </span>
@@ -294,11 +297,10 @@ const RestaurantManagement = () => {
                   <button
                     onClick={() => toggleStatus(restaurant._id)}
                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors
-                                        ${
-                                          restaurant.status === "active"
-                                            ? "bg-red-50 text-red-500 hover:bg-red-100"
-                                            : "bg-green-50 text-green-600 hover:bg-green-100"
-                                        }
+                                        ${restaurant.status === "active"
+                        ? "bg-red-50 text-red-500 hover:bg-red-100"
+                        : "bg-green-50 text-green-600 hover:bg-green-100"
+                      }
                                     `}>
                     {restaurant.status === "active" ? "Suspend" : "Activate"}
                   </button>

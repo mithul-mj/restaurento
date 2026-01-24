@@ -119,7 +119,7 @@ const restaurantSchema = new Schema(
     },
     verificationStatus: {
       type: String,
-      enum: ["new", "pending", "approved", "rejected"],
+      enum: ["new", "pending", "approved", "rejected", "banned"],
       default: "new",
       required: true,
     },
@@ -141,6 +141,20 @@ const restaurantSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    submissionAttempts: {
+      type: Number,
+      default: 0,
+    },
+    verificationHistory: [
+      {
+        status: {
+          type: String,
+          enum: ["new", "pending", "approved", "rejected", "banned"],
+        },
+        reason: { type: String }, // For rejections
+        date: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true },
 );

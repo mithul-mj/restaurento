@@ -29,18 +29,27 @@ export const preApprovalRestaurant = async (req, res, next) => {
             });
         }
 
+        if (currentRestaurant.submissionAttempts >= 3) {
+            return res.status(403).json({
+                message: "Maximum submission attempts (3) reached. Please contact support."
+            });
+        }
+
         const restaurant = await Restaurant.findByIdAndUpdate(
             req.user._id,
             {
-                restaurantName,
-                restaurantPhone,
-                address,
-                location: {
-                    type: "Point",
-                    coordinates: [Number(longitude), Number(latitude)]
+                $set: {
+                    restaurantName,
+                    restaurantPhone,
+                    address,
+                    location: {
+                        type: "Point",
+                        coordinates: [Number(longitude), Number(latitude)]
+                    },
+                    documents,
+                    verificationStatus: 'pending'
                 },
-                documents,
-                verificationStatus: 'pending'
+                $inc: { submissionAttempts: 1 }
             },
             { new: true }
         );

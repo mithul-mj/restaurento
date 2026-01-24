@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Utensils,
   Lock,
@@ -13,9 +14,27 @@ import {
 } from "lucide-react";
 import ImageGallery from "../../components/shared/ImageGallery";
 import MenuGrid from "../../components/shared/MenuGrid";
+import TimeSlotViewer from "../../components/shared/TimeSlotViewer";
 import Sidebar from "../../components/admin/Sidebar";
+import adminService from "../../services/admin.service";
+import LocationViewer from "../../components/shared/LocationViewer";
+import { formatTime12Hour } from "../../utils/timeUtils";
+import {
+  showConfirm,
+  showPrompt,
+  showSuccess,
+  showError,
+} from "../../utils/alert";
 
-
+const DAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 const LockableSection = ({ children, isLocked }) => (
   <div className="relative">
@@ -42,62 +61,137 @@ const LockableSection = ({ children, isLocked }) => (
 );
 
 const RestaurantDetails = () => {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { restaurantId } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [activeMenuTab, setActiveMenuTab] = useState("Dinner");
 
-  const data = {
-    isOnboardingCompleted: false, // Set to true to unlock sections
-    restaurantName: "The Gourmet Kitchen",
-    description:
-      "A cozy, family-owned restaurant offering authentic Italian cuisine made with locally-sourced ingredients. Perfect for a  romantic dinner or a family gathering.",
-    tags: ["Fine Dining", "Authentic Italian", "Romantic", "Outdoor Seating"],
-    images: [],
-    status: "Approved",
-    adminName: "Alex Hartman",
-    address: "123 Culinary Lane, Foodie City, FS 10101",
-    location: { lat: 40.7128, lng: -74.006 },
-    cuisine: "Italian",
-    phone: "(555) 123-4567",
-    email: "contact@thegourmetkitchen.com",
-    hours: "Mon-Fri: 5:00 PM - 10:00 PM",
-    menu: [
-      {
-        id: 1,
-        name: "Spaghetti Carbonara",
-        price: "$22.00",
-        desc: "Classic pasta with pancetta, egg, pecorino cheese.",
-      },
-      {
-        id: 2,
-        name: "Bruschetta al",
-        price: "$12.00",
-        desc: "Grilled bread with tomatoes, garlic, basil, and olive oil.",
-      },
-      {
-        id: 3,
-        name: "Lasagna Bolognese",
-        price: "$20.00",
-        desc: "Layers of pasta with rich meat sauce and béchamel.",
-      },
-      {
-        id: 4,
-        name: "Calamari Fritti",
-        price: "$16.00",
-        desc: "Crispy fried calamari served with a side of marinara sauce.",
-      },
-      {
-        id: 5,
-        name: "Risotto ai Funghi",
-        price: "$24.00",
-        desc: "Creamy risotto with wild mushrooms and parmesan.",
-      },
-      {
-        id: 6,
-        name: "Tiramisu",
-        price: "$10.00",
-        desc: "Coffee-flavored Italian dessert with ladyfingers.",
-      },
-    ],
+  const handleApprove = async () => {
+    const result = await showConfirm(
+      "Approve Restaurant",
+      `Are you sure you want to approve ${data.restaurantName}? This will grant them full access to the platform.`,
+      "Confirm Approval",
+    );
+
+    if (result.isConfirmed) {
+      await updateVerificationStatus("approved");
+    }
   };
+
+  const handleReject = async () => {
+    const result = await showPrompt(
+      "Reject Application",
+      "Please specify the reason for rejection:",
+      "Reject Application",
+    );
+
+    if (result.isConfirmed && result.value) {
+      await updateVerificationStatus("rejected", result.value);
+    }
+  };
+
+  const updateVerificationStatus = async (status, reason = "") => {
+    try {
+      const response = await adminService.toggleRestaurantVerificationStatus(
+        restaurantId,
+        { verificationStatus: status, reason },
+      );
+
+      if (response?.user) {
+        setData((prev) => ({
+          ...prev,
+          verificationStatus: response.user.verificationStatus,
+          verificationHistory: response.user.verificationHistory,
+          rejectionReason: response.user.rejectionReason,
+        }));
+
+        await showSuccess(
+          status === "approved"
+            ? "Approved Successfully"
+            : "Application Rejected",
+          `The restaurant application has been ${status}.`,
+        );
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      showError("Action Failed", "Could not update verification status.");
+    }
+  };
+
+  useEffect(() => {
+    const fetchRestaurantDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await adminService.getRestaurantDetails(restaurantId);
+        if (response.user) {
+          const fetchedData = {
+            ...response.user,
+            tags: response.user.tags || [],
+            images: response.user.images || [],
+            menu: response.user.menuItems || [],
+            location: response.user.location || {
+              type: "Point",
+              coordinates: [0, 0],
+            },
+          };
+          if (fetchedData.location.coordinates) {
+            fetchedData.location = {
+              lat: fetchedData.location.coordinates[1],
+              lng: fetchedData.location.coordinates[0],
+              ...fetchedData.location,
+            };
+          }
+
+          setData(fetchedData);
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (restaurantId) {
+      fetchRestaurantDetails();
+    }
+  }, [restaurantId]);
+
+  const handleStatusToggle = async () => {
+    try {
+      const response = await adminService.toggleRestaurantStatus(restaurantId);
+      if (response?.data?.user) {
+        setData((prev) => ({
+          ...prev,
+          status: response.data.user.status,
+        }));
+      }
+    } catch (error) {
+      console.error("Error toggling status:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500 text-lg">Loading restaurant details...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-500 text-lg">Restaurant not found</p>
+      </div>
+    );
+  }
+
+  const menuItems = data.menu || [];
+  const filteredItems = menuItems.filter((item) => {
+    return item.categories.includes(activeMenuTab);
+  });
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] text-slate-800">
@@ -107,7 +201,6 @@ const RestaurantDetails = () => {
         activePage="Restaurants"
       />
 
-      {/* Content Area */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
         <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between md:hidden">
           <div className="flex items-center gap-2">
@@ -124,10 +217,11 @@ const RestaurantDetails = () => {
         </header>
 
         <main className="flex-1 p-8 overflow-y-auto">
-          {/* Header Navigation */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center text-xs text-gray-400 space-x-2">
-              <span className="hover:underline cursor-pointer">
+              <span
+                onClick={() => navigate("/admin/restaurants")}
+                className="hover:underline cursor-pointer">
                 Back to Restaurants
               </span>
               <span>/</span>
@@ -135,8 +229,14 @@ const RestaurantDetails = () => {
                 {data.restaurantName}
               </span>
             </div>
-            <button className="bg-red-50 text-red-500 px-5 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition">
-              Suspend
+            <button
+              onClick={handleStatusToggle}
+              className={`px-5 py-1.5 rounded-lg text-xs font-bold transition ${
+                data.status === "active"
+                  ? "bg-red-50 text-red-500 hover:bg-red-100"
+                  : "bg-green-50 text-green-600 hover:bg-green-100"
+              }`}>
+              {data.status === "active" ? "Suspend" : "Activate"}
             </button>
           </div>
 
@@ -150,81 +250,112 @@ const RestaurantDetails = () => {
           </div>
 
           <div className="grid grid-cols-12 gap-8">
-            {/* Main Column */}
             <div className="col-span-12 lg:col-span-8 space-y-8">
-              {/* Basic Info (Always Unlocked) */}
               <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <h2 className="text-lg font-bold mb-4">Basic Information</h2>
                 <p className="text-gray-500 text-sm leading-relaxed mb-8">
                   {data.description}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
-                  <div className="flex items-center space-x-4">
-                    <Utensils size={18} className="text-orange-500" />
-                    <span className="text-sm">
-                      Cuisine:{" "}
-                      <b className="ml-1 text-gray-700">{data.cuisine}</b>
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <Phone size={18} className="text-orange-500" />
-                    <span className="text-sm">
+                  <div className="flex items-start space-x-3">
+                    <Phone size={18} className="text-[#ff5e00] mt-0.5" />
+                    <span className="text-sm text-gray-500">
                       Phone:{" "}
-                      <span className="ml-1 text-gray-700 font-medium">
-                        {data.phone}
+                      <span className="ml-1 text-gray-900 font-medium">
+                        {data.restaurantPhone}
                       </span>
                     </span>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <Mail size={18} className="text-orange-500" />
-                    <span className="text-sm">
+
+                  <div className="flex items-start space-x-3">
+                    <Mail size={18} className="text-[#ff5e00] mt-0.5" />
+                    <span className="text-sm text-gray-500">
                       Email:{" "}
-                      <span className="ml-1 text-gray-700 font-medium">
+                      <span className="ml-1 text-gray-900 font-medium">
                         {data.email}
                       </span>
                     </span>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <Clock size={18} className="text-orange-500" />
-                    <div className="text-xs">
-                      <p className="text-gray-700 font-medium">{data.hours}</p>
-                      <p className="text-gray-400">Sat-Sun: 4:00 PM - 11:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex space-x-2 mt-8">
-                  {data.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-[10px] font-bold">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </section>
 
-              {/* Visuals (Locked Before Onboarding) */}
+                  {data.isOnboardingCompleted &&
+                    data.openingHours &&
+                    data.openingHours?.days && (
+                      <div className="flex items-start space-x-3">
+                        <Clock
+                          size={18}
+                          className="text-[#ff5e00] mt-0.5 shrink-0"
+                        />
+                        <div className="text-xs space-y-1 w-full">
+                          {data.openingHours?.days.map((day, i) => (
+                            <div
+                              key={i}
+                              className="grid grid-cols-[3rem_1fr] gap-x-2 items-center">
+                              <span className="font-medium text-gray-500">
+                                {DAY_NAMES[i].substring(0, 3)}
+                              </span>
+                              {day.isClosed ? (
+                                <span className="text-gray-400 italic">
+                                  Closed
+                                </span>
+                              ) : (
+                                <span className="text-gray-900 font-medium">
+                                  {formatTime12Hour(day.startTime)} -{" "}
+                                  {formatTime12Hour(day.endTime)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </div>
+
+                {data.tags && (
+                  <div className="flex flex-wrap gap-3 mt-8">
+                    {data.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-orange-50 text-[#cc4b00] px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-orange-100 transition-colors cursor-default">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </section>
               <LockableSection isLocked={!data.isOnboardingCompleted}>
                 <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                   <h2 className="text-lg font-bold mb-6">Restaurant Visuals</h2>
                   <ImageGallery images={data.images} />
                 </section>
               </LockableSection>
+              <LockableSection isLocked={!data.isOnboardingCompleted}>
+                <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                  <h2 className="text-lg font-bold mb-6">
+                    Weekly Schedule & Slots
+                  </h2>
+                  <TimeSlotViewer days={data.openingHours?.days || []} />
+                </section>
+              </LockableSection>
 
-              {/* Menu (Locked Before Onboarding) */}
               <LockableSection isLocked={!data.isOnboardingCompleted}>
                 <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <div className="flex space-x-6 border-b border-gray-100 w-full md:w-auto">
-                      {["Breakfast", "Lunch", "Dinner"].map((t) => (
+                    <div className="flex gap-2">
+                      {["Breakfast", "Lunch", "Dinner"].map((tab) => (
                         <button
-                          key={t}
-                          className={`pb-2 text-sm font-bold ${t === "Dinner" ? "text-orange-600 border-b-2 border-orange-600" : "text-gray-400"}`}>
-                          {t}
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveMenuTab(tab)}
+                          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                            activeMenuTab === tab
+                              ? "bg-gray-900 text-white shadow-md"
+                              : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                          }`}>
+                          {tab}
                         </button>
                       ))}
                     </div>
-                    <div className="relative w-full md:w-64">
+                    {/* <div className="relative w-full md:w-64">
                       <Search
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                         size={14}
@@ -234,20 +365,19 @@ const RestaurantDetails = () => {
                         placeholder="Search menu..."
                         className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs"
                       />
-                    </div>
+                    </div> */}
                   </div>
 
                   <MenuGrid
-                    items={data.menu}
+                    items={filteredItems}
+                    activeTab={activeMenuTab}
                     emptyStateMessage="No menu items found"
                   />
                 </section>
               </LockableSection>
             </div>
 
-            {/* Right Sidebar */}
             <div className="col-span-12 lg:col-span-4 space-y-6">
-              {/* Reports Banner */}
               <div className="bg-orange-50 border border-orange-100 p-5 rounded-2xl flex items-start space-x-4">
                 <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
                   <AlertTriangle size={20} />
@@ -262,7 +392,6 @@ const RestaurantDetails = () => {
                 </div>
               </div>
 
-              {/* Status Card */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
                   Approval Status
@@ -271,31 +400,108 @@ const RestaurantDetails = () => {
                   <span className="text-sm text-gray-500 font-medium">
                     Current Status
                   </span>
-                  <span className="text-green-600 font-bold text-sm">
-                    Approved
+                  <span
+                    className={`font-bold text-sm capitalize ${
+                      data.verificationStatus === "approved"
+                        ? "text-green-600"
+                        : data.verificationStatus === "rejected"
+                          ? "text-red-500"
+                          : data.verificationStatus === "banned"
+                            ? "text-slate-900"
+                            : "text-orange-500"
+                    }`}>
+                    {data.verificationStatus}
                   </span>
                 </div>
-                <div className="border-l-2 border-green-500 ml-1 pl-4 space-y-6">
-                  <div>
+
+                {data.verificationStatus === "pending" &&
+                  (data.submissionAttempts || 0) <= 3 && (
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      <button
+                        onClick={handleApprove}
+                        className="bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-green-200">
+                        Approve
+                      </button>
+                      <button
+                        onClick={handleReject}
+                        className="bg-white border border-red-200 text-red-500 hover:bg-red-50 py-2 rounded-xl text-xs font-bold transition-all">
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                <div className="md:col-span-1 border-l-2 border-gray-100 ml-1 pl-4 space-y-6 relative">
+                  {(data.verificationHistory || [])
+                    .slice()
+                    .reverse()
+                    .map((historyItem, index) => (
+                      <div key={index} className="relative">
+                        {/* Timeline dot */}
+                        <div
+                          className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                            historyItem.status === "approved"
+                              ? "bg-green-500"
+                              : historyItem.status === "rejected"
+                                ? "bg-red-500"
+                                : historyItem.status === "banned"
+                                  ? "bg-slate-900"
+                                  : "bg-orange-500"
+                          }`}
+                        />
+
+                        <div>
+                          <p
+                            className={`text-xs font-bold capitalize ${
+                              historyItem.status === "approved"
+                                ? "text-green-700"
+                                : historyItem.status === "rejected"
+                                  ? "text-red-600"
+                                  : historyItem.status === "banned"
+                                    ? "text-slate-900"
+                                    : "text-orange-600"
+                            }`}>
+                            {historyItem.status}
+                          </p>
+
+                          {historyItem.reason && (
+                            <p className="text-[11px] text-gray-600 mt-1 italic">
+                              "{historyItem.reason}"
+                            </p>
+                          )}
+
+                          <p className="text-[10px] text-gray-400 mt-1">
+                            {new Date(historyItem.date).toLocaleString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+
+                  <div className="relative opacity-60">
+                    <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white bg-gray-400" />
                     <p className="text-xs font-bold text-gray-800">
-                      Approved by {data.adminName}
+                      Application Created
                     </p>
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      June 15, 2023
-                    </p>
-                  </div>
-                  <div className="opacity-40">
-                    <p className="text-xs font-bold text-gray-800">
-                      Application Submitted
-                    </p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">
-                      June 12, 2023
+                      {new Date(data.createdAt).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Rates Card (Locked Before Onboarding) */}
               <LockableSection isLocked={!data.isOnboardingCompleted}>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
@@ -303,10 +509,13 @@ const RestaurantDetails = () => {
                   </h3>
                   <div className="space-y-4">
                     {[
-                      ["Total Seats", "48"],
-                      ["Booking Rate", "$25 / person"],
-                      ["Slot Duration", "90 Minutes"],
-                      ["Gap Duration", "5 Minutes"],
+                      ["Total Seats", `${data.totalSeats || 0}`],
+                      ["Booking Rate", `₹${data.slotPrice || 0} / person`],
+                      [
+                        "Slot Duration",
+                        `${data.slotConfig?.duration || 0} Minutes`,
+                      ],
+                      ["Gap Duration", `${data.slotConfig?.gap || 0} Minutes`],
                     ].map(([k, v]) => (
                       <div
                         key={k}
@@ -319,15 +528,15 @@ const RestaurantDetails = () => {
                 </div>
               </LockableSection>
 
-              {/* Legal (Always Unlocked) */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
                   Legal Documents
                 </h3>
                 <div className="space-y-3">
-                  {["Business_License.pdf", "Health_Permit.pdf"].map((doc) => (
+                  {Object.keys(data.documents || {}).map((doc) => (
                     <div
                       key={doc}
+                      onClick={() => window.open(data.documents[doc], "_blank")}
                       className="group flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-transparent hover:border-orange-200 transition cursor-pointer">
                       <div className="flex items-center space-x-3 text-gray-600">
                         <Download size={16} className="text-orange-500" />
@@ -341,24 +550,14 @@ const RestaurantDetails = () => {
                 </div>
               </div>
 
-              {/* Location (Always Unlocked) */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
                   Location
                 </h3>
-                <div className="w-full h-44 bg-[#E5E7EB] rounded-2xl mb-4 relative overflow-hidden">
-                  {/* Mock Map Background */}
-                  <div
-                    className="absolute inset-0 opacity-30 grayscale"
-                    style={{
-                      backgroundImage:
-                        "radial-gradient(#000 1px, transparent 1px)",
-                      backgroundSize: "20px 20px",
-                    }}></div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <MapPin className="text-red-500 fill-red-200" size={32} />
-                  </div>
-                </div>
+                <LocationViewer
+                  lat={data.location.lat}
+                  lng={data.location.lng}
+                />
                 <p className="text-xs text-gray-600 font-medium leading-relaxed">
                   {data.address}
                 </p>

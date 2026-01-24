@@ -1,6 +1,8 @@
 import multer from "multer";
 import { storage } from "../../config/cloudinary.config.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
+import { sendEmail } from "../../services/commonAuth.service.js";
+import { getPreApprovalEmailTemplate } from "../../utils/emailTemplates.js";
 export const upload = multer({ storage });
 
 export const onboardingUploads = upload.fields([
@@ -83,9 +85,38 @@ export const submitOnboarding = async (req, res, next) => {
 
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       user._id,
-      restaurantData,
+      {
+        $set: {
+          ...restaurantData,
+          verificationStatus: "pending",
+        },
+        $push: {
+          verificationHistory: {
+            status: "pending",
+            date: new Date(),
+            reason: "Onboarding submitted",
+          },
+        },
+      },
       { new: true }
     );
+
+    // Send confirmation email
+    try {
+      console.log(`Attempting to send pre-approval email to: ${updatedRestaurant.email}`);
+      const subject = "Pre-Approval Application Received";
+      const recipientName = updatedRestaurant.fullName || updatedRestaurant.restaurantName || "Restaurant Partner";
+      const html = getPreApprovalEmailTemplate(recipientName);
+
+      await sendEmail(updatedRestaurant.email, subject, "Your application is under review.", html);
+      console.log("Pre-approval email sent successfully.");
+    } catch (emailError) {
+      console.error("Failed to send pre-approval email details:", {
+        recipient: updatedRestaurant.email,
+        error: emailError.message
+      });
+      // Don't block the response if email fails
+    }
 
     console.log("=== DEBUG INFO ===");
     console.log("Tags received:", tags);
