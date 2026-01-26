@@ -17,6 +17,19 @@ const userService = {
     const response = await api.patch("/profile/change-email/verify", { newEmail, otp });
     return response.data;
   },
+  getDashboard: async (page = 1, limit = 6, search = "", filters = {}, coordinates = null) => {
+    let params = { page, limit, search, ...filters };
+
+    if (coordinates && coordinates.lat && coordinates.lon) {
+      params.lat = coordinates.lat;
+      params.lng = coordinates.lon;
+    }
+
+    const response = await api.get(`/dashboard`, {
+      params,
+    });
+    return response.data;
+  },
 };
 
 export default userService;
