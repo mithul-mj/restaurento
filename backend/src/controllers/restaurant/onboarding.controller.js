@@ -83,40 +83,31 @@ export const submitOnboarding = async (req, res, next) => {
 
 
 
+    const existingRestaurant = await Restaurant.findById(user._id);
+
+    if (!existingRestaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found",
+      });
+    }
+
+    if (existingRestaurant.verificationStatus === "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Application is under review. You cannot edit details while pending approval.",
+      });
+    }
+
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       user._id,
       {
         $set: {
           ...restaurantData,
-          verificationStatus: "pending",
-        },
-        $push: {
-          verificationHistory: {
-            status: "pending",
-            date: new Date(),
-            reason: "Onboarding submitted",
-          },
         },
       },
       { new: true }
     );
-
-    // Send confirmation email
-    try {
-      console.log(`Attempting to send pre-approval email to: ${updatedRestaurant.email}`);
-      const subject = "Pre-Approval Application Received";
-      const recipientName = updatedRestaurant.fullName || updatedRestaurant.restaurantName || "Restaurant Partner";
-      const html = getPreApprovalEmailTemplate(recipientName);
-
-      await sendEmail(updatedRestaurant.email, subject, "Your application is under review.", html);
-      console.log("Pre-approval email sent successfully.");
-    } catch (emailError) {
-      console.error("Failed to send pre-approval email details:", {
-        recipient: updatedRestaurant.email,
-        error: emailError.message
-      });
-      // Don't block the response if email fails
-    }
 
     console.log("=== DEBUG INFO ===");
     console.log("Tags received:", tags);
@@ -135,7 +126,7 @@ export const submitOnboarding = async (req, res, next) => {
 
     res.status(201).json({
       message: "Onboarding details submitted successfully",
-      restaurantId: "generated_id_here",
+      restaurantId: updatedRestaurant._id,
     });
   } catch (error) {
     console.error("Backend onboarding error:", error);
