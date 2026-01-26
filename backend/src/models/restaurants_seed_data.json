@@ -1,0 +1,603 @@
+[
+    {
+        "fullName": "Rahul Nair",
+        "email": "rahul.nair@example.com",
+        "password": "$2b$10$2PNlyJlrMpK4Gtt7vpymSOn31Sy3WRHsEFlgBi/Z7dAzkrVMJdEsS",
+        "isEmailVerified": true,
+        "restaurantName": "The Golden Spoon",
+        "restaurantPhone": "9876543210",
+        "description": "Authentic Kerala cuisine with a modern twist. Experience the taste of tradition.",
+        "tags": [
+            "Indian",
+            "Kerala",
+            "Spicy"
+        ],
+        "openingHours": {
+            "isSameEveryDay": true,
+            "days": [
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                }
+            ]
+        },
+        "slotConfig": {
+            "duration": 60,
+            "gap": 15
+        },
+        "totalSeats": 40,
+        "images": [
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+            "https://images.unsplash.com/photo-1552566626-52f8b828add9"
+        ],
+        "address": "MG Road, Kochi, Kerala 682001, India",
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                76.2711,
+                9.9312
+            ]
+        },
+        "documents": {
+            "restaurantLicense": "https://example.com/doc1.png",
+            "businessCert": "https://example.com/doc2.png",
+            "fssaiCert": "https://example.com/doc3.png",
+            "ownerIdCert": "https://example.com/doc4.png"
+        },
+        "menuItems": [
+            {
+                "name": "Chicken Biryani",
+                "price": 250,
+                "description": "Richly flavored aromatic rice layered with marinated chicken pieces in a delicate blend of whole spices.",
+                "categories": [
+                    "Lunch",
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1589302168068-964664d93dc0",
+                "isAvailable": true
+            },
+            {
+                "name": "Kerala Parotta",
+                "price": 30,
+                "description": "Layered flatbread made from maida flour.",
+                "categories": [
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6a6",
+                "isAvailable": true
+            }
+        ],
+        "slotPrice": 100,
+        "status": "active",
+        "verificationStatus": "approved",
+        "isOnboardingCompleted": true,
+        "submissionAttempts": 1,
+        "rejectionReason": "",
+        "verificationHistory": [
+            {
+                "status": "approved",
+                "reason": "Documents verified successfully.",
+                "date": "2026-01-20T10:00:00.000Z"
+            }
+        ]
+    },
+    {
+        "fullName": "Sarah Conner",
+        "email": "sarah.pasta@example.com",
+        "password": "$2b$10$2PNlyJlrMpK4Gtt7vpymSOn31Sy3WRHsEFlgBi/Z7dAzkrVMJdEsS",
+        "isEmailVerified": true,
+        "restaurantName": "Pasta Paradise",
+        "restaurantPhone": "9876543211",
+        "description": "The best Italian pasta in town, made with fresh ingredients.",
+        "tags": [
+            "Italian",
+            "Pasta",
+            "Continental"
+        ],
+        "openingHours": {
+            "isSameEveryDay": false,
+            "days": [
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": true,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                }
+            ]
+        },
+        "slotConfig": {
+            "duration": 45,
+            "gap": 10
+        },
+        "totalSeats": 30,
+        "images": [
+            "https://images.unsplash.com/photo-1559339352-11d035aa65de",
+            "https://images.unsplash.com/photo-1595295333158-4742f28fbd85"
+        ],
+        "address": "Marine Drive, Kochi, Kerala 682031, India",
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                76.2754,
+                9.9785
+            ]
+        },
+        "documents": {
+            "restaurantLicense": "https://example.com/doc1.png",
+            "businessCert": "https://example.com/doc2.png",
+            "fssaiCert": "https://example.com/doc3.png",
+            "ownerIdCert": "https://example.com/doc4.png"
+        },
+        "menuItems": [
+            {
+                "name": "Spaghetti Carbonara",
+                "price": 350,
+                "description": "Classic carbonara with pancetta, egg, and pecorino cheese.",
+                "categories": [
+                    "Lunch",
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1612874742237-6526221588e3",
+                "isAvailable": true
+            },
+            {
+                "name": "Margherita Pizza",
+                "price": 400,
+                "description": "Tomato, mozzarella, and fresh basil.",
+                "categories": [
+                    "Lunch",
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002",
+                "isAvailable": true
+            }
+        ],
+        "slotPrice": 150,
+        "status": "active",
+        "verificationStatus": "approved",
+        "isOnboardingCompleted": true,
+        "submissionAttempts": 1,
+        "rejectionReason": "",
+        "verificationHistory": [
+            {
+                "status": "approved",
+                "reason": "All good.",
+                "date": "2026-01-21T11:00:00.000Z"
+            }
+        ]
+    },
+    {
+        "fullName": "John Doe",
+        "email": "john.burger@example.com",
+        "password": "$2b$10$2PNlyJlrMpK4Gtt7vpymSOn31Sy3WRHsEFlgBi/Z7dAzkrVMJdEsS",
+        "isEmailVerified": true,
+        "restaurantName": "Burger Hub",
+        "restaurantPhone": "9876543212",
+        "description": "Juicy burgers, crispy fries, and thick shakes.",
+        "tags": [
+            "Fast Food",
+            "Burgers",
+            "American"
+        ],
+        "openingHours": {
+            "isSameEveryDay": true,
+            "days": [
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "11:00",
+                    "endTime": "23:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                }
+            ]
+        },
+        "slotConfig": {
+            "duration": 30,
+            "gap": 5
+        },
+        "totalSeats": 20,
+        "images": [
+            "https://images.unsplash.com/photo-1550547660-d9450f859349",
+            "https://images.unsplash.com/photo-1551782450-a2132b4ba21d"
+        ],
+        "address": "Edappally, Kochi, Kerala 682024, India",
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                76.3079,
+                10.0245
+            ]
+        },
+        "documents": {
+            "restaurantLicense": "https://example.com/doc1.png",
+            "businessCert": "https://example.com/doc2.png",
+            "fssaiCert": "https://example.com/doc3.png",
+            "ownerIdCert": "https://example.com/doc4.png"
+        },
+        "menuItems": [
+            {
+                "name": "Classic Cheeseburger",
+                "price": 200,
+                "description": "Beef patty, cheddar cheese, lettuce, tomato, and special sauce.",
+                "categories": [
+                    "Lunch",
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+                "isAvailable": true
+            },
+            {
+                "name": "Crispy Chicken Burger",
+                "price": 220,
+                "description": "Fried chicken breast with coleslaw and pickles.",
+                "categories": [
+                    "Lunch",
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1615297928064-24977384d0f9",
+                "isAvailable": true
+            }
+        ],
+        "slotPrice": 50,
+        "status": "active",
+        "verificationStatus": "approved",
+        "isOnboardingCompleted": true,
+        "submissionAttempts": 1,
+        "rejectionReason": "",
+        "verificationHistory": [
+            {
+                "status": "approved",
+                "reason": "Clear documents.",
+                "date": "2026-01-21T12:00:00.000Z"
+            }
+        ]
+    },
+    {
+        "fullName": "Akira Tanaka",
+        "email": "akira.sushi@example.com",
+        "password": "$2b$10$2PNlyJlrMpK4Gtt7vpymSOn31Sy3WRHsEFlgBi/Z7dAzkrVMJdEsS",
+        "isEmailVerified": true,
+        "restaurantName": "Sushi Sensation",
+        "restaurantPhone": "9876543213",
+        "description": "Premium sushi and sashimi prepared by expert chefs.",
+        "tags": [
+            "Japanese",
+            "Sushi",
+            "Seafood"
+        ],
+        "openingHours": {
+            "isSameEveryDay": false,
+            "days": [
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": true,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "12:00",
+                    "endTime": "22:00",
+                    "isClosed": true,
+                    "generatedSlots": []
+                }
+            ]
+        },
+        "slotConfig": {
+            "duration": 90,
+            "gap": 15
+        },
+        "totalSeats": 25,
+        "images": [
+            "https://images.unsplash.com/photo-1579871494447-9811cf80d66c",
+            "https://images.unsplash.com/photo-1611143669185-af224c5e3252"
+        ],
+        "address": "Fort Kochi, Kerala 682001, India",
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                76.2418,
+                9.9658
+            ]
+        },
+        "documents": {
+            "restaurantLicense": "https://example.com/doc1.png",
+            "businessCert": "https://example.com/doc2.png",
+            "fssaiCert": "https://example.com/doc3.png",
+            "ownerIdCert": "https://example.com/doc4.png"
+        },
+        "menuItems": [
+            {
+                "name": "Salmon Nigiri",
+                "price": 500,
+                "description": "Fresh salmon slice over seasoned sushi rice.",
+                "categories": [
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351",
+                "isAvailable": true
+            },
+            {
+                "name": "California Roll",
+                "price": 450,
+                "description": "Crab meat, avocado, and cucumber wrapped in seaweed and rice.",
+                "categories": [
+                    "Lunch",
+                    "Dinner"
+                ],
+                "image": "https://images.unsplash.com/photo-1582450871972-ab5ca641643d",
+                "isAvailable": true
+            }
+        ],
+        "slotPrice": 200,
+        "status": "active",
+        "verificationStatus": "approved",
+        "isOnboardingCompleted": true,
+        "submissionAttempts": 1,
+        "rejectionReason": "",
+        "verificationHistory": [
+            {
+                "status": "approved",
+                "reason": "Excellent profile.",
+                "date": "2026-01-22T09:00:00.000Z"
+            }
+        ]
+    },
+    {
+        "fullName": "Priya Menon",
+        "email": "priya.cafe@example.com",
+        "password": "$2b$10$2PNlyJlrMpK4Gtt7vpymSOn31Sy3WRHsEFlgBi/Z7dAzkrVMJdEsS",
+        "isEmailVerified": true,
+        "restaurantName": "Café Mocha",
+        "restaurantPhone": "9876543214",
+        "description": "A cozy place for coffee lovers and bookworms.",
+        "tags": [
+            "Cafe",
+            "Coffee",
+            "Bakery"
+        ],
+        "openingHours": {
+            "isSameEveryDay": true,
+            "days": [
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                },
+                {
+                    "startTime": "08:00",
+                    "endTime": "20:00",
+                    "isClosed": false,
+                    "generatedSlots": []
+                }
+            ]
+        },
+        "slotConfig": {
+            "duration": 45,
+            "gap": 0
+        },
+        "totalSeats": 15,
+        "images": [
+            "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
+            "https://images.unsplash.com/photo-1509042239860-f550ce710b93"
+        ],
+        "address": "Kakkanad, Kochi, Kerala 682030, India",
+        "location": {
+            "type": "Point",
+            "coordinates": [
+                76.3419,
+                10.0159
+            ]
+        },
+        "documents": {
+            "restaurantLicense": "https://example.com/doc1.png",
+            "businessCert": "https://example.com/doc2.png",
+            "fssaiCert": "https://example.com/doc3.png",
+            "ownerIdCert": "https://example.com/doc4.png"
+        },
+        "menuItems": [
+            {
+                "name": "Cappuccino",
+                "price": 120,
+                "description": "Rich espresso topped with steamed milk/foam.",
+                "categories": [
+                    "Beverage"
+                ],
+                "image": "https://images.unsplash.com/photo-1572442388796-11668a67e53d",
+                "isAvailable": true
+            },
+            {
+                "name": "Chocolate Croissant",
+                "price": 150,
+                "description": "Buttery pastry filled with dark chocolate.",
+                "categories": [
+                    "Bakery"
+                ],
+                "image": "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
+                "isAvailable": true
+            }
+        ],
+        "slotPrice": 50,
+        "status": "active",
+        "verificationStatus": "approved",
+        "isOnboardingCompleted": true,
+        "submissionAttempts": 1,
+        "rejectionReason": "",
+        "verificationHistory": [
+            {
+                "status": "approved",
+                "reason": "Verified.",
+                "date": "2026-01-22T14:30:00.000Z"
+            }
+        ]
+    }
+]
