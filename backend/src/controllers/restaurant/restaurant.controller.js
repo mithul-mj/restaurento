@@ -78,3 +78,31 @@ export const getRestaurantProfile = async (req, res, next) => {
         next(error);
     }
 };
+
+export const updateRestaurantSettings = async (req, res, next) => {
+    try {
+        const { isTemporaryClosed } = req.body;
+
+        if (typeof isTemporaryClosed !== 'boolean') {
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+
+        const restaurant = await Restaurant.findByIdAndUpdate(
+            req.user._id,
+            { $set: { isTemporaryClosed } },
+            { new: true }
+        );
+
+        if (!restaurant) {
+            return res.status(404).json({ message: "Restaurant not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Restaurant is now ${isTemporaryClosed ? 'closed' : 'open'} temporarily`,
+            isTemporaryClosed: restaurant.isTemporaryClosed
+        });
+    } catch (error) {
+        next(error);
+    }
+};

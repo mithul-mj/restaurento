@@ -13,8 +13,8 @@ const menuSchema = new Schema({
 const dayHoursSchema = new Schema(
   {
     // No dayName - index determines day (0=Monday, 1=Tuesday, etc.)
-    startTime: { type: String }, // "09:00" format
-    endTime: { type: String }, // "22:00" format
+    startTime: { type: Number },
+    endTime: { type: Number },
     isClosed: { type: Boolean, default: false },
     generatedSlots: [
       {
@@ -137,7 +137,7 @@ const restaurantSchema = new Schema(
     rejectionReason: {
       type: String,
     },
-    isCurrentlyOpen: {
+    isTemporaryClosed: {
       type: Boolean,
       default: false,
     },

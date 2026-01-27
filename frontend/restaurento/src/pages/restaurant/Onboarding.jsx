@@ -14,6 +14,7 @@ import Step2Seating from "../../components/onboarding/Step2Seating";
 import Step4Menu from "../../components/onboarding/Step4Menu";
 import Step5Review from "../../components/onboarding/Step5Review";
 import restaurantService from '../../services/restaurant.service.js'
+import Loader from "../../components/Loader";
 
 const STEPS = ["Basic Info", "Seating & Photos", "Menu", "Review"];
 
@@ -180,7 +181,14 @@ const Onboarding = () => {
                                         disabled={isSubmitting}
                                         className="px-8 py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        {isSubmitting ? "Submitting..." : "Finish Setup"}
+                                        {isSubmitting ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader className="text-white" />
+                                                <span>Submitting...</span>
+                                            </div>
+                                        ) : (
+                                            "Finish Setup"
+                                        )}
                                     </button>
                                 )}
                             </div>

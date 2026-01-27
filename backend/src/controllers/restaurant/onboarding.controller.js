@@ -3,6 +3,7 @@ import { storage } from "../../config/cloudinary.config.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { sendEmail } from "../../services/commonAuth.service.js";
 import { getPreApprovalEmailTemplate } from "../../utils/emailTemplates.js";
+import { timeToMinutes } from "../../utils/timeUtils.js";
 export const upload = multer({ storage });
 
 export const onboardingUploads = upload.fields([
@@ -27,7 +28,15 @@ export const submitOnboarding = async (req, res, next) => {
     console.log("Raw openingHours from frontend:", body.openingHours);
 
     const slotConfig = typeof body.slotConfig === 'string' ? JSON.parse(body.slotConfig) : body.slotConfig;
-    const openingHours = typeof body.openingHours === 'string' ? JSON.parse(body.openingHours) : body.openingHours;
+    let openingHours = typeof body.openingHours === 'string' ? JSON.parse(body.openingHours) : body.openingHours;
+
+    if (openingHours && openingHours.days) {
+      openingHours.days = openingHours.days.map((day) => ({
+        ...day,
+        startTime: typeof day.startTime === 'string' ? timeToMinutes(day.startTime) : day.startTime,
+        endTime: typeof day.endTime === 'string' ? timeToMinutes(day.endTime) : day.endTime,
+      }));
+    }
     const galleryUrls = files["images"]?.map((f) => f.path) || [];
 
     const menuItems = [];

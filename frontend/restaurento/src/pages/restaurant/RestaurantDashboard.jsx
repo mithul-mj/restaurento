@@ -22,11 +22,11 @@ import {
     AreaChart,
     Area
 } from 'recharts';
+import RestaurantSettings from './RestaurentSettings';
 
 const RestaurantDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
 
     const weeklyData = [
         { name: 'Mon', bookings: 12, revenue: 150 },
@@ -180,6 +180,9 @@ const RestaurantDashboard = () => {
                         </div>
                     </div>
                 );
+
+            case 'settings':
+                return <RestaurantSettings />;
 
             default:
                 return (

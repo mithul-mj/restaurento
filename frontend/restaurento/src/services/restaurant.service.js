@@ -17,6 +17,10 @@ const restaurantService = {
         const response = await api.get("/restaurant/profile");
         return response.data;
     },
+    updateSettings: async (data) => {
+        const response = await api.patch("/restaurant/settings", data);
+        return response.data;
+    },
 
 
 };

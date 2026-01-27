@@ -25,7 +25,7 @@ export const getUserDashboard = async (req, res, next) => {
         $geoNear: {
           near: { type: "Point", coordinates: [lng, lat] },
           distanceField: "distanceFromUser",
-          maxDistance: 10000, // 10km radius
+          maxDistance: 15000, // 10km radius
           spherical: true,
           query: baseQuery
         }
@@ -101,10 +101,42 @@ export const getUserDashboard = async (req, res, next) => {
       }
     };
 
+    const now = new Date();
+    const day = now.getDay();
+    const currentDayIndex = day === 0 ? 6 : day - 1;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const addFieldsStage = {
+      $addFields: {
+        todaySchedule: { $arrayElemAt: ["$openingHours.days", currentDayIndex] }
+      }
+    };
+
+    const calculateOpenStage = {
+      $addFields: {
+        isCurrentlyOpen: {
+          $cond: {
+            if: {
+              $and: [
+                { $eq: ["$isTemporaryClosed", false] },
+                { $eq: ["$todaySchedule.isClosed", false] },
+                { $gte: [currentMinutes, "$todaySchedule.startTime"] },
+                { $lte: [currentMinutes, "$todaySchedule.endTime"] }
+              ]
+            },
+            then: true,
+            else: false
+          }
+        }
+      }
+    };
+
     pipeline.push({
       $facet: {
         metadata: [{ $count: "total" }],
         data: [
+          addFieldsStage,
+          calculateOpenStage,
           projectStage,
           { $skip: skip },
           { $limit: limit }
