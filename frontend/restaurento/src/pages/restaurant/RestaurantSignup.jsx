@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { showToast, showError } from "../../utils/alert";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import AuthLayout from "../../components/layouts/AuthLayout";
@@ -55,10 +56,13 @@ const RestaurantSignup = () => {
         otp,
         role: "RESTAURANT",
       });
-
+      showToast("Verification Successful", "success");
       navigate("/restaurant/login");
     } catch (error) {
-      alert(error.response?.data?.message || "Verification failed");
+      showError(
+        "Verification Failed",
+        error.response?.data?.message || "Verification failed"
+      );
     }
   };
 

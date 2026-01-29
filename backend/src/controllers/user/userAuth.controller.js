@@ -67,6 +67,9 @@ export const googleAuthUser = async (req, res, next) => {
           Math.random().toString(36).slice(-8),
         role: ROLES.USER,
       });
+    } else if (!user.avatar && picture) {
+      user.avatar = picture;
+      await user.save();
     }
 
     if (user.status === "suspended") {

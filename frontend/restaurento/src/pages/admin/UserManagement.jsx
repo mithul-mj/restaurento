@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUsers } from "../../hooks/useUsers";
+import { showConfirm } from "../../utils/alert";
 
 const UserManagement = () => {
   const { register, handleSubmit, control, setValue } = useForm();
@@ -233,13 +234,25 @@ const UserManagement = () => {
               </span>
 
               <button
-                onClick={() => toggleStatus(user._id)}
+                onClick={() => {
+                  showConfirm(
+                    user.status === "active" ? "Suspend User?" : "Activate User?",
+                    `Are you sure you want to ${user.status === "active" ? "suspend" : "activate"
+                    } ${user.fullName}?`,
+                    user.status === "active" ? "Yes, Suspend" : "Yes, Activate"
+                  ).then((result) => {
+                    if (result.isConfirmed) {
+                      toggleStatus(user._id);
+                    }
+                  });
+                }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors
                                     ${user.status === "active"
                     ? "bg-red-50 text-red-500 hover:bg-red-100"
                     : "bg-green-50 text-green-600 hover:bg-green-100"
                   }
-                                `}>
+                                `}
+              >
                 {user.status === "active" ? "Suspend" : "activate"}
               </button>
             </div>

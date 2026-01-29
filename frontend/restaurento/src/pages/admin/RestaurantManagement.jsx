@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRestaurants } from "../../hooks/useRestaurants";
+import { showConfirm } from "../../utils/alert";
 
 const RestaurantManagement = () => {
 
@@ -267,13 +268,29 @@ const RestaurantManagement = () => {
               </Link>
 
               <button
-                onClick={() => toggleStatus(restaurant._id)}
+                onClick={() => {
+                  showConfirm(
+                    restaurant.status === "active"
+                      ? "Suspend Restaurant?"
+                      : "Activate Restaurant?",
+                    `Are you sure you want to ${restaurant.status === "active" ? "suspend" : "activate"
+                    } ${restaurant.restaurantName}?`,
+                    restaurant.status === "active"
+                      ? "Yes, Suspend"
+                      : "Yes, Activate"
+                  ).then((result) => {
+                    if (result.isConfirmed) {
+                      toggleStatus(restaurant._id);
+                    }
+                  });
+                }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors
                                     ${restaurant.status === "active"
                     ? "bg-red-50 text-red-500 hover:bg-red-100"
                     : "bg-green-50 text-green-600 hover:bg-green-100"
                   }
-                                `}>
+                                `}
+              >
                 {restaurant.status === "active" ? "Suspend" : "Activate"}
               </button>
             </div>

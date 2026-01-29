@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import adminService from "../services/admin.service.js";
+import { showToast, showError } from "../utils/alert";
 
 export const useRestaurants = ({ page, limit, search, sortBy, status }) => {
   const queryClient = useQueryClient();
@@ -17,11 +18,12 @@ export const useRestaurants = ({ page, limit, search, sortBy, status }) => {
     onMutate: async (restaurantId) => {
       await queryClient.cancelQueries({ queryKey });
       const previousData = queryClient.getQueryData(queryKey);
+      let isSuspending = false;
       queryClient.setQueryData(queryKey, (old) => {
         if (!old) return old;
         const restaurantToUpdate = old.data.find((r) => r._id === restaurantId);
         if (!restaurantToUpdate) return old;
-        const isSuspending = restaurantToUpdate.status === "active";
+        isSuspending = restaurantToUpdate.status === "active";
         return {
           ...old,
           data: old.data.map((restaurant) =>
@@ -40,12 +42,17 @@ export const useRestaurants = ({ page, limit, search, sortBy, status }) => {
           },
         };
       });
-      return { previousData };
+      return { previousData, isSuspending };
     },
     onError: (err, restaurantId, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(queryKey, context.previousData);
       }
+      showError("Action Failed", err.message || "Failed to update restaurant status");
+    },
+    onSuccess: (data, variables, context) => {
+      const action = context?.isSuspending ? "Suspended" : "Activated";
+      showToast(`Restaurant ${action} Successfully`, "success");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });

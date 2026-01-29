@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Search,
   Filter,
-  Star,
   MapPin,
   ChevronDown,
   X,
@@ -15,102 +14,8 @@ import userService from "../../services/user.service";
 import FilterModal from "./FilterModal";
 import useDebounce from "../../hooks/useDebounce";
 import { showError } from "../../utils/alert";
-
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop";
-
-const RestaurantCard = React.memo(({ item }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  const getOptimizedImageUrl = (url) => {
-    if (!url) return FALLBACK_IMAGE;
-    if (url.includes("unsplash.com")) {
-      return `${url}&w=500&q=80&auto=format&fit=crop`;
-    }
-    return url;
-  };
-
-  return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform">
-      <div className="relative h-48 w-full overflow-hidden shrink-0 bg-gray-200">
-        <img
-          src={getOptimizedImageUrl(item.images?.[0])}
-          alt={item.restaurantName}
-          loading="lazy"
-          onLoad={() => setImageLoaded(true)}
-          className={`w-full h-full object-cover hover:scale-110 transition-all duration-700 ${imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-            }`}
-        />
-        <div
-          className={`absolute top-4 right-4 ${item.isCurrentlyOpen ? "bg-green-500" : "bg-red-500"
-            } text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide`}
-        >
-          {item.isCurrentlyOpen ? "OPEN" : "CLOSED"}
-        </div>
-
-        {item.distanceFromUser !== undefined && item.distanceFromUser !== null && (
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-            <MapPin size={10} className="text-[#ff9500]" />
-            <span>
-              {item.distanceFromUser < 1000
-                ? `${Math.round(item.distanceFromUser)} m`
-                : `${(item.distanceFromUser / 1000).toFixed(1)} km`}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="p-5 flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-2">
-          <h4 className="text-lg font-bold text-gray-900 line-clamp-1">
-            {item.restaurantName}
-          </h4>
-          <div className="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold shrink-0">
-            <span>{item.ratingStats?.average || "New"}</span>
-            <Star size={10} fill="currentColor" />
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-400 font-medium mb-3">
-          ({item.ratingStats?.count || 0} ratings)
-        </p>
-
-        <p className="text-sm text-gray-600 mb-4 line-clamp-1">
-          {item.tags?.join(", ") || "Clasical"}
-        </p>
-
-        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50 text-sm text-gray-500">
-          <div className="flex items-center gap-1.5">
-            <MapPin size={14} className="text-gray-400" />
-            <span className="line-clamp-1 max-w-[100px]">
-              {item.address || "Unknown"}
-            </span>
-          </div>
-          <div className="font-semibold text-gray-700">
-            ${item.slotPrice || 3}/slot
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-const SkeletonCard = React.memo(() => (
-  <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm h-full flex flex-col">
-    <div className="h-48 w-full bg-gray-200 animate-pulse shrink-0" />
-    <div className="p-5 flex flex-col flex-1 gap-3">
-      <div className="flex justify-between items-start">
-        <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
-        <div className="h-5 bg-gray-200 rounded w-12 animate-pulse" />
-      </div>
-      <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
-      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-      <div className="mt-auto h-10 border-t border-gray-50 pt-4 flex justify-between items-center">
-        <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
-        <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
-      </div>
-    </div>
-  </div>
-));
+import RestaurantCard from "../../components/user/RestaurantCard";
+import SkeletonCard from "../../components/user/SkeletonCard";
 
 const Home = () => {
   const { register, handleSubmit, watch, setValue } = useForm();
@@ -119,6 +24,8 @@ const Home = () => {
   const [columns, setColumns] = useState(3);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [placeholderText, setPlaceholderText] = useState("Search or Detect location..")
+  const [recentLocations, setRecentLocations] = useState([]);
 
   const [locationQuery, setLocationQuery] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState([]);
@@ -126,7 +33,7 @@ const Home = () => {
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const locationWrapperRef = useRef(null);
 
-  const debouncedLocationQuery = useDebounce(locationQuery, 200);
+  const debouncedLocationQuery = useDebounce(locationQuery, 400);
 
   const handleDetectLocation = () => {
     if (navigator.geolocation) {
@@ -151,13 +58,19 @@ const Home = () => {
     }
   };
 
+
+
   useEffect(() => {
+    const saved = localStorage.getItem("recentLocations");
+    if (saved) {
+      setRecentLocations(JSON.parse(saved));
+    }
+
     const handleClickOutside = (event) => {
       if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target)) {
         setShowLocationDropdown(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -166,7 +79,6 @@ const Home = () => {
     const fetchLocations = async () => {
       if (debouncedLocationQuery && debouncedLocationQuery.length > 2) {
         try {
-          // Using OpenStreetMap Nominatim API for free geocoding
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(debouncedLocationQuery)}&limit=5&addressdetails=1`
           );
@@ -178,7 +90,7 @@ const Home = () => {
         }
       } else {
         setLocationSuggestions([]);
-        setShowLocationDropdown(false);
+
       }
     };
 
@@ -186,9 +98,18 @@ const Home = () => {
   }, [debouncedLocationQuery]);
 
   const handleLocationSelect = (place) => {
-    setLocationQuery(place.display_name);
+    setPlaceholderText(place.display_name)
+    setLocationQuery('');
     setShowLocationDropdown(false);
     setSelectedCoordinates({ lat: place.lat, lon: place.lon });
+
+    const newRecent = [
+      place,
+      ...recentLocations.filter((p) => p.display_name !== place.display_name)
+    ].slice(0, 5);
+    setRecentLocations(newRecent);
+    localStorage.setItem('recentLocations', JSON.stringify(newRecent));
+
     console.log("Selected Location:", { lat: place.lat, lon: place.lon });
   };
 
@@ -276,7 +197,7 @@ const Home = () => {
   }, [lastRowIndex, rows.length, hasNextPage, isFetchingNextPage, fetchNextPage, isLoadingInitial]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#fcfcfc] overflow-hidden">
+    <div className="h-full flex flex-col bg-[#fcfcfc] overflow-hidden">
       <div
         ref={parentRef}
         className="flex-1 overflow-y-auto"
@@ -338,7 +259,7 @@ const Home = () => {
                           <MapPin className="text-[#ff9500] mr-3 shrink-0" size={22} />
                           <input
                             type="text"
-                            placeholder="Detecting location..."
+                            placeholder={placeholderText}
                             value={locationQuery}
                             onChange={(e) => {
                               setLocationQuery(e.target.value);
@@ -353,7 +274,7 @@ const Home = () => {
 
                           {showLocationDropdown && (
                             <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
-                              <div className="absolute -top-1.5 right-4 w-3 h-3 bg-white border-l border-t border-gray-100 rotate-45 z-10"></div>
+                              <div className="absolute -top-1.5 right-4 w-3 h-3 bg-white border-l border-t border-gray-100 rotate-45 z-10 hidden md:block"></div>
 
                               <div className="p-0 relative z-20 bg-white">
                                 <button
@@ -397,6 +318,37 @@ const Home = () => {
                                     ))}
                                   </>
                                 )}
+
+                                {locationSuggestions.length === 0 && recentLocations.length > 0 && (
+                                  <>
+                                    <div className="text-xs font-semibold text-gray-400 px-3 py-2 uppercase tracking-wider mt-2 border-t border-gray-50 pt-2">
+                                      Recent Locations
+                                    </div>
+                                    {recentLocations.map((place, index) => (
+                                      <button
+                                        key={index}
+                                        type="button"
+                                        onClick={() => handleLocationSelect(place)}
+                                        className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group"
+                                      >
+                                        <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <polyline points="12 6 12 12 16 14" />
+                                          </svg>
+                                        </div>
+                                        <div>
+                                          <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                                            {place.display_name.split(',')[0]}
+                                          </div>
+                                          <div className="text-xs text-gray-400 line-clamp-1 mt-0.5">
+                                            {place.display_name}
+                                          </div>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}
@@ -412,7 +364,10 @@ const Home = () => {
                           {watch("query") && (
                             <button
                               type="button"
-                              onClick={() => setValue("query", "")}
+                              onClick={() => {
+                                setValue("query", "");
+                                setSearchQuery("");
+                              }}
                               className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
                             >
                               <X size={18} />
@@ -422,9 +377,15 @@ const Home = () => {
 
                         <button
                           type="submit"
-                          className="px-6 py-3 md:py-4 transition-colors flex items-center justify-center text-gray-400 hover:text-[#ff9500]"
+                          className="hidden md:flex px-6 py-3 md:py-4 transition-colors items-center justify-center text-gray-400 hover:text-[#ff9500]"
                         >
                           <Search size={22} className="stroke-[2.5px]" />
+                        </button>
+                        <button
+                          type="submit"
+                          className="md:hidden w-full bg-[#ff5e00] text-white py-3 font-bold text-sm tracking-wide hover:bg-[#e05200] transition-colors rounded-b-xl"
+                        >
+                          Search
                         </button>
                       </form>
                     </div>
@@ -543,12 +504,14 @@ const Home = () => {
             }
           })}
         </div>
-        {!isLoadingInitial && allRestaurants.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            No restaurants found.
-          </div>
-        )}
-      </div>
+        {
+          !isLoadingInitial && allRestaurants.length === 0 && (
+            <div className="text-center py-20 text-gray-500">
+              No restaurants found.
+            </div>
+          )
+        }
+      </div >
 
       <FilterModal
         isOpen={isFilterModalOpen}
@@ -560,7 +523,7 @@ const Home = () => {
         }}
 
       />
-    </div>
+    </div >
   );
 };
 

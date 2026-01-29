@@ -157,15 +157,34 @@ const RestaurantDetails = () => {
 
   const handleStatusToggle = async () => {
     try {
-      const response = await adminService.toggleRestaurantStatus(restaurantId);
-      if (response?.data?.user) {
-        setData((prev) => ({
-          ...prev,
-          status: response.data.user.status,
-        }));
-      }
+      showConfirm(
+        data.status === "active" ? "Suspend Restaurant?" : "Activate Restaurant?",
+        `Are you sure you want to ${data.status === "active" ? "suspend" : "activate"
+        } ${data.restaurantName}?`,
+        data.status === "active" ? "Yes, Suspend" : "Yes, Activate"
+      ).then(async (result) => {
+        if (result.isConfirmed) {
+          const response = await adminService.toggleRestaurantStatus(
+            restaurantId
+          );
+          if (response?.data?.user) {
+            setData((prev) => ({
+              ...prev,
+              status: response.data.user.status,
+            }));
+            showSuccess(
+              "Status Updated",
+              `Restaurant has been ${response.data.user.status === "active"
+                ? "activated"
+                : "suspended"
+              }.`
+            );
+          }
+        }
+      });
     } catch (error) {
       console.error("Error toggling status:", error);
+      showError("Action Failed", "Could not update status.");
     }
   };
 

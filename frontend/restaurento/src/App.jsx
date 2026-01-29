@@ -37,6 +37,11 @@ import WalletPage from "./pages/restaurant/Wallet";
 import Notifications from "./pages/restaurant/Notifications";
 import RestaurantManagement from "./pages/admin/RestaurantManagement";
 import RestaurantDetails from "./pages/admin/RestaurantDetails";
+import AdminReports from "./pages/admin/Reports";
+import AdminBookings from "./pages/admin/Bookings";
+import AdminFinance from "./pages/admin/Finance";
+import AdminMarketing from "./pages/admin/Marketing";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 function App() {
   const dispatch = useDispatch();
@@ -135,6 +140,11 @@ function App() {
               path="/admin/restaurants/:restaurantId"
               element={<RestaurantDetails />}
             />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/finance" element={<AdminFinance />} />
+            <Route path="/admin/marketing" element={<AdminMarketing />} />
+            <Route path="/admin/profile" element={<AdminProfile />} />
           </Route>
         </Route>
       </Routes>

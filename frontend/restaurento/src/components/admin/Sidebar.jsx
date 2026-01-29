@@ -74,9 +74,9 @@ const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
                 A
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">
+                <Link to="/admin/profile" className="block text-sm font-bold text-gray-900 truncate hover:text-[#ff5e00] transition-colors">
                   Admin
-                </p>
+                </Link>
                 <p className="text-xs text-gray-400 truncate">Administrator</p>
               </div>
             </div>
