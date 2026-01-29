@@ -28,6 +28,13 @@ import RestaurantSettings from "./pages/restaurant/RestaurentSettings";
 import PreApproval from "./pages/restaurant/PreApproval";
 import VerificationPending from "./pages/restaurant/VerificationPending";
 import RestaurantStatusGuard from "./components/routes/RestaurantStatusGuard";
+import RestaurantLayout from "./components/layouts/RestaurantLayout";
+import AdminLayout from "./components/layouts/AdminLayout";
+import Bookings from "./pages/restaurant/Bookings";
+import MenuPage from "./pages/restaurant/Menu";
+import Earnings from "./pages/restaurant/Earnings";
+import WalletPage from "./pages/restaurant/Wallet";
+import Notifications from "./pages/restaurant/Notifications";
 import RestaurantManagement from "./pages/admin/RestaurantManagement";
 import RestaurantDetails from "./pages/admin/RestaurantDetails";
 
@@ -97,34 +104,38 @@ function App() {
 
         <Route element={<ProtectedRoutes allowedRoles={["RESTAURANT"]} />}>
           <Route element={<RestaurantStatusGuard />}>
-            <Route
-              path="/restaurant/dashboard"
-              element={<RestaurantDashboard />}
-            />
             <Route path="/restaurant/pre-approval" element={<PreApproval />} />
             <Route
               path="/restaurant/verification-pending"
               element={<VerificationPending />}
             />
             <Route
-              path="/restaurant/settings"
-              element={<RestaurantSettings />}
-            />
-            <Route
               path="/restaurant/onboarding"
               element={<RestaurantOnboarding />}
             />
+
+            <Route element={<RestaurantLayout />}>
+              <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+              <Route path="/restaurant/bookings" element={<Bookings />} />
+              <Route path="/restaurant/menu" element={<MenuPage />} />
+              <Route path="/restaurant/earnings" element={<Earnings />} />
+              <Route path="/restaurant/wallet" element={<WalletPage />} />
+              <Route path="/restaurant/notifications" element={<Notifications />} />
+              <Route path="/restaurant/settings" element={<RestaurantSettings />} />
+            </Route>
           </Route>
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/restaurants" element={<RestaurantManagement />} />
-          <Route
-            path="/admin/restaurants/:restaurantId"
-            element={<RestaurantDetails />}
-          />
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/restaurants" element={<RestaurantManagement />} />
+            <Route
+              path="/admin/restaurants/:restaurantId"
+              element={<RestaurantDetails />}
+            />
+          </Route>
         </Route>
       </Routes>
     </Router>
