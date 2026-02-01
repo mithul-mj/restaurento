@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useForm } from "react-hook-form";
 import authService from "../../services/auth.service";
-import { showToast, showConfirm } from "../../utils/alert";
+import { showToast, showConfirm, showError } from "../../utils/alert";
 import { logout } from "../../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +23,29 @@ const AdminProfile = () => {
         );
     };
 
+    const handleChangePassword = async () => {
+        const result = await showConfirm(
+            "Reset Password?",
+            `We will send a password reset link to ${user?.email}`,
+            "Yes, Send Link"
+        );
+
+        if (result.isConfirmed) {
+            try {
+                await authService.forgotPassword({
+                    email: user?.email,
+                    role: "ADMIN",
+                });
+                showToast("Reset Link Sent", "success");
+            } catch (error) {
+                showError(
+                    "Error",
+                    error.response?.data?.message || "Failed to send reset link"
+                );
+            }
+        }
+    };
+
     return (
         <div className="w-full max-w-5xl mx-auto">
             <div className="mb-8">
@@ -41,9 +63,6 @@ const AdminProfile = () => {
                             Email : {user?.email}
                         </p>
                     </div>
-                    <button className="bg-[#faddca] text-[#e65c00] px-6 py-2 rounded-lg text-sm font-semibold hover:bg-[#ffdec2] transition-colors">
-                        Edit
-                    </button>
                 </div>
 
                 {/* Change Password Section */}
@@ -53,7 +72,9 @@ const AdminProfile = () => {
                             Change password
                         </p>
                     </div>
-                    <button className="bg-[#faddca] text-[#e65c00] px-6 py-2 rounded-lg text-sm font-semibold hover:bg-[#ffdec2] transition-colors">
+                    <button
+                        onClick={handleChangePassword}
+                        className="bg-[#faddca] text-[#e65c00] px-6 py-2 rounded-lg text-sm font-semibold hover:bg-[#ffdec2] transition-colors">
                         Change
                     </button>
                     {/* Typo in screenshot says "Chnage", I'm correcting to "Change" */}

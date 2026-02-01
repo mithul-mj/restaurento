@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-    LayoutDashboard,
-    CalendarCheck,
-    UtensilsCrossed,
-    BarChart3,
-    Settings,
-    Wallet,
-    HelpCircle,
-    Bell
-} from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
-import { showConfirm, showToast } from '../../utils/alert';
+import { showConfirm, showToast, showError } from '../../utils/alert';
 import authService from '../../services/auth.service';
 import restaurantService from '../../services/restaurant.service';
 import { useNavigate } from 'react-router-dom';
@@ -39,15 +29,6 @@ const RestaurantSettings = () => {
         };
         fetchProfile();
     }, []);
-
-    const navItems = [
-        { name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-        { name: 'Bookings', icon: <CalendarCheck size={20} /> },
-        { name: 'Menu', icon: <UtensilsCrossed size={20} /> },
-        { name: 'Earnings', icon: <BarChart3 size={20} /> },
-        { name: 'Settings', icon: <Settings size={20} />, active: true },
-        { name: 'Wallet & Payout', icon: <Wallet size={20} /> },
-    ];
 
     const handleToggleClosed = async () => {
         const newValue = !isClosed;
@@ -83,6 +64,29 @@ const RestaurantSettings = () => {
             } finally {
                 dispatch(logout());
                 navigate("/restaurant/login");
+            }
+        }
+    };
+
+    const handleChangePassword = async () => {
+        const result = await showConfirm(
+            "Reset Password?",
+            `We will send a password reset link to ${email}`,
+            "Yes, Send Link"
+        );
+
+        if (result.isConfirmed) {
+            try {
+                await authService.forgotPassword({
+                    email: email,
+                    role: "RESTAURANT",
+                });
+                showToast("Reset Link Sent", "success");
+            } catch (error) {
+                showError(
+                    "Error",
+                    error.response?.data?.message || "Failed to send reset link"
+                );
             }
         }
     };
@@ -126,9 +130,6 @@ const RestaurantSettings = () => {
                         <h3 className="font-semibold text-gray-800">Email : {loading ? "Loading..." : email}</h3>
 
                     </div>
-                    <button className="px-6 py-1.5 bg-[#ffedd5] text-[#ea580c] rounded-md text-sm font-bold hover:bg-orange-200 transition-colors">
-                        edit
-                    </button>
                 </div>
 
                 {/* Change Password */}
@@ -137,7 +138,9 @@ const RestaurantSettings = () => {
                         <h3 className="font-semibold text-gray-800">Change Password</h3>
 
                     </div>
-                    <button className="px-6 py-1.5 bg-[#ffedd5] text-[#ea580c] rounded-md text-sm font-bold hover:bg-orange-200 transition-colors">
+                    <button
+                        onClick={handleChangePassword}
+                        className="px-6 py-1.5 bg-[#ffedd5] text-[#ea580c] rounded-md text-sm font-bold hover:bg-orange-200 transition-colors">
                         Change
                     </button>
                 </div>

@@ -6,6 +6,7 @@ import {
   ChevronDown,
   X,
   LocateFixed,
+  History,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -140,7 +141,7 @@ const Home = () => {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ["restaurants", searchQuery, appliedFilters, selectedCoordinates],
+    queryKey: ["restaurants", searchQuery, appliedFilters, selectedCoordinates, activeFilter],
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const limit = columns * 4;
@@ -332,10 +333,7 @@ const Home = () => {
                                         className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group"
                                       >
                                         <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <circle cx="12" cy="12" r="10" />
-                                            <polyline points="12 6 12 12 16 14" />
-                                          </svg>
+                                          <History size={14} strokeWidth={2.5} />
                                         </div>
                                         <div>
                                           <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
@@ -391,29 +389,43 @@ const Home = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-                      {filters.map((filter) => (
-                        <button
-                          key={filter}
-                          onClick={() => {
-                            if (filter === "Filters") {
-                              setIsFilterModalOpen(true);
-                            } else {
-                              setActiveFilter(filter);
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border
-                                        ${activeFilter === filter && filter !== "Filters"
-                              ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00]"
-                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                            }
-                                    `}
-                        >
-                          {filter === "Filters" && (
-                            <Filter size={14} className="inline mr-1.5" />
-                          )}
-                          {filter}
-                        </button>
-                      ))}
+                      {filters.map((filter) => {
+                        let count = 0;
+                        if (filter === "Filters") {
+                          if (appliedFilters.sort && appliedFilters.sort !== "rating_high_low") count++;
+                          if (appliedFilters.rating && appliedFilters.rating !== "Any") count++;
+                          if (appliedFilters.cost && appliedFilters.cost.length > 0) count += appliedFilters.cost.length;
+                        }
+
+                        return (
+                          <button
+                            key={filter}
+                            onClick={() => {
+                              if (filter === "Filters") {
+                                setIsFilterModalOpen(true);
+                              } else {
+                                setActiveFilter(filter);
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border flex items-center gap-1.5
+                                          ${activeFilter === filter && filter !== "Filters"
+                                ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00]"
+                                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                              }
+                                      `}
+                          >
+                            {filter === "Filters" && (
+                              <Filter size={14} className="inline mr-0.5" />
+                            )}
+                            {filter}
+                            {filter === "Filters" && count > 0 && (
+                              <span className="flex items-center justify-center w-5 h-5 ml-1 text-xs font-bold text-white bg-[#ff5e00] rounded-full">
+                                {count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">

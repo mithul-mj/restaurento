@@ -12,6 +12,7 @@ import RestaurantLogin from "./pages/restaurant/RestaurantLogin";
 import RestaurantDashboard from "./pages/restaurant/RestaurantDashboard";
 import RestaurantSignup from "./pages/restaurant/RestaurantSignup";
 import RestaurantOnboarding from "./pages/restaurant/Onboarding";
+import NotFound from "./pages/NotFound";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
@@ -147,6 +148,8 @@ function App() {
             <Route path="/admin/profile" element={<AdminProfile />} />
           </Route>
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

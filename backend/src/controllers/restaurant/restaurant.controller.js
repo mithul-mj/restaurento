@@ -106,3 +106,4 @@ export const updateRestaurantSettings = async (req, res, next) => {
         next(error);
     }
 };
+
