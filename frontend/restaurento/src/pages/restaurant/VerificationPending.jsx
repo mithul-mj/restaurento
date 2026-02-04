@@ -17,7 +17,12 @@ const VerificationPending = () => {
             const fetchReason = async () => {
                 try {
                     const { restaurant } = await restaurantService.getProfile();
-                    setRejectionReason(restaurant.rejectionReason);
+                    if (restaurant.verificationHistory?.length > 0) {
+                        const latestEntry = restaurant.verificationHistory[restaurant.verificationHistory.length - 1];
+                        if (latestEntry) {
+                            setRejectionReason(latestEntry.reason);
+                        }
+                    }
                 } catch (e) {
                     console.error("Failed to fetch rejection reason", e);
                 }

@@ -30,7 +30,13 @@ const PreApproval = () => {
             const loadData = async () => {
                 try {
                     const { restaurant } = await restaurantService.getProfile();
-                    setRejectionReason(restaurant.rejectionReason);
+
+                    if (restaurant.verificationHistory?.length > 0) {
+                        const latestRejection = restaurant.verificationHistory[restaurant.verificationHistory.length - 1];
+                        if (latestRejection) {
+                            setRejectionReason(latestRejection.reason);
+                        }
+                    }
 
                     setValue('restaurantName', restaurant.restaurantName);
                     setValue('restaurantPhone', restaurant.restaurantPhone);

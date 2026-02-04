@@ -105,6 +105,13 @@ const RestaurantDetails = () => {
         <div className="min-h-screen bg-[#fcfcfc] pb-20">
             <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
 
+
+
+                <div className="mb-10">
+                    <ImageGallery images={restaurant.images || []} />
+                </div>
+
+
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
 
                     <Link to="/" className="hover:text-[#ff5e00] transition-colors">Restaurants</Link>
@@ -112,9 +119,6 @@ const RestaurantDetails = () => {
                     <span className="text-gray-900 font-medium">{restaurant.restaurantName}</span>
                 </div>
 
-                <div className="mb-10">
-                    <ImageGallery images={restaurant.images || []} />
-                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
@@ -190,9 +194,17 @@ const RestaurantDetails = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl relative overflow-hidden">
                                         <div className="space-y-4 relative z-10">
                                             <div className="flex items-start gap-3">
-                                                <MapPin className="text-gray-400 mt-0.5" size={40} />
+                                                <MapPin className="text-gray-400 mt-0.5 shrink-0" size={20} />
                                                 <div>
                                                     <p className="text-sm font-semibold text-gray-900 line-clamp-2">{restaurant.address}</p>
+                                                    <a
+                                                        href={`https://www.google.com/maps/search/?api=1&query=${restaurant.location?.coordinates?.[1]},${restaurant.location?.coordinates?.[0]}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-gray-400 font-medium hover:text-[#ff5e00] hover:underline transition-colors mt-0.5 inline-block"
+                                                    >
+                                                        View in Map
+                                                    </a>
 
                                                 </div>
                                             </div>
@@ -227,7 +239,7 @@ const RestaurantDetails = () => {
                                         </div>
 
 
-                                        <div className="absolute right-0 top-0 bottom-0 w-1/3 md:w-1/2">
+                                        <div className="absolute right-0 top-0 bottom-0 w-1/3 md:w-1/2 hidden md:block">
                                             <div className="w-full h-full relative">
                                                 <div className="absolute inset-0 z-0">
                                                     <LocationViewer
@@ -407,7 +419,10 @@ const RestaurantDetails = () => {
                                             return (
                                                 <button
                                                     key={startTimeInMinutes}
-                                                    onClick={() => setSelectedTimeSlot(timeLabel)}
+                                                    onClick={() => {
+                                                        setSelectedTimeSlot(timeLabel);
+                                                        setActiveTab("menu");
+                                                    }}
                                                     className={`py-2 text-xs font-semibold rounded-lg border transition-all ${selectedTimeSlot === timeLabel
                                                         ? "bg-[#ff5e00] text-white border-[#ff5e00] shadow-md shadow-orange-200 scale-105"
                                                         : "bg-white text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
@@ -425,7 +440,7 @@ const RestaurantDetails = () => {
 
                             <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-50">
                                 <h4 className="font-bold text-gray-900">Your Order</h4>
-                                <button className="text-xs font-medium text-[#ff5e00] hover:text-[#d14d00]">Clear all</button>
+                                <button onClick={() => setCart({})} className="text-xs font-medium text-[#ff5e00] hover:text-[#d14d00]">Clear all</button>
                             </div>
 
                             <div className="space-y-4 mb-6 max-h-[200px] overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar">

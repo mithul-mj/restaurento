@@ -101,7 +101,6 @@ const RestaurantDetails = () => {
           ...prev,
           verificationStatus: response.user.verificationStatus,
           verificationHistory: response.user.verificationHistory,
-          rejectionReason: response.user.rejectionReason,
         }));
 
         await showSuccess(

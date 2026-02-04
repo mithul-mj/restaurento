@@ -134,9 +134,6 @@ const restaurantSchema = new Schema(
         date: { type: Date, default: Date.now },
       },
     ],
-    rejectionReason: {
-      type: String,
-    },
     isTemporaryClosed: {
       type: Boolean,
       default: false,

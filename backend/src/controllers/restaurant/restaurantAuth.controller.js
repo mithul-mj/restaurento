@@ -60,7 +60,6 @@ export const loginRestaurant = async (req, res, next) => {
         status: account.status,
         isOnboardingCompleted: account.isOnboardingCompleted,
         verificationStatus: account.verificationStatus,
-        rejectionReason: account.rejectionReason,
       },
       tokens: {
         accessToken,
@@ -137,7 +136,6 @@ export const googleAuthRestaurant = async (req, res, next) => {
         status: restaurant.status,
         isOnboardingCompleted: restaurant.isOnboardingCompleted,
         verificationStatus: restaurant.verificationStatus,
-        rejectionReason: restaurant.rejectionReason,
       },
       tokens: {
         accessToken,

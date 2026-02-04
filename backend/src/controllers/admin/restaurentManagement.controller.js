@@ -133,10 +133,6 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
     // Fix: Update verificationStatus, not status
     restaurant.verificationStatus = verificationStatus;
 
-    // If rejected, store the reason
-    if (verificationStatus === "rejected") {
-      restaurant.rejectionReason = reason;
-    }
 
     // Add to history
     restaurant.verificationHistory.push({
@@ -220,7 +216,6 @@ export const RestaurantDetails = async (req, res, next) => {
       images: 1,
       menuItems: 1,
       slotPrice: 1,
-      rejectionReason: 1,
       verificationHistory: 1,
       submissionAttempts: 1,
     });
