@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Star, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop";
 
@@ -15,7 +16,7 @@ const RestaurantCard = React.memo(({ item }) => {
     };
 
     return (
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform">
+        <Link to={`/restaurant/${item._id}`} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform group">
             <div className="relative h-48 w-full overflow-hidden shrink-0 bg-gray-200">
                 <img
                     src={getOptimizedImageUrl(item.images?.[0])}
@@ -75,7 +76,7 @@ const RestaurantCard = React.memo(({ item }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 });
 

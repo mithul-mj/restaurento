@@ -8,13 +8,18 @@ export const useUsers = ({ page, limit, search, sortBy, status }) => {
   const query = useQuery({
     queryKey,
     queryFn: () => adminService.fetchUsers({ page, limit, search, sortBy, status }),
-    placeholderData: (previousData) => previousData,
+    keepPreviousData: true,
   });
+
+
+
+
   const toggleStatusMutation = useMutation({
     mutationFn: (userId) => adminService.toggleUserStatus(userId),
 
     onMutate: async (userId) => {
       await queryClient.cancelQueries({ queryKey });
+
       const previousData = queryClient.getQueryData(queryKey);
       let isSuspending = false;
       queryClient.setQueryData(queryKey, (old) => {

@@ -1,4 +1,5 @@
 import { Restaurant } from "../../models/Restaurant.model.js";
+import mongoose from "mongoose";
 
 export const getUserDashboard = async (req, res, next) => {
   try {
@@ -92,7 +93,7 @@ export const getUserDashboard = async (req, res, next) => {
         restaurantName: 1,
         address: 1,
         location: 1,
-        images: 1,
+        images: { $slice: ["$images", 1] },
         ratingStats: 1,
         tags: 1,
         slotPrice: 1,
@@ -165,6 +166,130 @@ export const getUserDashboard = async (req, res, next) => {
         hasLocation: (!isNaN(lat) && !isNaN(lng))
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRestaurantDetails = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid Restaurant ID" });
+    }
+
+    const now = new Date();
+    const day = now.getDay();
+    const currentDayIndex = day === 0 ? 6 : day - 1;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const result = await Restaurant.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      {
+        $addFields: {
+          todaySchedule: { $arrayElemAt: ["$openingHours.days", currentDayIndex] }
+        }
+      },
+      {
+        $addFields: {
+          isCurrentlyOpen: {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: ["$isTemporaryClosed", false] },
+                  { $eq: ["$todaySchedule.isClosed", false] },
+                  { $gte: [currentMinutes, "$todaySchedule.startTime"] },
+                  { $lte: [currentMinutes, "$todaySchedule.endTime"] }
+                ]
+              },
+              then: true,
+              else: false
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          documents: 0,
+          onboardingStep: 0,
+          submissionAttempts: 0,
+          verificationStatus: 0,
+          isOnboardingCompleted: 0,
+          ownerId: 0,
+          menuItems: 0,
+        }
+      }
+    ]);
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ success: false, message: "Restaurant not found" });
+    }
+
+    res.status(200).json({ success: true, restaurant: result[0] });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRestaurantMenu = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const category = req.query.category || "All";
+    const search = req.query.search || "";
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid Restaurant ID" });
+    }
+
+    const matchStage = { $match: { _id: new mongoose.Types.ObjectId(id) } };
+    const unwindStage = { $unwind: "$menuItems" };
+
+    const filterStage = { $match: {} };
+
+    if (category !== "All") {
+      filterStage.$match["menuItems.categories"] = category;
+    }
+
+    if (search) {
+      filterStage.$match["menuItems.name"] = { $regex: search, $options: "i" };
+    }
+
+    const pipeline = [
+      matchStage,
+      unwindStage,
+      filterStage,
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            { $replaceRoot: { newRoot: "$menuItems" } }
+          ]
+        }
+      }
+    ];
+
+    const result = await Restaurant.aggregate(pipeline);
+
+    const menuItems = result[0].data;
+    const totalItems = result[0].metadata[0] ? result[0].metadata[0].total : 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      success: true,
+      menu: menuItems,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        hasNextPage: page < totalPages,
+      }
+    });
+
   } catch (error) {
     next(error);
   }

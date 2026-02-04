@@ -170,6 +170,7 @@ const UserManagement = () => {
                   }
                   alt={user.fullName}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </div>
               <div className="min-w-0">

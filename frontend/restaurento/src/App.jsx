@@ -1,48 +1,52 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/user/Home";
-import Profile from "./pages/user/Profile";
-import EditProfile from "./pages/user/EditProfile";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import UserManagement from "./pages/admin/UserManagement";
+import { useEffect, Suspense, lazy } from "react";
+import { Toaster } from "sonner";
+import "./App.css";
 
-import UserLogin from "./pages/user/UserLogin";
-import UserSignup from "./pages/user/UserSignup";
-import AdminLogin from "./pages/admin/AdminLogin";
-import RestaurantLogin from "./pages/restaurant/RestaurantLogin";
-import RestaurantDashboard from "./pages/restaurant/RestaurantDashboard";
-import RestaurantSignup from "./pages/restaurant/RestaurantSignup";
-import RestaurantOnboarding from "./pages/restaurant/Onboarding";
-import NotFound from "./pages/NotFound";
+const Home = lazy(() => import("./pages/user/Home"));
+const Profile = lazy(() => import("./pages/user/Profile"));
+const EditProfile = lazy(() => import("./pages/user/EditProfile"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+
+const UserLogin = lazy(() => import("./pages/user/UserLogin"));
+const UserSignup = lazy(() => import("./pages/user/UserSignup"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const RestaurantLogin = lazy(() => import("./pages/restaurant/RestaurantLogin"));
+const RestaurantDashboard = lazy(() => import("./pages/restaurant/RestaurantDashboard"));
+const RestaurantSignup = lazy(() => import("./pages/restaurant/RestaurantSignup"));
+const RestaurantOnboarding = lazy(() => import("./pages/restaurant/Onboarding"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
 import { setAuthFailed } from "./redux/slices/authSlice";
 import ProtectedRoutes from "./components/routes/ProtectedRoutes";
 import PublicRoutes from "./components/routes/PublicRoutes";
 import authService from "./services/auth.service";
 import { setCredentials } from "./redux/slices/authSlice";
-import ResetPassword from "./pages/ResetPassword";
-import { Toaster } from "sonner";
-import "./App.css";
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+
 import UserLayout from "./components/layouts/UserLayout";
-import RestaurantSettings from "./pages/restaurant/RestaurentSettings";
-import PreApproval from "./pages/restaurant/PreApproval";
-import VerificationPending from "./pages/restaurant/VerificationPending";
+import PageLoader from "./components/PageLoader";
+const RestaurantSettings = lazy(() => import("./pages/restaurant/RestaurentSettings"));
+const PreApproval = lazy(() => import("./pages/restaurant/PreApproval"));
+const VerificationPending = lazy(() => import("./pages/restaurant/VerificationPending"));
 import RestaurantStatusGuard from "./components/routes/RestaurantStatusGuard";
 import RestaurantLayout from "./components/layouts/RestaurantLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
-import Bookings from "./pages/restaurant/Bookings";
-import MenuPage from "./pages/restaurant/Menu";
-import Earnings from "./pages/restaurant/Earnings";
-import WalletPage from "./pages/restaurant/Wallet";
-import Notifications from "./pages/restaurant/Notifications";
-import RestaurantManagement from "./pages/admin/RestaurantManagement";
-import RestaurantDetails from "./pages/admin/RestaurantDetails";
-import AdminReports from "./pages/admin/Reports";
-import AdminBookings from "./pages/admin/Bookings";
-import AdminFinance from "./pages/admin/Finance";
-import AdminMarketing from "./pages/admin/Marketing";
-import AdminProfile from "./pages/admin/AdminProfile";
+const Bookings = lazy(() => import("./pages/restaurant/Bookings"));
+const MenuPage = lazy(() => import("./pages/restaurant/Menu"));
+const Earnings = lazy(() => import("./pages/restaurant/Earnings"));
+const WalletPage = lazy(() => import("./pages/restaurant/Wallet"));
+const Notifications = lazy(() => import("./pages/restaurant/Notifications"));
+const RestaurantManagement = lazy(() => import("./pages/admin/RestaurantManagement"));
+const RestaurantDetails = lazy(() => import("./pages/admin/RestaurantDetails"));
+const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const AdminBookings = lazy(() => import("./pages/admin/Bookings"));
+const AdminFinance = lazy(() => import("./pages/admin/Finance"));
+const AdminMarketing = lazy(() => import("./pages/admin/Marketing"));
+const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
+const UserRestaurantDetails = lazy(() => import("./pages/user/RestaurantDetails"));
 
 function App() {
   const dispatch = useDispatch();
@@ -56,7 +60,7 @@ function App() {
         else if (window.location.pathname.startsWith("/restaurant"))
           role = "RESTAURANT";
 
-        console.log("App.jsx: Refreshing token for role:", role); // DEBUG LOG
+        console.log("App.jsx: Refreshing token for role:", role);
         const response = await authService.refreshToken(role);
         if (!response.data.role) {
           throw new Error("Role missing in refresh response");
@@ -80,77 +84,78 @@ function App() {
 
   if (isInitializing) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff5e00]"></div>
-      </div>
+      <PageLoader />
     );
   }
 
   return (
     <Router>
       <Toaster position="top-right" richColors />
-      <Routes>
-        <Route element={<PublicRoutes />}>
-          <Route path="/login" element={<UserLogin />} />
-          <Route path="/signup" element={<UserSignup />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/restaurant/login" element={<RestaurantLogin />} />
-          <Route path="/restaurant/signup" element={<RestaurantSignup />} />
-        </Route>
-
-        <Route path="/reset-password" element={<ResetPassword />} />
-
-        <Route element={<UserLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route element={<ProtectedRoutes allowedRoles={["USER"]} />}>
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/edit-profile" element={<EditProfile />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route element={<PublicRoutes />}>
+            <Route path="/login" element={<UserLogin />} />
+            <Route path="/signup" element={<UserSignup />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/restaurant/login" element={<RestaurantLogin />} />
+            <Route path="/restaurant/signup" element={<RestaurantSignup />} />
           </Route>
-        </Route>
 
-        <Route element={<ProtectedRoutes allowedRoles={["RESTAURANT"]} />}>
-          <Route element={<RestaurantStatusGuard />}>
-            <Route path="/restaurant/pre-approval" element={<PreApproval />} />
-            <Route
-              path="/restaurant/verification-pending"
-              element={<VerificationPending />}
-            />
-            <Route
-              path="/restaurant/onboarding"
-              element={<RestaurantOnboarding />}
-            />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-            <Route element={<RestaurantLayout />}>
-              <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
-              <Route path="/restaurant/bookings" element={<Bookings />} />
-              <Route path="/restaurant/menu" element={<MenuPage />} />
-              <Route path="/restaurant/earnings" element={<Earnings />} />
-              <Route path="/restaurant/wallet" element={<WalletPage />} />
-              <Route path="/restaurant/notifications" element={<Notifications />} />
-              <Route path="/restaurant/settings" element={<RestaurantSettings />} />
+          <Route element={<UserLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/restaurant/:id" element={<UserRestaurantDetails />} />
+            <Route element={<ProtectedRoutes allowedRoles={["USER"]} />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
             </Route>
           </Route>
-        </Route>
 
-        <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<UserManagement />} />
-            <Route path="/admin/restaurants" element={<RestaurantManagement />} />
-            <Route
-              path="/admin/restaurants/:restaurantId"
-              element={<RestaurantDetails />}
-            />
-            <Route path="/admin/reports" element={<AdminReports />} />
-            <Route path="/admin/bookings" element={<AdminBookings />} />
-            <Route path="/admin/finance" element={<AdminFinance />} />
-            <Route path="/admin/marketing" element={<AdminMarketing />} />
-            <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route element={<ProtectedRoutes allowedRoles={["RESTAURANT"]} />}>
+            <Route element={<RestaurantStatusGuard />}>
+              <Route path="/restaurant/pre-approval" element={<PreApproval />} />
+              <Route
+                path="/restaurant/verification-pending"
+                element={<VerificationPending />}
+              />
+              <Route
+                path="/restaurant/onboarding"
+                element={<RestaurantOnboarding />}
+              />
+
+              <Route element={<RestaurantLayout />}>
+                <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+                <Route path="/restaurant/bookings" element={<Bookings />} />
+                <Route path="/restaurant/menu" element={<MenuPage />} />
+                <Route path="/restaurant/earnings" element={<Earnings />} />
+                <Route path="/restaurant/wallet" element={<WalletPage />} />
+                <Route path="/restaurant/notifications" element={<Notifications />} />
+                <Route path="/restaurant/settings" element={<RestaurantSettings />} />
+              </Route>
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/restaurants" element={<RestaurantManagement />} />
+              <Route
+                path="/admin/restaurants/:restaurantId"
+                element={<RestaurantDetails />}
+              />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/bookings" element={<AdminBookings />} />
+              <Route path="/admin/finance" element={<AdminFinance />} />
+              <Route path="/admin/marketing" element={<AdminMarketing />} />
+              <Route path="/admin/profile" element={<AdminProfile />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
