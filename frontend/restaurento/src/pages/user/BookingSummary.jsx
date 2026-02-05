@@ -30,7 +30,6 @@ const BookingSummary = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Booking Summary</h1>
 
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
-                    {/* Restaurant Header */}
                     <div className="p-6 border-b border-gray-100 bg-orange-50/50">
                         <h2 className="text-xl font-bold text-gray-900 mb-2">{restaurant.restaurantName}</h2>
                         <div className="flex items-center gap-2 text-gray-500 text-sm">
@@ -39,7 +38,6 @@ const BookingSummary = () => {
                         </div>
                     </div>
 
-                    {/* Booking Details */}
                     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-gray-100">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#ff5e00]">
@@ -70,7 +68,6 @@ const BookingSummary = () => {
                         </div>
                     </div>
 
-                    {/* Order Summary */}
                     <div className="p-6 border-b border-gray-100">
                         <h3 className="font-bold text-gray-900 mb-4">Pre-ordered Items</h3>
                         {cartItems.length > 0 ? (
@@ -90,7 +87,6 @@ const BookingSummary = () => {
                         )}
                     </div>
 
-                    {/* Bill Details */}
                     <div className="p-6 bg-gray-50">
                         <div className="space-y-2 text-sm text-gray-600 mb-4">
                             <div className="flex justify-between">

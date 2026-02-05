@@ -79,7 +79,7 @@ const restaurantSchema = new Schema(
       type: Number,
       min: 0,
     },
-    images: [{ type: String }], // Array of image URLs/paths
+    images: [{ type: String }],
     address: {
       type: String,
     },

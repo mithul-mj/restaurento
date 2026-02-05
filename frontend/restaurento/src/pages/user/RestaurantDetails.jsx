@@ -12,6 +12,8 @@ import RestaurantMenu from "./RestaurantMenu";
 import RestaurantReviews from "./RestaurantReviews";
 import { TAX_RATE, PLATFORM_FEE_RATE } from "../../utils/constants";
 import { formatTime12Hour } from "../../utils/timeUtils";
+import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
+import { showConfirm } from "../../utils/alert";
 
 const RestaurantDetails = () => {
     const { id } = useParams();
@@ -100,6 +102,43 @@ const RestaurantDetails = () => {
     }
 
     const { restaurant } = data;
+
+    const getSlotStatus = () => {
+        if (!restaurant.openingHours?.days) return { status: 'no_schedule', slots: [] };
+
+        const date = new Date(selectedDate);
+        const jsDay = date.getDay();
+        const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+
+        const daySchedule = restaurant.openingHours.days[dayIndex];
+
+        if (!daySchedule || daySchedule.isClosed) {
+            return { status: 'closed', slots: [] };
+        }
+
+        let slots = [];
+        if (daySchedule.generatedSlots && daySchedule.generatedSlots.length > 0) {
+            slots = daySchedule.generatedSlots.map(s => s.startTime);
+        }
+
+        // Filter out past slots if today
+        const today = new Date();
+        const isToday = today.toISOString().split('T')[0] === selectedDate;
+        if (isToday) {
+            const currentMinutes = today.getHours() * 60 + today.getMinutes();
+            slots = slots.filter(start => start > currentMinutes);
+        }
+
+        if (slots.length === 0) {
+            return { status: 'no_slots', slots: [] };
+        }
+
+        return { status: 'open', slots };
+    };
+
+    const { status: slotStatus, slots: availableMinutes } = getSlotStatus();
+    const availableLabels = availableMinutes.map(m => formatTime12Hour(m));
+    const isSlotInvalid = selectedTimeSlot && !availableLabels.includes(selectedTimeSlot);
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] pb-20">
@@ -388,52 +427,72 @@ const RestaurantDetails = () => {
 
                             <div className="mb-6">
                                 <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Time Slot</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {(() => {
-                                        if (!restaurant.openingHours?.days) return <p className="text-gray-400 text-xs col-span-3">No schedule available</p>;
+                                <div className={`transition-all duration-200 rounded-xl ${isSlotInvalid ? 'p-3 border-2 border-red-500 bg-red-50' : ''}`}>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {(() => {
+                                            if (slotStatus === 'no_schedule') return <p className="text-gray-400 text-xs col-span-3">No schedule available</p>;
+                                            if (slotStatus === 'closed') return <p className="text-red-400 text-xs font-medium col-span-3">Closed on this date</p>;
+                                            if (slotStatus === 'no_slots') return <p className="text-gray-400 text-xs col-span-3">No slots available</p>;
 
-                                        const date = new Date(selectedDate);
-                                        const jsDay = date.getDay();
-                                        const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+                                            return availableMinutes.map((startTimeInMinutes) => {
+                                                const timeLabel = formatTime12Hour(startTimeInMinutes);
+                                                return (
+                                                    <button
+                                                        key={startTimeInMinutes}
+                                                        onClick={async () => {
+                                                            // Check if existing cart items conflict with new slot
+                                                            const newCategory = getCategoryFromTimeSlot(timeLabel);
+                                                            const cartItemsList = Object.values(cart);
 
-                                        const daySchedule = restaurant.openingHours.days[dayIndex];
+                                                            const conflictingItems = cartItemsList.filter(item => {
+                                                                if (item.categories && Array.isArray(item.categories)) {
+                                                                    return !item.categories.includes(newCategory);
+                                                                }
+                                                                return false;
+                                                            });
 
-                                        if (!daySchedule || daySchedule.isClosed) {
-                                            return <p className="text-red-400 text-xs font-medium col-span-3">Closed on this date</p>;
-                                        }
+                                                            if (conflictingItems.length > 0) {
+                                                                const itemNames = conflictingItems.map(i => `<b>${i.name}</b>`).join("<br/>");
+                                                                const result = await showConfirm(
+                                                                    "Use this time slot?",
+                                                                    `Switching to <b>${timeLabel}</b> (${newCategory}) will remove the following items from your cart:<br/><br/>${itemNames}`,
+                                                                    "Yes, switch & clear",
+                                                                    true // isHtml = true
+                                                                );
 
-                                        let slots = [];
-
-                                        if (daySchedule.generatedSlots && daySchedule.generatedSlots.length > 0) {
-                                            slots = daySchedule.generatedSlots.map(s => s.startTime);
-                                        }
-
-                                        if (slots.length === 0) {
-                                            return <p className="text-gray-400 text-xs col-span-3">No slots available</p>;
-                                        }
-
-
-
-                                        return slots.map((startTimeInMinutes) => {
-                                            const timeLabel = formatTime12Hour(startTimeInMinutes);
-                                            return (
-                                                <button
-                                                    key={startTimeInMinutes}
-                                                    onClick={() => {
-                                                        setSelectedTimeSlot(timeLabel);
-                                                        setActiveTab("menu");
-                                                    }}
-                                                    className={`py-2 text-xs font-semibold rounded-lg border transition-all ${selectedTimeSlot === timeLabel
-                                                        ? "bg-[#ff5e00] text-white border-[#ff5e00] shadow-md shadow-orange-200 scale-105"
-                                                        : "bg-white text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
-                                                        }`}
-                                                >
-                                                    {timeLabel}
-                                                </button>
-                                            );
-                                        });
-                                    })()}
+                                                                if (result.isConfirmed) {
+                                                                    // Clear conflicting items
+                                                                    setCart(prev => {
+                                                                        const nextCart = { ...prev };
+                                                                        conflictingItems.forEach(ci => delete nextCart[ci._id]);
+                                                                        return nextCart;
+                                                                    });
+                                                                    setSelectedTimeSlot(timeLabel);
+                                                                    setActiveTab("menu");
+                                                                }
+                                                            } else {
+                                                                setSelectedTimeSlot(timeLabel);
+                                                                setActiveTab("menu");
+                                                            }
+                                                        }}
+                                                        className={`py-2 text-xs font-semibold rounded-lg border transition-all ${selectedTimeSlot === timeLabel
+                                                            ? "bg-[#ff5e00] text-white border-[#ff5e00] shadow-md shadow-orange-200 scale-105"
+                                                            : "bg-white text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                                                            }`}
+                                                    >
+                                                        {timeLabel}
+                                                    </button>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
                                 </div>
+                                {isSlotInvalid && (
+                                    <div className="flex items-center gap-2 mt-2 text-red-600 animate-in slide-in-from-top-2 fade-in">
+                                        <AlertTriangle size={14} />
+                                        <p className="text-xs font-bold">Please select a valid time slot for this date</p>
+                                    </div>
+                                )}
                             </div>
 
 

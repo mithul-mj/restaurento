@@ -22,10 +22,10 @@ export const showError = (title, text) => {
     return showAlert(title, text || "Something went wrong!", "error");
 };
 
-export const showConfirm = (title, text, confirmButtonText = "Yes, do it!") => {
+export const showConfirm = (title, text, confirmButtonText = "Yes, do it!", isHtml = false) => {
     return Swal.fire({
         title,
-        text,
+        [isHtml ? "html" : "text"]: text,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -34,7 +34,7 @@ export const showConfirm = (title, text, confirmButtonText = "Yes, do it!") => {
         customClass: {
             popup: "dark:bg-gray-800 dark:text-white",
             title: "dark:text-white",
-            content: "dark:text-gray-300",
+            content: "dark:text-gray-300 whitespace-pre-line",
         },
     });
 };

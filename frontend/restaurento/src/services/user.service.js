@@ -34,9 +34,9 @@ const userService = {
     const response = await api.get(`/restaurant/${id}`);
     return response.data;
   },
-  getRestaurantMenu: async (id, page = 1, category = "All", search = "") => {
+  getRestaurantMenu: async (id, page = 1, category = "All", search = "", limit = 6) => {
     const response = await api.get(`/restaurant/${id}/menu`, {
-      params: { page, category, search }
+      params: { page, category, search, limit }
     });
     return response.data;
   },

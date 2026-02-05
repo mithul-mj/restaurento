@@ -5,13 +5,14 @@ import { Search, ChevronLeft, ChevronRight, AlertTriangle, X } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "../../services/user.service";
 import useDebounce from "../../hooks/useDebounce";
+import { showToast } from "../../utils/alert";
+import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
 
 const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) => {
     const [page, setPage] = useState(1);
     const [category, setCategory] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
-    const [limit] = useState(6);
 
     // Reset page when filters change
     useEffect(() => {
@@ -20,21 +21,19 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
 
     // select category based on time slot
     useEffect(() => {
-        if (selectedTimeSlot) {
-            const timeParts = selectedTimeSlot.match(/(\d+):(\d+)\s(AM|PM)/);
-            if (timeParts) {
-                let hour = parseInt(timeParts[1]);
-                const ampm = timeParts[3];
-                if (ampm === "PM" && hour !== 12) hour += 12;
-                if (ampm === "AM" && hour === 12) hour = 0;
-
-                // Simple logic: Breakfast < 11, Lunch < 16, Dinner >= 16
-                if (hour < 11) setCategory("Breakfast");
-                else if (hour < 16) setCategory("Lunch");
-                else setCategory("Dinner");
-            }
+        const slotCategory = getCategoryFromTimeSlot(selectedTimeSlot);
+        if (slotCategory) {
+            setCategory(slotCategory);
         }
     }, [selectedTimeSlot]);
+
+    const handleUpdateCart = (item, qty) => {
+        if (qty > 0 && !selectedTimeSlot) {
+            showToast("Please select a time slot first.", "error");
+            return;
+        }
+        updateCart(item, qty);
+    };
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ["restaurant_menu", restaurantId, page, category, debouncedSearch],
@@ -45,13 +44,7 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
     const menuItems = data?.menu || [];
     const pagination = data?.pagination || {};
 
-    // Check if item is roughly available for the selected slot
-    const isItemAvailableForSlot = (item) => {
-        if (!selectedTimeSlot) return true; // Available if no slot selected
-        if (category === "All") return true;
 
-        return true;
-    };
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -75,21 +68,9 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             <AnimatePresence>
                 {(() => {
-                    if (!selectedTimeSlot) return null;
+                    const slotCategory = getCategoryFromTimeSlot(selectedTimeSlot);
 
-                    const timeParts = selectedTimeSlot.match(/(\d+):(\d+)\s(AM|PM)/);
-                    if (!timeParts) return null;
-
-                    let hour = parseInt(timeParts[1]);
-                    const ampm = timeParts[3];
-                    if (ampm === "PM" && hour !== 12) hour += 12;
-                    if (ampm === "AM" && hour === 12) hour = 0;
-
-                    let slotCategory = "Dinner";
-                    if (hour < 11) slotCategory = "Breakfast";
-                    else if (hour < 16) slotCategory = "Lunch";
-
-                    if (slotCategory !== category && category !== "All") {
+                    if (slotCategory && slotCategory !== category && category !== "All") {
                         return (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
@@ -111,7 +92,6 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                 })()}
             </AnimatePresence>
 
-            {/* Categories & Search Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
                     {["All", "Breakfast", "Lunch", "Dinner"].map((cat) => (
@@ -159,8 +139,21 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                         const imageUrl = item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80";
                         const isAvailable = item.isAvailable !== false;
 
+                        let isMismatch = false;
+                        const slotCategory = getCategoryFromTimeSlot(selectedTimeSlot);
+
+                        if (slotCategory && item.categories && Array.isArray(item.categories)) {
+                            if (!item.categories.includes(slotCategory)) {
+                                isMismatch = true;
+                            }
+                        } else if (slotCategory && slotCategory !== category && category !== "All") {
+                            isMismatch = true;
+                        }
+
+                        const isDisabled = !isAvailable || isMismatch;
+
                         return (
-                            <div key={item._id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all group h-fit">
+                            <div key={item._id} className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 transition-all group h-fit ${!isAvailable ? 'opacity-60 grayscale' : ''} ${!isDisabled ? 'hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : ''}`}>
                                 <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100">
                                     <img loading="lazy" src={imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                 </div>
@@ -178,22 +171,22 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                                     </div>
 
                                     <div className="flex items-center justify-between mt-3">
-                                        <span className="font-bold text-[#ff5e00]">
+                                        <span className={`font-bold ${isMismatch ? 'text-gray-500' : 'text-[#ff5e00]'}`}>
                                             ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
                                         </span>
 
-                                        {isAvailable ? (
+                                        {!isDisabled ? (
                                             cartItem > 0 ? (
                                                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
                                                     <button
-                                                        onClick={() => updateCart(item, -1)}
+                                                        onClick={() => handleUpdateCart(item, -1)}
                                                         className="w-6 h-6 flex items-center justify-center bg-white rounded-md text-gray-600 shadow-sm hover:scale-105 transition-transform"
                                                     >
                                                         -
                                                     </button>
                                                     <span className="w-8 text-center text-sm font-bold text-gray-900">{cartItem}</span>
                                                     <button
-                                                        onClick={() => updateCart(item, 1)}
+                                                        onClick={() => handleUpdateCart(item, 1)}
                                                         className="w-6 h-6 flex items-center justify-center bg-white rounded-md text-gray-600 shadow-sm hover:scale-105 transition-transform"
                                                     >
                                                         +
@@ -201,15 +194,15 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                                                 </div>
                                             ) : (
                                                 <button
-                                                    onClick={() => updateCart(item, 1)}
+                                                    onClick={() => handleUpdateCart(item, 1)}
                                                     className="px-6 py-1.5 bg-[#ff5e00] text-white text-xs font-bold rounded-full hover:bg-[#e05200] active:scale-95 transition-all shadow-md shadow-orange-100"
                                                 >
                                                     + Add
                                                 </button>
                                             )
                                         ) : (
-                                            <button disabled className="px-4 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded-full cursor-not-allowed">
-                                                Sold Out
+                                            <button disabled className="px-6 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded-full cursor-not-allowed">
+                                                + Add
                                             </button>
                                         )}
                                     </div>
