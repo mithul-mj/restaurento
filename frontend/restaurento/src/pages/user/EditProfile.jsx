@@ -8,6 +8,7 @@ import userService from "../../services/user.service";
 import authService from "../../services/auth.service";
 import { setCredentials } from "../../redux/slices/authSlice";
 import EmailChangeModal from "../../components/modals/EmailChangeModal";
+import ImageCropper from "../../components/common/ImageCropper";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -16,6 +17,10 @@ const EditProfile = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+
+  // Cropper State
+  const [imageToCrop, setImageToCrop] = useState(null);
+
   const {
     register,
     handleSubmit,
@@ -32,9 +37,24 @@ const EditProfile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      // Create a URL for the selected file to show in cropper
+      const url = URL.createObjectURL(file);
+      setImageToCrop(url);
+
+      // Reset input value so same file can be selected again if cancelled
+      e.target.value = '';
     }
+  };
+
+  const handleCropComplete = async (croppedDataUrl) => {
+    // Convert Data URL to File
+    const res = await fetch(croppedDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], "profile-avatar.jpg", { type: "image/jpeg" });
+
+    setSelectedImage(file);
+    setPreviewUrl(croppedDataUrl);
+    setImageToCrop(null);
   };
 
   const onSubmit = async (data) => {
@@ -64,7 +84,15 @@ const EditProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
-
+      {/* Cropper Modal */}
+      {imageToCrop && (
+        <ImageCropper
+          imageSrc={imageToCrop}
+          aspect={1} // 1:1 for Profile Picture
+          onCropComplete={handleCropComplete}
+          onCancel={() => setImageToCrop(null)}
+        />
+      )}
 
       <main className="max-w-3xl mx-auto px-4 md:px-8 py-10">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center md:text-left">
@@ -85,6 +113,7 @@ const EditProfile = () => {
                 type="file"
                 id="avatar-upload"
                 className="hidden"
+                accept="image/*"
                 onChange={handleImageChange}
               />
               <label

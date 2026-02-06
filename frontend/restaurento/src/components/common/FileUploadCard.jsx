@@ -1,21 +1,26 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useFormContext } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import { CheckCircle, X, Upload, FileCheck } from "lucide-react";
+import ImageCropper from './ImageCropper';
 
 const FileUploadCard = ({
     name,
     label,
     required,
-    acceptedFileTypes = { 'application/pdf': ['.pdf'], 'image/*': ['.jpg', '.jpeg', '.png'] }
+    acceptedFileTypes = { 'application/pdf': ['.pdf'], 'image/*': ['.jpg', '.jpeg', '.png'] },
+    aspectRatio = 16 / 9
 }) => {
     const { watch, setValue, formState: { errors } } = useFormContext();
+    const [imageToCrop, setImageToCrop] = useState(null);
+    const [pendingFiles, setPendingFiles] = useState([]);
 
     const files = watch(name);
     const file = files && files.length > 0 ? files[0] : null;
 
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length > 0) {
+            // Process all dropped files
             const filesWithPreview = await Promise.all(
                 acceptedFiles.map(async (file) => {
                     const dataUrl = await new Promise((resolve) => {
@@ -27,7 +32,19 @@ const FileUploadCard = ({
                 })
             );
 
-            setValue(name, filesWithPreview, { shouldValidate: true });
+            // Filter for images that require cropping
+            const imagesToCrop = filesWithPreview.filter(f =>
+                f.type.startsWith('image/') || (typeof f.preview === 'string' && f.preview.startsWith('data:image'))
+            );
+
+            if (imagesToCrop.length > 0) {
+                // Initialize cropping sequence
+                setImageToCrop(imagesToCrop[0].preview);
+                setPendingFiles(imagesToCrop.slice(1));
+            } else {
+                // No images to crop, update form immediately
+                setValue(name, filesWithPreview, { shouldValidate: true });
+            }
         }
     }, [name, setValue]);
 
@@ -39,9 +56,40 @@ const FileUploadCard = ({
     });
 
     const removeFile = (e) => {
-        e.stopPropagation();
+        e && e.stopPropagation();
         setValue(name, null, { shouldValidate: true });
     };
+
+    const handleCropComplete = async (croppedDataUrl) => {
+        // Create File object from cropped data
+        const res = await fetch(croppedDataUrl);
+        const blob = await res.blob();
+        const finalFile = new File([blob], "cropped-image.jpg", { type: "image/jpeg" });
+        Object.assign(finalFile, { preview: croppedDataUrl });
+
+        // Process next file in queue or finish
+        if (pendingFiles.length > 0) {
+            const nextFile = pendingFiles[0];
+            const remaining = pendingFiles.slice(1);
+
+            setPendingFiles(remaining);
+            setImageToCrop(nextFile.preview);
+        } else {
+            // All files processed, update form value
+            setValue(name, [finalFile], { shouldValidate: true });
+
+            setImageToCrop(null);
+            setPendingFiles([]);
+        }
+    };
+
+    const handleCancelCrop = () => {
+        // Stop cropping and clear queue
+        setImageToCrop(null);
+        setPendingFiles([]);
+    };
+
+    const isImage = file && (file.type?.startsWith('image') || (typeof file.preview === 'string' && file.preview.startsWith('data:image')));
 
     return (
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -64,14 +112,19 @@ const FileUploadCard = ({
                             <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                         </div>
                     </div>
-                    {file.preview && (file.type?.startsWith('image') || file.isExisting) && (
-                        <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-gray-200">
-                            <img src={file.preview} alt="Preview" className="h-full w-full object-cover" />
-                        </div>
-                    )}
-                    <button type="button" onClick={removeFile} className="p-1.5 hover:bg-green-100 text-green-700 rounded-full transition-colors">
-                        <X size={16} />
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        {file.preview && isImage && (
+                            <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-gray-200 hidden sm:block">
+                                <img src={file.preview} alt="Preview" className="h-full w-full object-cover" />
+                            </div>
+                        )}
+
+
+                        <button type="button" onClick={removeFile} className="p-1.5 hover:bg-red-100 text-red-500 rounded-full transition-colors">
+                            <X size={16} />
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <div
@@ -94,6 +147,15 @@ const FileUploadCard = ({
             {errors[name] && <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
                 <X size={12} /> {errors[name].message}
             </p>}
+
+            {imageToCrop && (
+                <ImageCropper
+                    imageSrc={imageToCrop}
+                    aspect={aspectRatio}
+                    onCropComplete={handleCropComplete}
+                    onCancel={handleCancelCrop}
+                />
+            )}
         </div>
     );
 };

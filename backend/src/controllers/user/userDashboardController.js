@@ -6,11 +6,19 @@ export const getUserDashboard = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 6;
     const search = req.query.search || "";
-    const sort = req.query.sort || 'rating_high_low';
     const rating = req.query.rating || 'Any';
     const cost = req.query.cost || req.query['cost[]'] || [];
     const lat = parseFloat(req.query.lat);
     const lng = parseFloat(req.query.lng);
+
+    let sort = req.query.sort;
+    if (!sort) {
+      if (!isNaN(lat) && !isNaN(lng)) {
+        sort = 'distance';
+      } else {
+        sort = 'rating_high_low';
+      }
+    }
 
 
     const baseQuery = {
@@ -26,7 +34,7 @@ export const getUserDashboard = async (req, res, next) => {
         $geoNear: {
           near: { type: "Point", coordinates: [lng, lat] },
           distanceField: "distanceFromUser",
-          maxDistance: 15000, // 10km radius
+          maxDistance: 15000, // 15km radius
           spherical: true,
           query: baseQuery
         }
@@ -81,6 +89,7 @@ export const getUserDashboard = async (req, res, next) => {
     if (sort === 'rating_high_low') sortOptions = { 'ratingStats.average': -1 };
     else if (sort === 'cost_low_high') sortOptions = { slotPrice: 1 };
     else if (sort === 'cost_high_low') sortOptions = { slotPrice: -1 };
+    else if (sort === 'distance' && !isNaN(lat) && !isNaN(lng)) sortOptions = { distanceFromUser: 1 };
     if (Object.keys(sortOptions).length > 0) {
       pipeline.push({ $sort: sortOptions });
     }

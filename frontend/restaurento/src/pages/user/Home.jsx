@@ -128,7 +128,7 @@ const Home = () => {
   }, []);
 
   const onSearch = (data) => {
-    setSearchQuery(data.query);
+    setSearchQuery(data.query?.trim() || "");
   };
 
   const filters = ["Filters", "Open Now", "Rating 4.5+"];

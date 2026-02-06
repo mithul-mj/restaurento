@@ -1,20 +1,13 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { singleDishSchema } from '../../schemas/onboardingSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import FileUploadCard from '../common/FileUploadCard';
 
 const AddDishModal = ({ onClose, onSave, initialData }) => {
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        watch,
-        reset,
-        formState: { errors, isSubmitting }
-    } = useForm({
+    const methods = useForm({
         resolver: zodResolver(singleDishSchema),
         defaultValues: {
             name: "",
@@ -25,7 +18,15 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
         }
     });
 
-    const image = watch('image');
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        reset,
+        formState: { errors, isSubmitting }
+    } = methods;
+
     const categories = watch('categories') || [];
 
     useEffect(() => {
@@ -77,30 +78,6 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
         }
     }, [initialData, reset]);
 
-
-
-    const onDrop = useCallback(async (acceptedFiles) => {
-        if (acceptedFiles.length > 0) {
-            const filesWithPreview = await Promise.all(
-                acceptedFiles.map(async (file) => {
-                    const dataUrl = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result);
-                        reader.readAsDataURL(file);
-                    });
-                    return Object.assign(file, { preview: dataUrl });
-                })
-            );
-            setValue('image', filesWithPreview, { shouldValidate: true });
-        }
-    }, [setValue]);
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
-        maxFiles: 1
-    });
-
     const handleCategoryChange = (category) => {
         const current = categories;
         let newCategories;
@@ -138,125 +115,95 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-800 mb-1.5">Dish Name</label>
-                                <input
-                                    {...register("name")}
-                                    className="w-full p-3.5 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-400"
-                                    placeholder="e.g. Classic Margherita Pizza"
-                                />
-                                {errors.name && <span className="text-red-500 text-xs mt-1">{errors.name.message}</span>}
+                <FormProvider {...methods}>
+                    <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-800 mb-1.5">Dish Name</label>
+                                    <input
+                                        {...register("name")}
+                                        className="w-full p-3.5 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-400"
+                                        placeholder="e.g. Classic Margherita Pizza"
+                                    />
+                                    {errors.name && <span className="text-red-500 text-xs mt-1">{errors.name.message}</span>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-800 mb-1.5">Price</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-3.5 text-gray-400 font-medium">₹</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            {...register("price")}
+                                            className="w-full p-3.5 pl-8 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-300"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    {errors.price && <span className="text-red-500 text-xs mt-1">{errors.price.message}</span>}
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-800 mb-1.5">Price</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-gray-400 font-medium">₹</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        {...register("price")}
-                                        className="w-full p-3.5 pl-8 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-300"
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                {errors.price && <span className="text-red-500 text-xs mt-1">{errors.price.message}</span>}
+                                <FileUploadCard
+                                    name="image"
+                                    label="Dish Image"
+                                    required={true}
+                                    aspectRatio={1} // Square crop for dishes
+                                />
                             </div>
                         </div>
 
                         <div>
-                            <div
-                                {...getRootProps()}
-                                className={`h-full min-h-[160px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-4 transition-all cursor-pointer ${isDragActive ? 'border-[#ff5e00] bg-orange-50' : 'border-gray-200 bg-white hover:border-orange-200'} `}
-                            >
-                                <input {...getInputProps()} />
-                                {image && image.length > 0 ? (
-                                    <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                        {image[0].preview ? (
-                                            <img src={image[0].preview} alt="Preview" className="h-[140px] object-contain rounded-lg" />
-                                        ) : (
-                                            <>
-                                                <p className="text-sm font-bold text-green-600 truncate max-w-full px-2">{image[0].name}</p>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setValue('image', null);
-                                                    }}
-                                                    className="mt-2 text-xs text-red-500 hover:underline"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <>
-                                        <h3 className="text-base font-bold text-gray-900 mb-1">
-                                            Dish Image<span className="text-red-500 font-normal">(Required)</span>
-                                        </h3>
-                                        <p className="text-xs text-gray-400 mb-4">Supports: PDF, JPG, PNG. Max size: 5MB</p>
-                                        <span className="px-4 py-2 bg-[#FFF0E5] text-[#ff5e00] text-xs font-bold rounded-lg pointer-events-none">
-                                            Drag & Drop or Click to Upload
-                                        </span>
-                                    </>
-                                )}
+                            <label className="block text-sm font-bold text-gray-800 mb-1.5">Description</label>
+                            <textarea
+                                rows={3}
+                                {...register("description")}
+                                className="w-full p-3.5 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-400 resize-none"
+                                placeholder="e.g., Fresh basil, mozzarella, san marzano tomatoes on a hand-tossed crust."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-gray-800 mb-3">Available During</label>
+                            <div className="flex gap-6">
+                                {["Breakfast", "Lunch", "Dinner"].map((type) => (
+                                    <label key={type} className="flex items-center gap-2.5 cursor-pointer group">
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${categories.includes(type) ? 'bg-[#ff5e00] border-[#ff5e00]' : 'border-gray-300 bg-white group-hover:border-[#ff5e00]'} `}>
+                                            {categories.includes(type) && <Check className="text-white" size={14} strokeWidth={3} />}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={categories.includes(type)}
+                                            onChange={() => handleCategoryChange(type)}
+                                        />
+                                        <span className="text-gray-700 font-medium">{type}</span>
+                                    </label>
+                                ))}
                             </div>
-                            {errors.image && <span className="text-red-500 text-xs mt-1 block text-center">{errors.image.message}</span>}
+                            {errors.categories && <span className="text-red-500 text-xs mt-1">{errors.categories.message}</span>}
                         </div>
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-1.5">Description</label>
-                        <textarea
-                            rows={3}
-                            {...register("description")}
-                            className="w-full p-3.5 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-400 resize-none"
-                            placeholder="e.g., Fresh basil, mozzarella, san marzano tomatoes on a hand-tossed crust."
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-3">Available During</label>
-                        <div className="flex gap-6">
-                            {["Breakfast", "Lunch", "Dinner"].map((type) => (
-                                <label key={type} className="flex items-center gap-2.5 cursor-pointer group">
-                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${categories.includes(type) ? 'bg-[#ff5e00] border-[#ff5e00]' : 'border-gray-300 bg-white group-hover:border-[#ff5e00]'} `}>
-                                        {categories.includes(type) && <Check className="text-white" size={14} strokeWidth={3} />}
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        className="hidden"
-                                        checked={categories.includes(type)}
-                                        onChange={() => handleCategoryChange(type)}
-                                    />
-                                    <span className="text-gray-700 font-medium">{type}</span>
-                                </label>
-                            ))}
+                        <div className="p-6 border-t bg-white flex justify-end gap-3 mt-4 -mx-8 -mb-8">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="px-8 py-2.5 bg-[#ff5e00] text-white font-bold rounded-lg hover:bg-[#e05200] transition-colors shadow-lg shadow-orange-100 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting ? "Saving..." : "Save"}
+                            </button>
                         </div>
-                        {errors.categories && <span className="text-red-500 text-xs mt-1">{errors.categories.message}</span>}
-                    </div>
-
-                    <div className="p-6 border-t bg-white flex justify-end gap-3 mt-4 -mx-8 -mb-8">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="px-8 py-2.5 bg-[#ff5e00] text-white font-bold rounded-lg hover:bg-[#e05200] transition-colors shadow-lg shadow-orange-100 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? "Saving..." : "Save"}
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </FormProvider>
             </div>
         </div>
     );
