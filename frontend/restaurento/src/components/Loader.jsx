@@ -1,14 +1,10 @@
 import React from "react";
+import PotLoader from "./common/PotLoader";
 
-const Loader = ({ className }) => {
+const Loader = ({ className, size = "xs", text = "Loading", showText = false }) => {
     return (
-        <div
-            className={`inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] ${className}`}
-            role="status"
-        >
-            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                Loading...
-            </span>
+        <div className={`inline-flex items-center justify-center ${className}`}>
+            <PotLoader size={size} text={text} showText={showText} />
         </div>
     );
 };

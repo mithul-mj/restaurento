@@ -5,6 +5,7 @@ import { showConfirm, showToast, showError } from '../../utils/alert';
 import authService from '../../services/auth.service';
 import restaurantService from '../../services/restaurant.service';
 import { useNavigate } from 'react-router-dom';
+import Loader from '../../components/Loader';
 
 const RestaurantSettings = () => {
     const dispatch = useDispatch();
@@ -127,7 +128,7 @@ const RestaurantSettings = () => {
                 {/* Email */}
                 <div className="bg-white border border-gray-200 p-6 rounded-xl flex items-center justify-between shadow-sm">
                     <div>
-                        <h3 className="font-semibold text-gray-800">Email : {loading ? "Loading..." : email}</h3>
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2">Email : {loading ? <Loader size="xs" showText={false} /> : email}</h3>
 
                     </div>
                 </div>

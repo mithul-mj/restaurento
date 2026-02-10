@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { useRestaurants } from "../../hooks/useRestaurants";
 import { showConfirm } from "../../utils/alert";
 import useDebounce from "../../hooks/useDebounce";
+import Loader from "../../components/Loader";
 
 const RestaurantManagement = () => {
 
@@ -40,7 +41,7 @@ const RestaurantManagement = () => {
     setPage(1);
   }, [debouncedSearch, sortBy, statusFilter]);
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader size="medium" showText={true} /></div>;
   if (isError) return <p>Error loading restaurants</p>;
 
   const restaurants = data?.data || [];

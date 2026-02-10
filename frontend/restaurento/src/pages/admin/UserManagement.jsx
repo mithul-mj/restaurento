@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { useUsers } from "../../hooks/useUsers";
 import { showConfirm } from "../../utils/alert";
 import useDebounce from "../../hooks/useDebounce";
+import Loader from "../../components/Loader";
 
 const UserManagement = () => {
   const { register, control, setValue } = useForm();
@@ -37,7 +38,7 @@ const UserManagement = () => {
     setPage(1);
   }, [debouncedSearch, sortBy, statusFilter]);
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader size="medium" showText={true} /></div>;
   if (isError) return <p>Error loading users</p>;
 
   const users = data?.data || [];
