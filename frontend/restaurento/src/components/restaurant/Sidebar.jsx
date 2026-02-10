@@ -12,7 +12,11 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { useSelector } from 'react-redux';
+
 const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
+    const { user } = useSelector((state) => state.auth);
+
     const menuItems = [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/restaurant/dashboard' },
         { id: 'bookings', icon: CalendarDays, label: 'Bookings', path: '/restaurant/bookings' },
@@ -62,11 +66,11 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
                 <div className="px-6 py-6 border-t border-gray-50 mt-auto">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#fff5eb] flex items-center justify-center text-[#ff5e00] font-bold overflow-hidden">
-                            <img src="https://ui-avatars.com/api/?name=Chef+Owner&background=random" alt="User" className="w-full h-full object-cover" />
+                            <img src={`https://ui-avatars.com/api/?name=${user?.fullName || user?.name || 'Chef+Owner'}&background=random`} alt="User" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                             <p className="text-sm font-bold text-gray-900 truncate">
-                                Chef Owner
+                                {user?.fullName || user?.name || 'Chef Owner'}
                             </p>
                             <p className="text-xs text-gray-400 truncate">Restaurant Owner</p>
                         </div>
