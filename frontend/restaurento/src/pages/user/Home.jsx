@@ -19,12 +19,17 @@ import RestaurantCard from "../../components/user/RestaurantCard";
 import SkeletonCard from "../../components/user/SkeletonCard";
 
 const Home = () => {
-  const { register, handleSubmit, watch, setValue } = useForm();
+  const { register, watch, setValue } = useForm();
   const [activeFilter, setActiveFilter] = useState("Filters");
-  const [searchQuery, setSearchQuery] = useState("");
+  const queryValue = watch("query", "");
+  const debouncedSearchQuery = useDebounce(queryValue, 500);
   const [columns, setColumns] = useState(3);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState({});
+  const [appliedFilters, setAppliedFilters] = useState({
+    sort: "rating_high_low",
+    rating: "Any",
+    cost: [],
+  });
   const [placeholderText, setPlaceholderText] = useState("Search or Detect location..")
   const [recentLocations, setRecentLocations] = useState([]);
 
@@ -127,9 +132,7 @@ const Home = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const onSearch = (data) => {
-    setSearchQuery(data.query?.trim() || "");
-  };
+
 
   const filters = ["Filters", "Open Now", "Rating 4.5+"];
 
@@ -141,11 +144,11 @@ const Home = () => {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ["restaurants", searchQuery, appliedFilters, selectedCoordinates, activeFilter],
+    queryKey: ["restaurants", debouncedSearchQuery, appliedFilters, selectedCoordinates, activeFilter],
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const limit = columns * 4;
-      const res = await userService.getDashboard(pageParam, limit, searchQuery, appliedFilters, selectedCoordinates);
+      const res = await userService.getDashboard(pageParam, limit, debouncedSearchQuery, appliedFilters, selectedCoordinates);
       return {
         results: res.restaurants,
         nextPage: res.pagination.hasNextPage ? pageParam + 1 : undefined,
@@ -248,8 +251,7 @@ const Home = () => {
                     </div>
 
                     <div className="w-full max-w-4xl mx-auto -mt-14 relative z-10 mb-10 px-2">
-                      <form
-                        onSubmit={handleSubmit(onSearch)}
+                      <div
                         className="relative flex flex-col md:flex-row shadow-xl shadow-gray-200/50 rounded-xl bg-white max-w-4xl mx-auto border border-gray-100"
                         style={{ zIndex: 50 }}
                       >
@@ -364,7 +366,6 @@ const Home = () => {
                               type="button"
                               onClick={() => {
                                 setValue("query", "");
-                                setSearchQuery("");
                               }}
                               className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
                             >
@@ -385,7 +386,7 @@ const Home = () => {
                         >
                           Search
                         </button>
-                      </form>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 mb-10 overflow-x-auto pb-2 scrollbar-hide">
@@ -528,12 +529,11 @@ const Home = () => {
       <FilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
+        filters={appliedFilters}
         onApply={(filters) => {
           setAppliedFilters(filters);
           setIsFilterModalOpen(false);
-
         }}
-
       />
     </div >
   );

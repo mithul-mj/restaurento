@@ -112,7 +112,7 @@ export const getMenu = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const search = req.query.search || "";
+        const search = (req.query.search || "").trim();
         const category = req.query.category || "All";
 
         const skip = (page - 1) * limit;

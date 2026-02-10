@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import adminService from "../services/admin.service.js";
 import { showToast, showError } from "../utils/alert";
 
@@ -8,7 +8,7 @@ export const useUsers = ({ page, limit, search, sortBy, status }) => {
   const query = useQuery({
     queryKey,
     queryFn: () => adminService.fetchUsers({ page, limit, search, sortBy, status }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
 

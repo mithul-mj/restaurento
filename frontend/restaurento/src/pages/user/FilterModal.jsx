@@ -1,24 +1,29 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-const FilterModal = ({ isOpen, onClose, onApply }) => {
+const FilterModal = ({ isOpen, onClose, onApply, filters }) => {
     const [activeTab, setActiveTab] = useState("sort");
 
-    const { register, handleSubmit, watch, reset } = useForm({
-        defaultValues: {
+    const { register, handleSubmit, reset } = useForm({
+        defaultValues: filters || {
             sort: "rating_high_low",
             rating: "Any",
             cost: [],
         },
     });
 
-    const filters = watch();
+    useEffect(() => {
+        if (isOpen && filters) {
+            reset(filters);
+        }
+    }, [isOpen, filters, reset]);
+
 
     if (!isOpen) return null;
 
     const renderSidebar = () => (
-        <div className="w-1/3 bg-gray-50 border-r border-gray-100 py-2">
+        <div className="w-1/3 bg-gray-50 border-r border-gray-100 py-2 h-full">
             <button
                 type="button"
                 onClick={() => setActiveTab("sort")}
@@ -57,9 +62,8 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
         </div>
     );
 
-    // --- CONTENT ---
     const renderContent = () => (
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-5 overflow-y-auto h-full">
             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-5">
                 {activeTab === "sort" && "Sort by"}
                 {activeTab === "rating" && "Rating"}
@@ -208,7 +212,7 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+                className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col md:max-h-[600px] max-h-[80vh] animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* HEADER */}
@@ -224,7 +228,7 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
                     className="flex flex-col flex-1 overflow-hidden"
                     onSubmit={handleSubmit(onApply)}
                 >
-                    <div className="flex flex-1 overflow-hidden min-h-[400px]">
+                    <div className="flex w-full overflow-hidden h-[290px]">
                         {renderSidebar()}
                         {renderContent()}
                     </div>

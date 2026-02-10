@@ -8,7 +8,7 @@ export const getAllUsers = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 6;
-    const search = req.query.search || "";
+    const search = (req.query.search || "").trim();
     const sortBy = req.query.sortBy || "newest";
     const status = req.query.status || "all";
 

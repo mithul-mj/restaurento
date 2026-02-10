@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Store,
@@ -9,40 +9,44 @@ import {
   ChevronRight,
   MapPin,
   Eye,
+  EyeOff,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRestaurants } from "../../hooks/useRestaurants";
 import { showConfirm } from "../../utils/alert";
+import useDebounce from "../../hooks/useDebounce";
 
 const RestaurantManagement = () => {
 
-  const { register, handleSubmit, control, setValue } = useForm();
+  const { register, control, setValue } = useForm();
 
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+
   const [sortBy, setSortBy] = useState("newest");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const searchValue = useWatch({ control, name: "search", defaultValue: "" });
+  const debouncedSearch = useDebounce(searchValue, 500);
 
   const { data, isLoading, isError, toggleStatus } = useRestaurants({
     page,
     limit: 6,
-    search,
+    search: debouncedSearch,
     sortBy,
     status: statusFilter,
   });
 
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, sortBy, statusFilter]);
+
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading restaurants</p>;
 
-  // Ensure data structure matches what hook returns (data: { data: [], meta: {} })
-  const { data: restaurants, meta } = data;
+  const restaurants = data?.data || [];
+  const meta = data?.meta || { totalCount: 0, suspendedCount: 0, currentPage: 1, totalPages: 1 };
 
-  const onSearch = (data) => {
-    setSearch(data.search);
-    setPage(1);
-  };
+
 
   return (
     <>
@@ -89,8 +93,7 @@ const RestaurantManagement = () => {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
-        <form
-          onSubmit={handleSubmit(onSearch)}
+        <div
           className="w-full md:w-96 relative">
           <input
             type="text"
@@ -107,14 +110,13 @@ const RestaurantManagement = () => {
               type="button"
               onClick={() => {
                 setValue("search", "");
-                setSearch("");
                 setPage(1);
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <X size={16} />
             </button>
           )}
-        </form>
+        </div>
 
         <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 items-center">
           <div className="relative">
@@ -260,12 +262,22 @@ const RestaurantManagement = () => {
                 {restaurant.status}
               </span>
 
-              <Link
-                to={`/admin/restaurants/${restaurant._id}`}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-[#ff5e00] hover:bg-[#fff5eb] transition-colors"
-                title="View Details">
-                <Eye size={18} />
-              </Link>
+              {restaurant.verificationStatus === "new" ? (
+                <div
+                  className="p-1.5 rounded-lg text-gray-300 cursor-not-allowed"
+                  title="Details not available"
+                >
+                  <EyeOff size={18} />
+                </div>
+              ) : (
+                <Link
+                  to={`/admin/restaurants/${restaurant._id}`}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-[#ff5e00] hover:bg-[#fff5eb] transition-colors"
+                  title="View Details"
+                >
+                  <Eye size={18} />
+                </Link>
+              )}
 
               <button
                 onClick={() => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Users,
@@ -13,34 +13,35 @@ import {
 import { Link } from "react-router-dom";
 import { useUsers } from "../../hooks/useUsers";
 import { showConfirm } from "../../utils/alert";
+import useDebounce from "../../hooks/useDebounce";
 
 const UserManagement = () => {
-  const { register, handleSubmit, control, setValue } = useForm();
+  const { register, control, setValue } = useForm();
 
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const searchValue = useWatch({ control, name: "search", defaultValue: "" });
+  const debouncedSearch = useDebounce(searchValue, 500);
+
   const [sortBy, setSortBy] = useState("newest");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  const searchValue = useWatch({ control, name: "search", defaultValue: "" });
 
   const { data, isLoading, isError, toggleStatus } = useUsers({
     page,
     limit: 6,
-    search,
+    search: debouncedSearch,
     sortBy,
     status: statusFilter,
   });
 
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, sortBy, statusFilter]);
+
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading users</p>;
 
-  const { data: users, meta } = data;
-
-  const onSearch = (data) => {
-    setSearch(data.search);
-    setPage(1);
-  };
+  const users = data?.data || [];
+  const meta = data?.meta || { totalCount: 0, suspendedCount: 0, currentPage: 1, totalPages: 1 };
 
   return (
     <>
@@ -89,8 +90,7 @@ const UserManagement = () => {
 
 
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
-        <form
-          onSubmit={handleSubmit(onSearch)}
+        <div
           className="w-full md:w-96 relative">
           <input
             type="text"
@@ -107,14 +107,13 @@ const UserManagement = () => {
               type="button"
               onClick={() => {
                 setValue("search", "");
-                setSearch("");
                 setPage(1);
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <X size={16} />
             </button>
           )}
-        </form>
+        </div>
 
         <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 items-center">
           <div className="relative">
