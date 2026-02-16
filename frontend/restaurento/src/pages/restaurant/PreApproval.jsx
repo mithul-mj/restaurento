@@ -47,13 +47,13 @@ const PreApproval = () => {
                     }
 
                     const mockFile = (url) => {
-                        if (!url) return [];
-                        return [{
+                        if (!url) return null;
+                        return {
                             name: "Existing Document",
                             size: 0,
                             preview: url,
                             isExisting: true
-                        }];
+                        };
                     };
 
                     setValue('restaurantLicense', mockFile(restaurant.documents?.restaurantLicense));
@@ -99,10 +99,9 @@ const PreApproval = () => {
 
                 const fileFields = ["restaurantLicense", "businessCert", "fssaiCert", "ownerIdCert"];
                 fileFields.forEach(field => {
-                    if (data[field] && data[field].length > 0) {
-                        if (!data[field][0].isExisting) {
-                            formData.append(field, data[field][0]);
-                        }
+                    const file = data[field];
+                    if (file && !file.isExisting) {
+                        formData.append(field, file);
                     }
                 });
 
@@ -153,7 +152,7 @@ const PreApproval = () => {
                                             name="restaurantPhone"
                                             label="Restaurant Phone"
                                             placeholder="e.g. +1234567890"
-                                            icon={Building} // or Phone icon if available, but Building is fine for now as placeholder
+                                            icon={Building}
                                             required
                                         />
                                     </div>

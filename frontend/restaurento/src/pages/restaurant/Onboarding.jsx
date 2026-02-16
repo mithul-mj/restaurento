@@ -105,8 +105,8 @@ const Onboarding = () => {
                 });
             }
 
-            if (item.image && item.image.length > 0) {
-                formData.append(`menuItems[${index}].image`, item.image[0]);
+            if (item.image) {
+                formData.append(`menuItems[${index}].image`, item.image);
             }
         });
 

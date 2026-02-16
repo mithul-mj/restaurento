@@ -21,6 +21,12 @@ const restaurantService = {
         const response = await api.patch("/restaurant/settings", data);
         return response.data;
     },
+    updateProfile: async (formData) => {
+        const response = await api.patch("/restaurant/profile", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        return response.data;
+    },
     getMenu: async ({ page, limit, category, search }) => {
         const response = await api.get("/restaurant/menu", {
             params: { page, limit, category, search },

@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useFormContext } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
-import { CheckCircle, X, Upload, FileCheck } from "lucide-react";
+import { CheckCircle, X, Upload, FileCheck, FileText } from "lucide-react";
 import ImageCropper from './ImageCropper';
 
 const FileUploadCard = ({
@@ -13,37 +13,26 @@ const FileUploadCard = ({
 }) => {
     const { watch, setValue, formState: { errors } } = useFormContext();
     const [imageToCrop, setImageToCrop] = useState(null);
-    const [pendingFiles, setPendingFiles] = useState([]);
 
-    const files = watch(name);
-    const file = files && files.length > 0 ? files[0] : null;
+    const file = watch(name);
 
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length > 0) {
-            // Process all dropped files
-            const filesWithPreview = await Promise.all(
-                acceptedFiles.map(async (file) => {
-                    const dataUrl = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result);
-                        reader.readAsDataURL(file);
-                    });
-                    return Object.assign(file, { preview: dataUrl });
-                })
-            );
+            const file = acceptedFiles[0];
 
-            // Filter for images that require cropping
-            const imagesToCrop = filesWithPreview.filter(f =>
-                f.type.startsWith('image/') || (typeof f.preview === 'string' && f.preview.startsWith('data:image'))
-            );
+            const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+            Object.assign(file, { preview: dataUrl });
 
-            if (imagesToCrop.length > 0) {
-                // Initialize cropping sequence
-                setImageToCrop(imagesToCrop[0].preview);
-                setPendingFiles(imagesToCrop.slice(1));
+            const isImage = file.type.startsWith('image/') || (typeof file.preview === 'string' && file.preview.startsWith('data:image'));
+
+            if (isImage) {
+                setImageToCrop(file.preview);
             } else {
-                // No images to crop, update form immediately
-                setValue(name, filesWithPreview, { shouldValidate: true });
+                setValue(name, file, { shouldValidate: true });
             }
         }
     }, [name, setValue]);
@@ -61,35 +50,26 @@ const FileUploadCard = ({
     };
 
     const handleCropComplete = async (croppedDataUrl) => {
-        // Create File object from cropped data
         const res = await fetch(croppedDataUrl);
         const blob = await res.blob();
         const finalFile = new File([blob], "cropped-image.jpg", { type: "image/jpeg" });
         Object.assign(finalFile, { preview: croppedDataUrl });
 
-        // Process next file in queue or finish
-        if (pendingFiles.length > 0) {
-            const nextFile = pendingFiles[0];
-            const remaining = pendingFiles.slice(1);
-
-            setPendingFiles(remaining);
-            setImageToCrop(nextFile.preview);
-        } else {
-            // All files processed, update form value
-            setValue(name, [finalFile], { shouldValidate: true });
-
-            setImageToCrop(null);
-            setPendingFiles([]);
-        }
+        setValue(name, finalFile, { shouldValidate: true });
+        setImageToCrop(null);
     };
 
     const handleCancelCrop = () => {
-        // Stop cropping and clear queue
         setImageToCrop(null);
-        setPendingFiles([]);
     };
 
-    const isImage = file && (file.type?.startsWith('image') || (typeof file.preview === 'string' && file.preview.startsWith('data:image')));
+    const isImage = file && (
+        file.type?.startsWith('image') ||
+        (typeof file.preview === 'string' && (
+            file.preview.startsWith('data:image') ||
+            (!/\.(pdf|doc|docx|xls|xlsx|txt)($|\?)/i.test(file.preview))
+        ))
+    );
 
     return (
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -114,9 +94,13 @@ const FileUploadCard = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {file.preview && isImage && (
+                        {file.preview && isImage ? (
                             <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-gray-200 hidden sm:block">
                                 <img src={file.preview} alt="Preview" className="h-full w-full object-cover" />
+                            </div>
+                        ) : (
+                            <div className="h-10 w-10 shrink-0 rounded-lg bg-orange-50 flex items-center justify-center border border-orange-100/50 hidden sm:flex">
+                                <FileText size={20} className="text-[#ff5e00]" />
                             </div>
                         )}
 

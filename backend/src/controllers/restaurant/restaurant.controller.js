@@ -68,6 +68,7 @@ export const preApprovalRestaurant = async (req, res, next) => {
     }
 };
 
+
 export const getRestaurantProfile = async (req, res, next) => {
     try {
         const restaurant = await Restaurant.findById(req.user._id);
@@ -75,6 +76,82 @@ export const getRestaurantProfile = async (req, res, next) => {
             return res.status(404).json({ message: "Restaurant not found" });
         }
         return res.status(200).json({ success: true, restaurant });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateRestaurantProfile = async (req, res, next) => {
+    try {
+        const {
+            description,
+            totalSeats,
+            slotPrice,
+            slotConfig,
+            openingHours,
+            tags,
+            existingImages
+        } = req.body;
+
+        const restaurant = await Restaurant.findById(req.user._id);
+        if (!restaurant) {
+            return res.status(404).json({ message: "Restaurant not found" });
+        }
+
+        // Update basic fields
+        if (description) restaurant.description = description;
+        if (totalSeats) restaurant.totalSeats = Number(totalSeats);
+        if (slotPrice) restaurant.slotPrice = Number(slotPrice);
+
+        // Update JSON fields
+        if (slotConfig) restaurant.slotConfig = typeof slotConfig === 'string' ? JSON.parse(slotConfig) : slotConfig;
+        if (openingHours) restaurant.openingHours = typeof openingHours === 'string' ? JSON.parse(openingHours) : openingHours;
+
+        // Update tags
+        if (tags) {
+            restaurant.tags = tags;
+        }
+
+        // Handle Images
+        let currentImages = [];
+        // 1. Keep existing images that were sent back
+        if (existingImages) {
+            try {
+                // If it's a string, try to parse it (in case it came as JSON array string)
+                if (typeof existingImages === 'string') {
+                    // Try to parse if it looks like JSON array
+                    if (existingImages.startsWith('[') && existingImages.endsWith(']')) {
+                        currentImages = JSON.parse(existingImages);
+                    } else {
+                        currentImages = [existingImages];
+                    }
+                } else if (Array.isArray(existingImages)) {
+                    currentImages = existingImages;
+                } else {
+                    currentImages = [existingImages];
+                }
+            } catch (e) {
+                // If parsing fails, it might be a single string URL
+                currentImages = Array.isArray(existingImages) ? existingImages : [existingImages];
+            }
+        }
+
+        // 2. Add new uploaded images
+        if (req.files && req.files.length > 0) {
+            const newImageUrls = req.files.map(file => file.path);
+            currentImages = [...currentImages, ...newImageUrls];
+        }
+
+        restaurant.images = currentImages;
+
+        await restaurant.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Restaurant profile updated successfully",
+            restaurant
+        });
+
     } catch (error) {
         next(error);
     }

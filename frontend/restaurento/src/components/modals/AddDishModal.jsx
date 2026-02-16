@@ -31,42 +31,20 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
 
     useEffect(() => {
         if (initialData) {
-            let processedImages = null;
+            const formatImage = (img) => {
+                if (!img) return null;
+                return typeof img === 'string' ? { preview: img } : img;
+            };
 
-            if (initialData.image) {
-                if (Array.isArray(initialData.image)) {
-                    processedImages = Promise.all(initialData.image.map(async (img) => {
-                        if (img instanceof File) {
-                            const dataUrl = await new Promise((resolve) => {
-                                const reader = new FileReader();
-                                reader.onloadend = () => resolve(reader.result);
-                                reader.readAsDataURL(img);
-                            });
-                            return Object.assign(img, { preview: dataUrl });
-                        }
-                        if (typeof img === 'string') return { preview: img };
-                        return img;
-                    }));
-                } else if (typeof initialData.image === 'string') {
-                    processedImages = Promise.resolve([{ preview: initialData.image }]);
-                }
-            }
+            const existingImage = formatImage(initialData.image);
 
-            if (processedImages) {
-                processedImages.then(images => {
-                    reset({
-                        ...initialData,
-                        image: images,
-                        categories: Array.isArray(initialData.categories) ? initialData.categories : [initialData.category || "Breakfast"]
-                    });
-                });
-            } else {
-                reset({
-                    ...initialData,
-                    image: null,
-                    categories: Array.isArray(initialData.categories) ? initialData.categories : [initialData.category || "Breakfast"]
-                });
-            }
+            reset({
+                ...initialData,
+                image: existingImage,
+                categories: Array.isArray(initialData.categories)
+                    ? initialData.categories
+                    : [initialData.category || "Breakfast"]
+            });
         } else {
             reset({
                 name: "",
@@ -151,6 +129,7 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                                     label="Dish Image"
                                     required={true}
                                     aspectRatio={1} // Square crop for dishes
+                                    acceptedFileTypes={{ 'image/*': ['.jpeg', '.png', '.jpg', '.webp'] }} // Strictly images
                                 />
                             </div>
                         </div>

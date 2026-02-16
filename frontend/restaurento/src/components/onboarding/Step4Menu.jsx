@@ -58,8 +58,8 @@ const Step4Menu = () => {
                         <div key={field.id} className="bg-white border border-gray-100 p-4 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
-                                    {field.image && field.image.length > 0 && field.image[0].preview ? (
-                                        <img src={field.image[0].preview} alt={field.name} className="w-full h-full object-cover" />
+                                    {field.image && field.image.preview ? (
+                                        <img src={field.image.preview} alt={field.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
                                             <Upload size={20} />
@@ -101,24 +101,7 @@ const Step4Menu = () => {
                     )}
                 </div>
 
-                <div className="border border-orange-100 rounded-2xl p-6 bg-[#FFFBF7]">
-                    <h3 className="font-bold text-lg text-gray-800 mb-2">Slot Booking Rates</h3>
-                    <p className="text-sm text-gray-500 mb-4">Set the price for a customer to book a single slot at your restaurant.</p>
 
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Price Per Person</label>
-                        <div className="relative max-w-xs">
-                            <span className="absolute left-3 top-3 text-gray-500 font-bold">₹</span>
-                            <input
-                                {...register("slotPrice")}
-                                type="number"
-                                className="w-full p-3 pl-6 rounded-lg bg-white border border-gray-200 focus:border-[#ff5e00] outline-none font-medium"
-                                placeholder="5.00"
-                            />
-                        </div>
-                        {errors.slotPrice && <p className="text-red-500 text-xs mt-1 font-medium">{errors.slotPrice.message}</p>}
-                    </div>
-                </div>
             </div>
 
             {isModalOpen && (

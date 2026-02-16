@@ -1,5 +1,5 @@
 import express from "express";
-import { getRestaurantProfile, updateRestaurantSettings, getMenu, toggleItemAvailability, updateMenuItem, addMenuItem, deleteMenuItem } from "../../controllers/restaurant/restaurant.controller.js";
+import { getRestaurantProfile, updateRestaurantSettings, getMenu, toggleItemAvailability, updateMenuItem, addMenuItem, deleteMenuItem, updateRestaurantProfile } from "../../controllers/restaurant/restaurant.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
 
@@ -12,6 +12,7 @@ const upload = multer({ storage: storage });
 router.use(verifyRole(ROLES.RESTAURANT));
 
 router.get("/profile", getRestaurantProfile);
+router.patch("/profile", upload.array("images", 5), updateRestaurantProfile);
 router.patch("/settings", updateRestaurantSettings);
 
 router.get("/menu", getMenu);

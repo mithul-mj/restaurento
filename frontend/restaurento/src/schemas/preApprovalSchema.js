@@ -6,10 +6,10 @@ const preApprovalSchema = z.object({
     address: z.string().min(5, "Address must be at least 5 characters"),
     latitude: z.preprocess((val) => Number(val), z.number({ required_error: "Location is required" }).min(-90).max(90)),
     longitude: z.preprocess((val) => Number(val), z.number({ required_error: "Location is required" }).min(-180).max(180)),
-    restaurantLicense: z.any().refine((files) => files && files.length > 0, "Restaurant License is required"),
-    businessCert: z.any().refine((files) => files && files.length > 0, "Business Certificate is required"),
-    fssaiCert: z.any().refine((files) => files && files.length > 0, "FSSAI Certificate is required"),
-    ownerIdCert: z.any().refine((files) => files && files.length > 0, "Owner ID is required"),
+    restaurantLicense: z.any().refine((file) => !!file, "Restaurant License is required"),
+    businessCert: z.any().refine((file) => !!file, "Business Certificate is required"),
+    fssaiCert: z.any().refine((file) => !!file, "FSSAI Certificate is required"),
+    ownerIdCert: z.any().refine((file) => !!file, "Owner ID is required"),
 });
 
 export default preApprovalSchema;

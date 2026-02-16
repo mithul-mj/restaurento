@@ -8,7 +8,7 @@ export const singleDishSchema = z.object({
     price: z.coerce.number({ invalidTypeError: "Price required" }).positive("Price must be greater than 0"),
     description: z.string().optional(),
     // Update image to be required if needed
-    image: z.any().refine((files) => files && files.length > 0, "Image is required"),
+    image: z.any().refine((file) => !!file, "Image is required"),
     categories: z.array(z.string()).min(1, "Select at least one category")
 });
 
@@ -48,12 +48,12 @@ export const stepSchemas = [
     // Step 2: Seating & Photos
     z.object({
         totalSeats: z.coerce.number().min(1, "Required"),
+        slotPrice: z.coerce.number().min(0, "Slot price required"),
         images: z.any().refine((files) => files?.length >= 3, "Upload at least 3 photos"),
     }),
     // Step 3: Menu & Slot Rates
     z.object({
         menuItems: z.array(singleDishSchema).min(1, "Add at least one menu item"),
-        slotPrice: z.coerce.number().min(0, "Slot price required"),
     }),
     // Step 4: Final Review
     z.object({
