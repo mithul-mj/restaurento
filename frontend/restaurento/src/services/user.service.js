@@ -17,8 +17,12 @@ const userService = {
     const response = await api.patch("/profile/change-email/verify", { newEmail, otp });
     return response.data;
   },
-  getDashboard: async (page = 1, limit = 6, search = "", filters = {}, coordinates = null) => {
+  getDashboard: async (page = 1, limit = 6, search = "", filters = {}, coordinates = null, activeFilter = null) => {
     let params = { page, limit, search, ...filters };
+
+    if (activeFilter === "Open Now") {
+      params.openNow = true;
+    }
 
     if (coordinates && coordinates.lat && coordinates.lon) {
       params.lat = coordinates.lat;
@@ -40,7 +44,7 @@ const userService = {
     });
     return response.data;
   },
-  
+
 };
 
 export default userService;

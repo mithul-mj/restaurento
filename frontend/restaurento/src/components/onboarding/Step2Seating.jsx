@@ -1,15 +1,18 @@
 import { useFormContext } from "react-hook-form";
 import MultiImageUpload from "../common/MultiImageUpload";
 
-const Step2Seating = () => {
+const Step2Seating = ({ isEditing = false }) => {
     const { register, formState: { errors } } = useFormContext();
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-            <div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Restaurant Details</h2>
-                <p className="text-gray-500 mt-2">Step 2: Seating & Photos & Rates</p>
-            </div>
+            {!isEditing && (
+                <div>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Restaurant Details</h2>
+                    <p className="text-gray-500 mt-2">Step 2: Seating & Photos & Rates</p>
+                </div>
+            )}
+
 
             <div className="space-y-8">
                 <div>

@@ -4,7 +4,7 @@ import { logout } from '../../redux/slices/authSlice';
 import { showConfirm, showToast, showError } from '../../utils/alert';
 import authService from '../../services/auth.service';
 import restaurantService from '../../services/restaurant.service';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Loader from '../../components/Loader';
 
 const RestaurantSettings = () => {
@@ -120,9 +120,9 @@ const RestaurantSettings = () => {
                         <h3 className="font-semibold text-gray-800">Edit Your Restaurant Details</h3>
 
                     </div>
-                    <button className="px-6 py-1.5 bg-[#ffedd5] text-[#ea580c] rounded-md text-sm font-bold hover:bg-orange-200 transition-colors">
+                    <Link to="/restaurant/edit-restaurant" className="px-6 py-1.5 bg-[#ffedd5] text-[#ea580c] rounded-md text-sm font-bold hover:bg-orange-200 transition-colors">
                         edit
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Email */}

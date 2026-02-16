@@ -6,7 +6,7 @@ import { calculateSlots } from '../../utils/slotGenerator';
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const Step1BasicInfo = () => {
+const Step1BasicInfo = ({ isEditing = false }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { register, control, watch, setValue, getValues, formState: { errors } } = useFormContext();
 
@@ -93,10 +93,12 @@ const Step1BasicInfo = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Tell us about your restaurant</h2>
-                <p className="text-gray-500 mt-2">Let's start with the basics to get your page set up.</p>
-            </div>
+            {!isEditing && (
+                <div>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Tell us about your restaurant</h2>
+                    <p className="text-gray-500 mt-2">Let's start with the basics to get your page set up.</p>
+                </div>
+            )}
 
             <div className="space-y-6">
 

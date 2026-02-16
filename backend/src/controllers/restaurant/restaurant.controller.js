@@ -282,8 +282,6 @@ export const updateMenuItem = async (req, res, next) => {
         const { itemId } = req.params;
         const { name, price, description, categories, isAvailable } = req.body;
 
-        console.log("Updating Item ID:", itemId);
-
         const restaurant = await Restaurant.findById(req.user._id);
 
         if (!restaurant) {

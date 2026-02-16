@@ -17,6 +17,7 @@ const RestaurantDashboard = lazy(() => import("./pages/restaurant/RestaurantDash
 const RestaurantSignup = lazy(() => import("./pages/restaurant/RestaurantSignup"));
 const RestaurantOnboarding = lazy(() => import("./pages/restaurant/Onboarding"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const EditRestaurant = lazy(() => import("./pages/restaurant/EditRestaurant"));
 
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthFailed } from "./redux/slices/authSlice";
@@ -132,6 +133,7 @@ function App() {
                 <Route path="/restaurant/wallet" element={<WalletPage />} />
                 <Route path="/restaurant/notifications" element={<Notifications />} />
                 <Route path="/restaurant/settings" element={<RestaurantSettings />} />
+                <Route path="/restaurant/edit-restaurant" element={<EditRestaurant />} />
               </Route>
             </Route>
           </Route>

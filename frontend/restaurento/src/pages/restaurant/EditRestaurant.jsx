@@ -5,32 +5,48 @@ import Loader from '../../components/Loader'
 
 import { stepSchemas } from '../../schemas/onboardingSchema'
 import restaurantService from '../../services/restaurant.service'
+import { minutesToTime, timeToMinutes } from '../../utils/timeUtils'
+
 
 import { showSuccess, showError } from '../../utils/alert'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const editRestaurantSchema = z.intersection(stepSchemas[0], stepSchemas[1]);
+
 
 const EditRestaurant = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
 
-    const { handleSubmit, reset, formState: { isSubmitting } } = useForm({
+    const methods = useForm({
         resolver: zodResolver(editRestaurantSchema),
         mode: 'onchange'
     });
 
+    const { handleSubmit, reset, formState: { isSubmitting } } = methods;
+
     useEffect(() => {
         const fetchRestaurantData = async () => {
             try {
-                const { restaurant } = await restaurantService.getProfile
+                const { restaurant } = await restaurantService.getProfile()
+
+                // Format opening hours from backend (minutes) to frontend (HH:MM)
+                const formattedOpeningHours = {
+                    ...restaurant.openingHours,
+                    days: restaurant.openingHours.days.map(day => ({
+                        ...day,
+                        startTime: typeof day.startTime === 'number' ? minutesToTime(day.startTime) : day.startTime,
+                        endTime: typeof day.endTime === 'number' ? minutesToTime(day.endTime) : day.endTime,
+                    }))
+                };
+
                 const formattedData = {
                     description: restaurant.description,
                     tags: restaurant.tags || [],
-                    openingHours: restaurant.openingHours,
+                    openingHours: formattedOpeningHours,
                     slotConfig: restaurant.slotConfig || { duration: 60, gap: 0 },
                     totalSeats: restaurant.totalSeats,
                     slotPrice: restaurant.slotPrice,
@@ -48,7 +64,7 @@ const EditRestaurant = () => {
             };
         }
         fetchRestaurantData()
-    })
+    }, [])
 
     const onSubmit = async (data) => {
         try {
@@ -57,7 +73,17 @@ const EditRestaurant = () => {
             formData.append("totalSeats", data.totalSeats);
             formData.append("slotPrice", data.slotPrice);
             formData.append("slotConfig", JSON.stringify(data.slotConfig));
-            formData.append("openingHours", JSON.stringify(data.openingHours));
+
+            // Convert opening hours times back to minutes
+            const openingHoursPayload = {
+                ...data.openingHours,
+                days: data.openingHours.days.map(day => ({
+                    ...day,
+                    startTime: typeof day.startTime === 'string' ? timeToMinutes(day.startTime) : day.startTime,
+                    endTime: typeof day.endTime === 'string' ? timeToMinutes(day.endTime) : day.endTime,
+                }))
+            };
+            formData.append("openingHours", JSON.stringify(openingHoursPayload));
             data.tags.forEach(tag => formData.append("tags[]", tag));
             if (data.images && data.images.length > 0) {
                 data.images.forEach(file => {
@@ -74,7 +100,6 @@ const EditRestaurant = () => {
             showSuccess("Updated!", "Your restaurant details have been updated.");
             navigate('/restaurant/settings'); // Redirect back to settings
         } catch (error) {
-            console.error("Update failed:", error);
             showError("Update Failed", error.message || "Something went wrong.");
         }
     };
@@ -97,11 +122,11 @@ const EditRestaurant = () => {
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
 
                             {/* Render Step 1: Basic Info */}
-                            <Step1BasicInfo />
+                            <Step1BasicInfo isEditing={true} />
                             <hr className="border-gray-100" />
                             {/* Render Step 2: Seating, Rates & Photos */}
-                            <Step2Seating />
-                            {/* Action Buttons */}
+                            <Step2Seating isEditing={true} />
+
                             <div className="flex justify-end gap-4 pt-4">
                                 <button
                                     type="button"
@@ -127,3 +152,5 @@ const EditRestaurant = () => {
 
 
 }
+
+export default EditRestaurant

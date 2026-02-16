@@ -14,14 +14,14 @@ const useHome = () => {
     const debouncedSearchQuery = useDebounce(queryValue, 500);
 
     // 2. Filters
-    const [activeFilter, setActiveFilter] = useState("Filters");
+    const [activeFilter, setActiveFilter] = useState(null);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [appliedFilters, setAppliedFilters] = useState({
         sort: "rating_high_low",
         rating: "Any",
         cost: [],
     });
-    const filters = ["Filters", "Open Now", "Rating 4.5+"];
+    const filters = ["Filters", "Open Now"];
 
     // 3. Location
     const [placeholderText, setPlaceholderText] = useState("Search or Detect location..");
@@ -40,6 +40,10 @@ const useHome = () => {
                 const { latitude, longitude } = position.coords;
                 console.log("Detected:", latitude, longitude);
                 setSelectedCoordinates({ lat: latitude, lon: longitude });
+
+                // Switch to distance sort when location is detected
+                setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
+
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
@@ -103,6 +107,9 @@ const useHome = () => {
         setShowLocationDropdown(false);
         setSelectedCoordinates({ lat: place.lat, lon: place.lon });
 
+        // Switch to distance sort when location is selected
+        setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
+
         const newRecent = [
             place,
             ...recentLocations.filter((p) => p.display_name !== place.display_name)
@@ -141,7 +148,7 @@ const useHome = () => {
         initialPageParam: 1,
         queryFn: async ({ pageParam = 1 }) => {
             const limit = columns * 4;
-            const res = await userService.getDashboard(pageParam, limit, debouncedSearchQuery, appliedFilters, selectedCoordinates);
+            const res = await userService.getDashboard(pageParam, limit, debouncedSearchQuery, appliedFilters, selectedCoordinates, activeFilter);
             return {
                 results: res.restaurants,
                 nextPage: res.pagination.hasNextPage ? pageParam + 1 : undefined,

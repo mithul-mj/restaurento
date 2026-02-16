@@ -143,10 +143,16 @@ export const getUserDashboard = async (req, res, next) => {
 
     pipeline.push({
       $facet: {
-        metadata: [{ $count: "total" }],
+        metadata: [
+          ...(req.query.openNow === 'true'
+            ? [addFieldsStage, calculateOpenStage, { $match: { isCurrentlyOpen: true } }]
+            : []),
+          { $count: "total" }
+        ],
         data: [
           addFieldsStage,
           calculateOpenStage,
+          ...(req.query.openNow === 'true' ? [{ $match: { isCurrentlyOpen: true } }] : []),
           projectStage,
           { $skip: skip },
           { $limit: limit }

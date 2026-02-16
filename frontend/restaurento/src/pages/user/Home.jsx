@@ -251,11 +251,11 @@ const Home = () => {
                               if (filter === "Filters") {
                                 setIsFilterModalOpen(true);
                               } else {
-                                setActiveFilter(filter);
+                                setActiveFilter(prev => prev === filter ? null : filter);
                               }
                             }}
                             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border flex items-center gap-1.5
-                                          ${activeFilter === filter && filter !== "Filters"
+                                          ${activeFilter === filter
                                 ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00]"
                                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                               }
@@ -376,6 +376,7 @@ const Home = () => {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         filters={appliedFilters}
+        hasLocation={!!selectedCoordinates}
         onApply={(filters) => {
           setAppliedFilters(filters);
           setIsFilterModalOpen(false);

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-const FilterModal = ({ isOpen, onClose, onApply, filters }) => {
+const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
     const [activeTab, setActiveTab] = useState("sort");
 
     const { register, handleSubmit, reset } = useForm({
@@ -74,6 +74,17 @@ const FilterModal = ({ isOpen, onClose, onApply, filters }) => {
                 {/* SORT TAB */}
                 {activeTab === "sort" && (
                     <div className="flex flex-col gap-4">
+                        {hasLocation && (
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="distance"
+                                    {...register("sort")}
+                                    className="w-5 h-5 accent-[#ff9500] cursor-pointer"
+                                />
+                                <span className="text-gray-700 font-medium">Distance: Nearest First</span>
+                            </label>
+                        )}
                         <label className="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="radio"
