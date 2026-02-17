@@ -1,5 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ErrorBoundary } from "react-error-boundary";
+import ErrorFallback from "./components/ErrorFallback";
 import "./index.css";
 import App from "./App.jsx";
 import { Provider } from "react-redux";
@@ -21,7 +23,9 @@ createRoot(document.getElementById("root")).render(
     <Provider store={store}>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+            <App />
+          </ErrorBoundary>
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </Provider>
