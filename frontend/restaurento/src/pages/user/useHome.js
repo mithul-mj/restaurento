@@ -8,12 +8,10 @@ import useDebounce from "../../hooks/useDebounce";
 import { showError } from "../../utils/alert";
 
 const useHome = () => {
-    // 1. Form & Search
     const { register, watch, setValue } = useForm();
     const queryValue = watch("query", "");
     const debouncedSearchQuery = useDebounce(queryValue, 500);
 
-    // 2. Filters
     const [activeFilter, setActiveFilter] = useState(null);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [appliedFilters, setAppliedFilters] = useState({
@@ -23,7 +21,6 @@ const useHome = () => {
     });
     const filters = ["Filters", "Open Now"];
 
-    // 3. Location
     const [placeholderText, setPlaceholderText] = useState("Search or Detect location..");
     const [recentLocations, setRecentLocations] = useState([]);
     const [locationQuery, setLocationQuery] = useState("");
@@ -33,7 +30,6 @@ const useHome = () => {
     const locationWrapperRef = useRef(null);
     const debouncedLocationQuery = useDebounce(locationQuery, 400);
 
-    // Location detection logic
     const handleDetectLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (position) => {
@@ -41,7 +37,6 @@ const useHome = () => {
                 console.log("Detected:", latitude, longitude);
                 setSelectedCoordinates({ lat: latitude, lon: longitude });
 
-                // Switch to distance sort when location is detected
                 setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
 
                 try {
@@ -61,7 +56,6 @@ const useHome = () => {
         }
     };
 
-    // Recent locations effect
     useEffect(() => {
         const saved = localStorage.getItem("recentLocations");
         if (saved) {
@@ -77,7 +71,6 @@ const useHome = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Fetch locations effect
     useEffect(() => {
         const fetchLocations = async () => {
             if (debouncedLocationQuery && debouncedLocationQuery.length > 2) {
@@ -107,7 +100,6 @@ const useHome = () => {
         setShowLocationDropdown(false);
         setSelectedCoordinates({ lat: place.lat, lon: place.lon });
 
-        // Switch to distance sort when location is selected
         setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
 
         const newRecent = [
@@ -120,7 +112,6 @@ const useHome = () => {
         console.log("Selected Location:", { lat: place.lat, lon: place.lon });
     };
 
-    // 4. Responsive Columns
     const [columns, setColumns] = useState(3);
     const parentRef = useRef(null);
 
@@ -135,7 +126,6 @@ const useHome = () => {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // 5. Data Fetching
     const {
         data,
         fetchNextPage,
@@ -164,7 +154,6 @@ const useHome = () => {
 
     const isLoadingInitial = isLoading && !data;
 
-    // 6. Virtualization
     const rows = useMemo(() => {
         const r = ["HEADER"];
         if (isLoadingInitial) {

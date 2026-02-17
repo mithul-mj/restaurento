@@ -10,6 +10,7 @@ import onboardingRoutes from "./restaurant/onboarding.routes.js";
 import restaurantRoutes from "./restaurant/restaurant.routes.js";
 import adminUserMangementRoutes from "../routes/admin/userManagement.routes.js";
 import adminRestaurantManagementRoutes from "../routes/admin/restaurantManagement.routes.js";
+import bannerRoutes from "../routes/admin/banner.routes.js";
 
 const router = express.Router();
 
@@ -17,13 +18,13 @@ const router = express.Router();
 router.use("/api/v1/auth/", commonAuthRoutes);
 router.use("/api/v1/admin/users", adminUserMangementRoutes);
 router.use("/api/v1/admin/restaurants", adminRestaurantManagementRoutes);
+router.use("/api/v1/admin/banners", bannerRoutes);
 router.use("/api/v1/admin", adminAuthRoutes);
 router.use("/api/v1/restaurant", restaurantAuthRoutes);
 router.use("/api/v1/restaurant", onboardingRoutes);
 router.use("/api/v1/restaurant", restaurantRoutes);
 
 router.use("/api/v1/", userAuthRoutes);
-// User profile routes last as they likely have broad matching or looser permissions
 router.use("/api/v1/", userProfileRoutes);
 
 router.use(errorHandler);

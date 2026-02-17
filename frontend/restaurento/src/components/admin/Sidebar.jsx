@@ -9,9 +9,10 @@ import {
   Flag,
   Calendar,
   DollarSign,
-  Megaphone,
   X,
   LogOut,
+  Ticket,
+  Image,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
@@ -30,41 +31,47 @@ const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
     { icon: Flag, label: "Reports", link: "/admin/reports" },
     { icon: Calendar, label: "Bookings", link: "/admin/bookings" },
     { icon: DollarSign, label: "Payments & Revenue", link: "/admin/finance" },
-    { icon: Megaphone, label: "Marketing", link: "/admin/marketing" },
+    { icon: Ticket, label: "Coupons", link: "/admin/coupons" },
+    { icon: Image, label: "Banners", link: "/admin/banners" },
   ];
 
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}>
-      <div className="h-full flex flex-col">
-        <div className="px-6 py-6 border-b border-gray-50 flex items-center gap-3">
-          <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-            <span className="font-bold text-lg">A</span>
+        }`}
+    >
+      <div className="flex h-full flex-col">
+        <div className="flex items-center gap-3 border-b border-gray-50 px-6 py-6">
+          <div className="flex items-center justify-center rounded-md bg-[#ff5e00] p-1.5 text-white">
+            <span className="text-lg font-bold">A</span>
           </div>
-          <span className="font-bold text-xl text-gray-900">Restauranto</span>
+          <span className="text-xl font-bold text-gray-900">Restauranto</span>
           <button
             onClick={() => setIsOpen(false)}
-            className="md:hidden ml-auto text-gray-400">
+            className="ml-auto text-gray-400 md:hidden"
+          >
             <X size={20} />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          {menuItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.link || "#"}
-              className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors
-                        ${activePage === item.label
+        <nav className="flex-1 space-y-1 px-4 py-6">
+          {menuItems.map((item, index) => {
+            const isActive = activePage === item.label;
+
+            return (
+              <Link
+                key={index}
+                to={item.link}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${isActive
                   ? "bg-[#fff5eb] text-[#ff5e00]"
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                }
-                    `}>
-              <item.icon size={18} />
-              {item.label}
-            </Link>
-          ))}
+                  }`}
+              >
+                <item.icon size={18} />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="px-6 py-6 border-t border-gray-50 mt-auto">
@@ -90,7 +97,7 @@ const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
           </div>
         </div>
       </div>
-    </aside>
+    </aside >
   );
 };
 

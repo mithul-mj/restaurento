@@ -15,7 +15,8 @@ const AdminLayout = () => {
         if (path === '/admin/reports') return 'Reports';
         if (path === '/admin/bookings') return 'Bookings';
         if (path === '/admin/finance') return 'Payments & Revenue';
-        if (path === '/admin/marketing') return 'Marketing';
+        if (path.startsWith('/admin/coupons')) return 'Coupons';
+        if (path.startsWith('/admin/banners')) return 'Banners';
         return 'Dashboard';
     };
 
