@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 
 const UserNavbar = () => {
     const { user, avatar } = useSelector((state) => state.auth);
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (

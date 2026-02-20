@@ -27,5 +27,5 @@ app.use(cookieParser());
 app.use(allRoutes);
 
 app.listen(env.PORT, () => {
-  console.log("server running");
+  console.log("server running on ", env.PORT);
 });

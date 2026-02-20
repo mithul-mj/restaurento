@@ -88,7 +88,7 @@ const CreateBannerModal = ({ isOpen, onClose, onCreate, isCreating, initialData 
                         imageSrc={tempImageSrc}
                         onCropComplete={handleCropComplete}
                         onCancel={() => setCropperOpen(false)}
-                        aspect={3 / 1}
+                        aspect={16 / 5}
                     />
                 </div>
             )}
@@ -128,7 +128,7 @@ const CreateBannerModal = ({ isOpen, onClose, onCreate, isCreating, initialData 
                                         <CloudUpload size={24} />
                                     </div>
                                     <p className="mb-2 text-sm text-gray-900 font-medium">Click to upload</p>
-                                    <p className="absolute bottom-3 right-4 text-xs text-gray-400">Rec. 1200x400</p>
+                                    <p className="absolute bottom-3 right-4 text-xs text-gray-400">Rec. 1600x500</p>
                                 </div>
                             )}
                             <input

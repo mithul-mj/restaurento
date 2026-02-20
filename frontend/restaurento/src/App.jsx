@@ -12,10 +12,18 @@ const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const UserLogin = lazy(() => import("./pages/user/UserLogin"));
 const UserSignup = lazy(() => import("./pages/user/UserSignup"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const RestaurantLogin = lazy(() => import("./pages/restaurant/RestaurantLogin"));
-const RestaurantDashboard = lazy(() => import("./pages/restaurant/RestaurantDashboard"));
-const RestaurantSignup = lazy(() => import("./pages/restaurant/RestaurantSignup"));
-const RestaurantOnboarding = lazy(() => import("./pages/restaurant/Onboarding"));
+const RestaurantLogin = lazy(
+  () => import("./pages/restaurant/RestaurantLogin"),
+);
+const RestaurantDashboard = lazy(
+  () => import("./pages/restaurant/RestaurantDashboard"),
+);
+const RestaurantSignup = lazy(
+  () => import("./pages/restaurant/RestaurantSignup"),
+);
+const RestaurantOnboarding = lazy(
+  () => import("./pages/restaurant/Onboarding"),
+);
 const NotFound = lazy(() => import("./pages/NotFound"));
 const EditRestaurant = lazy(() => import("./pages/restaurant/EditRestaurant"));
 
@@ -29,9 +37,13 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 import UserLayout from "./components/layouts/UserLayout";
 import PageLoader from "./components/PageLoader";
-const RestaurantSettings = lazy(() => import("./pages/restaurant/RestaurentSettings"));
+const RestaurantSettings = lazy(
+  () => import("./pages/restaurant/RestaurentSettings"),
+);
 const PreApproval = lazy(() => import("./pages/restaurant/PreApproval"));
-const VerificationPending = lazy(() => import("./pages/restaurant/VerificationPending"));
+const VerificationPending = lazy(
+  () => import("./pages/restaurant/VerificationPending"),
+);
 import RestaurantStatusGuard from "./components/routes/RestaurantStatusGuard";
 import RestaurantLayout from "./components/layouts/RestaurantLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -40,7 +52,9 @@ const MenuPage = lazy(() => import("./pages/restaurant/Menu"));
 const Earnings = lazy(() => import("./pages/restaurant/Earnings"));
 const WalletPage = lazy(() => import("./pages/restaurant/Wallet"));
 const Notifications = lazy(() => import("./pages/restaurant/Notifications"));
-const RestaurantManagement = lazy(() => import("./pages/admin/RestaurantManagement"));
+const RestaurantManagement = lazy(
+  () => import("./pages/admin/RestaurantManagement"),
+);
 const RestaurantDetails = lazy(() => import("./pages/admin/RestaurantDetails"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const AdminBookings = lazy(() => import("./pages/admin/Bookings"));
@@ -48,17 +62,22 @@ const AdminFinance = lazy(() => import("./pages/admin/Finance"));
 const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
 const Coupons = lazy(() => import("./pages/admin/Coupons"));
 const Banners = lazy(() => import("./pages/admin/Banners"));
-const UserRestaurantDetails = lazy(() => import("./pages/user/RestaurantDetails"));
+const UserRestaurantDetails = lazy(
+  () => import("./pages/user/RestaurantDetails"),
+);
 
 function App() {
   const dispatch = useDispatch();
   const { isInitializing } = useSelector((state) => state.auth);
 
   useEffect(() => {
+
     const initializeAuth = async () => {
       try {
         let role = "USER";
         if (window.location.pathname.startsWith("/admin")) role = "ADMIN";
+        else if (window.location.pathname.startsWith("/restaurants"))
+          role = "USER";
         else if (window.location.pathname.startsWith("/restaurant"))
           role = "RESTAURANT";
 
@@ -78,6 +97,7 @@ function App() {
         if (error.response?.status !== 401 && error.code !== "ECONNABORTED") {
           console.error("Auth init failed:", error);
         }
+
         dispatch(setAuthFailed());
       }
     };
@@ -85,9 +105,7 @@ function App() {
   }, [dispatch]);
 
   if (isInitializing) {
-    return (
-      <PageLoader />
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -107,7 +125,10 @@ function App() {
 
           <Route element={<UserLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/restaurant/:id" element={<UserRestaurantDetails />} />
+            <Route
+              path="/restaurants/:id"
+              element={<UserRestaurantDetails />}
+            />
             <Route element={<ProtectedRoutes allowedRoles={["USER"]} />}>
               <Route path="/profile" element={<Profile />} />
               <Route path="/edit-profile" element={<EditProfile />} />
@@ -116,7 +137,10 @@ function App() {
 
           <Route element={<ProtectedRoutes allowedRoles={["RESTAURANT"]} />}>
             <Route element={<RestaurantStatusGuard />}>
-              <Route path="/restaurant/pre-approval" element={<PreApproval />} />
+              <Route
+                path="/restaurant/pre-approval"
+                element={<PreApproval />}
+              />
               <Route
                 path="/restaurant/verification-pending"
                 element={<VerificationPending />}
@@ -127,14 +151,26 @@ function App() {
               />
 
               <Route element={<RestaurantLayout />}>
-                <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+                <Route
+                  path="/restaurant/dashboard"
+                  element={<RestaurantDashboard />}
+                />
                 <Route path="/restaurant/bookings" element={<Bookings />} />
                 <Route path="/restaurant/menu" element={<MenuPage />} />
                 <Route path="/restaurant/earnings" element={<Earnings />} />
                 <Route path="/restaurant/wallet" element={<WalletPage />} />
-                <Route path="/restaurant/notifications" element={<Notifications />} />
-                <Route path="/restaurant/settings" element={<RestaurantSettings />} />
-                <Route path="/restaurant/edit-restaurant" element={<EditRestaurant />} />
+                <Route
+                  path="/restaurant/notifications"
+                  element={<Notifications />}
+                />
+                <Route
+                  path="/restaurant/settings"
+                  element={<RestaurantSettings />}
+                />
+                <Route
+                  path="/restaurant/edit-restaurant"
+                  element={<EditRestaurant />}
+                />
               </Route>
             </Route>
           </Route>
@@ -143,7 +179,10 @@ function App() {
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
-              <Route path="/admin/restaurants" element={<RestaurantManagement />} />
+              <Route
+                path="/admin/restaurants"
+                element={<RestaurantManagement />}
+              />
               <Route
                 path="/admin/restaurants/:restaurantId"
                 element={<RestaurantDetails />}

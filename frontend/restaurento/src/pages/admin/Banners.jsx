@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Link as LinkIcon, Pencil, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useBanners } from "../../hooks/useBanners";
 import { showConfirm } from "../../utils/alert";
@@ -61,7 +61,7 @@ const Banners = () => {
     };
 
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (page > 1 && pagination?.totalPages < page) {
             setPage((prev) => Math.max(1, prev - 1));
         }
@@ -106,7 +106,7 @@ const Banners = () => {
                 {banners.map((banner) => (
                     <div key={banner._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
-                        <div className="relative h-64 w-full bg-gray-100 group">
+                        <div className="relative h-64 md:h-auto md:aspect-[16/5] w-full bg-gray-100 group">
                             <img
                                 src={banner.imageUrl}
                                 alt={banner.title || "Banner preview"}

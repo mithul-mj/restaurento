@@ -200,7 +200,7 @@ export const getRestaurantDetails = async (req, res, next) => {
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     const result = await Restaurant.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      { $match: { _id: new mongoose.Types.ObjectId(id), status: "active" } },
       {
         $addFields: {
           todaySchedule: { $arrayElemAt: ["$openingHours.days", currentDayIndex] }
@@ -259,7 +259,7 @@ export const getRestaurantMenu = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Invalid Restaurant ID" });
     }
 
-    const matchStage = { $match: { _id: new mongoose.Types.ObjectId(id) } };
+    const matchStage = { $match: { _id: new mongoose.Types.ObjectId(id), status: "active" } };
     const unwindStage = { $unwind: "$menuItems" };
 
     const filterStage = { $match: {} };

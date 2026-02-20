@@ -12,6 +12,7 @@ import FilterModal from "./FilterModal";
 import Loader from "../../components/Loader";
 import RestaurantCard from "../../components/user/RestaurantCard";
 import SkeletonCard from "../../components/user/SkeletonCard";
+import BannerCarousel from "../../components/user/BannerCarousel";
 import useHome from "./useHome";
 
 const Home = () => {
@@ -43,22 +44,20 @@ const Home = () => {
     virtualRows,
     rows,
     isLoadingInitial,
-    allRestaurants
+    allRestaurants,
+    activeBanners,
+    isLoadingBanners,
   } = useHome();
 
   return (
     <div className="h-full flex flex-col bg-[#fcfcfc] overflow-hidden">
-      <div
-        ref={parentRef}
-        className="flex-1 overflow-y-auto"
-      >
+      <div ref={parentRef} className="flex-1 overflow-y-auto">
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
             width: "100%",
             position: "relative",
-          }}
-        >
+          }}>
           {virtualRows.map((virtualRow) => {
             const isHeader = virtualRow.index === 0;
             const isLoader = virtualRow.index === rows.length;
@@ -79,47 +78,45 @@ const Home = () => {
                     width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
                     zIndex: 50, // Ensure header is above other rows for dropdown visibility
-                  }}
-                >
-                  <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-                    <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-8 group bg-gray-200">
-                      <img
-                        src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1974&auto=format&fit=crop"
-                        alt="Hero Banner"
-                        loading="eager"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 md:p-10">
-                        <h2 className="text-white text-3xl md:text-5xl font-bold tracking-tight drop-shadow-lg">
-                          50% OFF on Weekend Orders
-                        </h2>
-                      </div>
-                    </div>
+                  }}>
+                  <main className="max-w-7xl mx-auto px-4 md:px-8 pt-1 pb-6">
+                    <BannerCarousel
+                      banners={activeBanners}
+                      isLoading={isLoadingBanners}
+                    />
 
-                    <div className="w-full max-w-4xl mx-auto -mt-14 relative z-10 mb-10 px-2">
+                    <div className="w-full max-w-4xl mx-auto -mt-14 relative z-10 mb-4 px-2">
                       <div
                         className="relative flex flex-col md:flex-row shadow-xl shadow-gray-200/50 rounded-xl bg-white max-w-4xl mx-auto border border-gray-100"
-                        style={{ zIndex: 50 }}
-                      >
+                        style={{ zIndex: 50 }}>
                         <div
                           ref={locationWrapperRef}
-                          className="relative flex items-center md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 px-4 py-3 md:py-4 transition-colors rounded-l-xl z-20"
-                        >
-                          <MapPin className="text-[#ff9500] mr-3 shrink-0" size={22} />
+                          className="relative flex items-center md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 px-4 py-3 md:py-4 transition-colors rounded-l-xl z-20">
+                          <MapPin
+                            className="text-[#ff9500] mr-3 shrink-0"
+                            size={22}
+                          />
                           <input
                             type="text"
                             placeholder={placeholderText}
                             value={locationQuery}
                             onChange={(e) => {
                               setLocationQuery(e.target.value);
-                              if (e.target.value.length === 0) setShowLocationDropdown(true);
+                              if (e.target.value.length === 0)
+                                setShowLocationDropdown(true);
                             }}
                             onFocus={() => {
                               setShowLocationDropdown(true);
                             }}
                             className="w-full bg-transparent focus:outline-none text-gray-700 font-medium placeholder-gray-400 text-base"
                           />
-                          <ChevronDown className="text-gray-400 ml-2 shrink-0 cursor-pointer" size={16} onClick={() => setShowLocationDropdown(!showLocationDropdown)} />
+                          <ChevronDown
+                            className="text-gray-400 ml-2 shrink-0 cursor-pointer"
+                            size={16}
+                            onClick={() =>
+                              setShowLocationDropdown(!showLocationDropdown)
+                            }
+                          />
 
                           {showLocationDropdown && (
                             <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
@@ -129,14 +126,21 @@ const Home = () => {
                                 <button
                                   type="button"
                                   onClick={handleDetectLocation}
-                                  className="w-full text-left px-4 py-4 hover:bg-gray-50 flex items-start gap-4 transition-colors group border-b border-gray-50"
-                                >
+                                  className="w-full text-left px-4 py-4 hover:bg-gray-50 flex items-start gap-4 transition-colors group border-b border-gray-50">
                                   <div className="mt-0.5 text-red-500">
-                                    <LocateFixed className="fill-transparent" size={18} style={{ strokeWidth: 2.5 }} />
+                                    <LocateFixed
+                                      className="fill-transparent"
+                                      size={18}
+                                      style={{ strokeWidth: 2.5 }}
+                                    />
                                   </div>
                                   <div>
-                                    <div className="text-red-500 font-medium text-[15px]">Detect current location</div>
-                                    <div className="text-xs text-gray-400 mt-0.5">Using GPS</div>
+                                    <div className="text-red-500 font-medium text-[15px]">
+                                      Detect current location
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-0.5">
+                                      Using GPS
+                                    </div>
                                   </div>
                                 </button>
 
@@ -149,15 +153,16 @@ const Home = () => {
                                       <button
                                         key={index}
                                         type="button"
-                                        onClick={() => handleLocationSelect(place)}
-                                        className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group"
-                                      >
+                                        onClick={() =>
+                                          handleLocationSelect(place)
+                                        }
+                                        className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group">
                                         <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
                                           <MapPin size={14} />
                                         </div>
                                         <div>
                                           <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                            {place.display_name.split(',')[0]}
+                                            {place.display_name.split(",")[0]}
                                           </div>
                                           <div className="text-xs text-gray-400 line-clamp-1 mt-0.5">
                                             {place.display_name}
@@ -168,33 +173,38 @@ const Home = () => {
                                   </>
                                 )}
 
-                                {locationSuggestions.length === 0 && recentLocations.length > 0 && (
-                                  <>
-                                    <div className="text-xs font-semibold text-gray-400 px-3 py-2 uppercase tracking-wider mt-2 border-t border-gray-50 pt-2">
-                                      Recent Locations
-                                    </div>
-                                    {recentLocations.map((place, index) => (
-                                      <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() => handleLocationSelect(place)}
-                                        className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group"
-                                      >
-                                        <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
-                                          <History size={14} strokeWidth={2.5} />
-                                        </div>
-                                        <div>
-                                          <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                            {place.display_name.split(',')[0]}
+                                {locationSuggestions.length === 0 &&
+                                  recentLocations.length > 0 && (
+                                    <>
+                                      <div className="text-xs font-semibold text-gray-400 px-3 py-2 uppercase tracking-wider mt-2 border-t border-gray-50 pt-2">
+                                        Recent Locations
+                                      </div>
+                                      {recentLocations.map((place, index) => (
+                                        <button
+                                          key={index}
+                                          type="button"
+                                          onClick={() =>
+                                            handleLocationSelect(place)
+                                          }
+                                          className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group">
+                                          <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
+                                            <History
+                                              size={14}
+                                              strokeWidth={2.5}
+                                            />
                                           </div>
-                                          <div className="text-xs text-gray-400 line-clamp-1 mt-0.5">
-                                            {place.display_name}
+                                          <div>
+                                            <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                                              {place.display_name.split(",")[0]}
+                                            </div>
+                                            <div className="text-xs text-gray-400 line-clamp-1 mt-0.5">
+                                              {place.display_name}
+                                            </div>
                                           </div>
-                                        </div>
-                                      </button>
-                                    ))}
-                                  </>
-                                )}
+                                        </button>
+                                      ))}
+                                    </>
+                                  )}
                               </div>
                             </div>
                           )}
@@ -213,8 +223,7 @@ const Home = () => {
                               onClick={() => {
                                 setValue("query", "");
                               }}
-                              className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-                            >
+                              className="ml-2 text-gray-400 hover:text-gray-600 transition-colors">
                               <X size={18} />
                             </button>
                           )}
@@ -222,26 +231,36 @@ const Home = () => {
 
                         <button
                           type="submit"
-                          className="hidden md:flex px-6 py-3 md:py-4 transition-colors items-center justify-center text-gray-400 hover:text-[#ff9500]"
-                        >
+                          className="hidden md:flex px-6 py-3 md:py-4 transition-colors items-center justify-center text-gray-400 hover:text-[#ff9500]">
                           <Search size={22} className="stroke-[2.5px]" />
                         </button>
                         <button
                           type="submit"
-                          className="md:hidden w-full bg-[#ff5e00] text-white py-3 font-bold text-sm tracking-wide hover:bg-[#e05200] transition-colors rounded-b-xl"
-                        >
+                          className="md:hidden w-full bg-[#ff5e00] text-white py-3 font-bold text-sm tracking-wide hover:bg-[#e05200] transition-colors rounded-b-xl">
                           Search
                         </button>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex flex-wrap items-center gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
                       {filters.map((filter) => {
                         let count = 0;
                         if (filter === "Filters") {
-                          if (appliedFilters.sort && appliedFilters.sort !== "rating_high_low") count++;
-                          if (appliedFilters.rating && appliedFilters.rating !== "Any") count++;
-                          if (appliedFilters.cost && appliedFilters.cost.length > 0) count += appliedFilters.cost.length;
+                          if (
+                            appliedFilters.sort &&
+                            appliedFilters.sort !== "rating_high_low"
+                          )
+                            count++;
+                          if (
+                            appliedFilters.rating &&
+                            appliedFilters.rating !== "Any"
+                          )
+                            count++;
+                          if (
+                            appliedFilters.cost &&
+                            appliedFilters.cost.length > 0
+                          )
+                            count += appliedFilters.cost.length;
                         }
 
                         return (
@@ -251,7 +270,9 @@ const Home = () => {
                               if (filter === "Filters") {
                                 setIsFilterModalOpen(true);
                               } else {
-                                setActiveFilter(prev => prev === filter ? null : filter);
+                                setActiveFilter((prev) =>
+                                  prev === filter ? null : filter,
+                                );
                               }
                             }}
                             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border flex items-center gap-1.5
@@ -259,8 +280,7 @@ const Home = () => {
                                 ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00]"
                                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                               }
-                                      `}
-                          >
+                                      `}>
                             {filter === "Filters" && (
                               <Filter size={14} className="inline mr-0.5" />
                             )}
@@ -275,7 +295,7 @@ const Home = () => {
                       })}
                     </div>
 
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                       Restaurants Near You
                     </h3>
                   </main>
@@ -297,8 +317,7 @@ const Home = () => {
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
-                  className="flex justify-center items-center py-4"
-                >
+                  className="flex justify-center items-center py-4">
                   <Loader size="small" showText={true} text="Loading more" />
                 </div>
               );
@@ -315,15 +334,13 @@ const Home = () => {
                     width: "100%",
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
+                  }}>
                   <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <div
                       className="grid gap-6 md:gap-8"
                       style={{
-                        gridTemplateColumns: `repeat(${columns}, 1fr)`
-                      }}
-                    >
+                        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                      }}>
                       {Array.from({ length: columns }).map((_, idx) => (
                         <SkeletonCard key={idx} />
                       ))}
@@ -344,18 +361,17 @@ const Home = () => {
                     width: "100%",
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
+                  }}>
                   <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <div
                       className="grid gap-6 md:gap-8"
                       style={{
-                        gridTemplateColumns: `repeat(${columns}, 1fr)`
-                      }}
-                    >
-                      {Array.isArray(rowItems) && rowItems.map((item) => (
-                        <RestaurantCard key={item._id} item={item} />
-                      ))}
+                        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                      }}>
+                      {Array.isArray(rowItems) &&
+                        rowItems.map((item) => (
+                          <RestaurantCard key={item._id} item={item} />
+                        ))}
                     </div>
                   </div>
                 </div>
@@ -363,14 +379,12 @@ const Home = () => {
             }
           })}
         </div>
-        {
-          !isLoadingInitial && allRestaurants.length === 0 && (
-            <div className="text-center py-20 text-gray-500">
-              No restaurants found.
-            </div>
-          )
-        }
-      </div >
+        {!isLoadingInitial && allRestaurants.length === 0 && (
+          <div className="text-center py-20 text-gray-500">
+            No restaurants found.
+          </div>
+        )}
+      </div>
 
       <FilterModal
         isOpen={isFilterModalOpen}
@@ -382,7 +396,7 @@ const Home = () => {
           setIsFilterModalOpen(false);
         }}
       />
-    </div >
+    </div>
   );
 };
 

@@ -10,14 +10,16 @@ import { getUserDashboard, getRestaurantDetails, getRestaurantMenu } from "../..
 import multer from "multer";
 import { storage } from "../../config/cloudinary.config.js";
 import ROLES from "../../constants/roles.js";
+import { getActiveBanners } from "../../controllers/userDashboardController.js";
 
 const upload = multer({ storage });
 
 const router = express.Router();
 
 router.get("/dashboard", getUserDashboard);
-router.get("/restaurant/:id", getRestaurantDetails);
-router.get("/restaurant/:id/menu", getRestaurantMenu);
+router.get("/banners", getActiveBanners);
+router.get("/restaurants/:id", getRestaurantDetails);
+router.get("/restaurants/:id/menu", getRestaurantMenu);
 
 // Protected routes
 router.use(verifyRole(ROLES.USER));

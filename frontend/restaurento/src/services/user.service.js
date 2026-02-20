@@ -35,15 +35,19 @@ const userService = {
     return response.data;
   },
   getRestaurantDetails: async (id) => {
-    const response = await api.get(`/restaurant/${id}`);
+    const response = await api.get(`/restaurants/${id}`);
     return response.data;
   },
   getRestaurantMenu: async (id, page = 1, category = "All", search = "", limit = 6) => {
-    const response = await api.get(`/restaurant/${id}/menu`, {
+    const response = await api.get(`/restaurants/${id}/menu`, {
       params: { page, category, search, limit }
     });
     return response.data;
   },
+  getActiveBanners: async () => {
+    const response = await api.get("/banners");
+    return response.data;
+  }
 
 };
 

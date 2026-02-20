@@ -19,6 +19,7 @@ export const getAllRestaurants = async (req, res, next) => {
       $or: [
         { fullName: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
+        { restaurantName: { $regex: search, $options: "i" } },
       ],
     };
 

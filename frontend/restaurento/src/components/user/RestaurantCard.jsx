@@ -16,7 +16,7 @@ const RestaurantCard = React.memo(({ item }) => {
     };
 
     return (
-        <Link to={`/restaurant/${item._id}`} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform group">
+        <Link to={`/restaurants/${item._id}`} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform group">
             <div className="relative h-48 w-full overflow-hidden shrink-0 bg-gray-200">
                 <img
                     src={getOptimizedImageUrl(item.images?.[0])}

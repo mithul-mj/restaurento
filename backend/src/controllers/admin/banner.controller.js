@@ -4,7 +4,7 @@ import { ApiError } from "../../utils/errors/ApiError.js";
 export const createBanner = async (req, res, next) => {
 
     try {
-        const { targetLink, isActive, title, order } = req.body;
+        const { targetLink, isActive } = req.body;
 
         const imageUrl = req.file?.path;
         if (!imageUrl) {
@@ -14,8 +14,6 @@ export const createBanner = async (req, res, next) => {
             imageUrl,
             targetLink,
             isActive: isActive === "true" || isActive === true,
-            title: title,
-            order: order ? Number(order) : 0
         })
         res.status(201).json({
             succes: true,
@@ -84,7 +82,7 @@ export const toggleBannerStatus = async (req, res, next) => {
 export const updateBanner = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { targetLink, isActive, title } = req.body;
+        const { targetLink, isActive } = req.body;
         const banner = await Banner.findById(id);
 
         if (!banner) {
@@ -98,7 +96,6 @@ export const updateBanner = async (req, res, next) => {
 
         if (targetLink !== undefined) banner.targetLink = targetLink;
         if (isActive !== undefined) banner.isActive = isActive === "true" || isActive === true;
-        if (title !== undefined) banner.title = title;
 
         await banner.save();
 

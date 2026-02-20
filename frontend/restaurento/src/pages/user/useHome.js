@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import userService from "../../services/user.service";
 import useDebounce from "../../hooks/useDebounce";
@@ -30,6 +30,14 @@ const useHome = () => {
     const locationWrapperRef = useRef(null);
     const debouncedLocationQuery = useDebounce(locationQuery, 400);
 
+    const { data: bannersData, isLoading: isLoadingBanners } = useQuery({
+        queryKey: ["active-banners"],
+        queryFn: () => userService.getActiveBanners(),
+    })
+
+    const activeBanners = bannersData?.data || [];
+
+
     const handleDetectLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (position) => {
@@ -42,10 +50,11 @@ const useHome = () => {
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
-                    setLocationQuery(data.display_name);
+                    setPlaceholderText(data.display_name);
                 } catch (error) {
-                    setLocationQuery("Current Location");
+                    setPlaceholderText("Current Location");
                 }
+                setLocationQuery("");
                 setShowLocationDropdown(false);
             }, (error) => {
                 console.error("Error detecting location", error);
@@ -190,7 +199,6 @@ const useHome = () => {
         }
     }, [lastRowIndex, rows.length, hasNextPage, isFetchingNextPage, fetchNextPage, isLoadingInitial]);
 
-
     return {
         register,
         watch,
@@ -219,7 +227,9 @@ const useHome = () => {
         virtualRows,
         rows,
         isLoadingInitial,
-        allRestaurants
+        allRestaurants,
+        activeBanners,
+        isLoadingBanners
     };
 };
 
