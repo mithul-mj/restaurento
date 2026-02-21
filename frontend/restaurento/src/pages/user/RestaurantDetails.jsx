@@ -13,7 +13,7 @@ import RestaurantReviews from "./RestaurantReviews";
 import { TAX_RATE, PLATFORM_FEE_RATE } from "../../utils/constants";
 import { formatTime12Hour } from "../../utils/timeUtils";
 import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
-import { showConfirm } from "../../utils/alert";
+import { showConfirm, showToast } from "../../utils/alert";
 
 const RestaurantDetails = () => {
     const { id } = useParams();
@@ -43,6 +43,39 @@ const RestaurantDetails = () => {
         prevPartySize.current = partySize;
     }, [partySize]);
     const direction = partySize > prevPartySize.current ? 1 : -1;
+
+    const handleSaveWishlist = async () => {
+        const cartItems = Object.values(cart);
+
+        if (cartItems.length === 0) {
+            showToast('Add some dishes first!', 'error');
+            return;
+        }
+
+        const confirm = await showConfirm(
+            "Save to Wishlist?",
+            "Do you want to save these items to your wishlist for later?",
+            "Yes, save it!"
+        );
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const payload = {
+                restaurantId: id,
+                items: cartItems.map((item) => ({
+                    dishId: item._id,
+                    qty: item.qty
+                }))
+            };
+
+            const response = await userService.addToWishlist(payload);
+            showToast(response.message || 'Saved to wishlist!', 'success');
+        } catch (error) {
+            showToast(error.response?.data?.message || 'Something went wrong!', 'error');
+        }
+    }
+
 
     const handleUpdateCart = (item, change) => {
         setCart(prev => {
@@ -565,7 +598,10 @@ const RestaurantDetails = () => {
                                 <button className="w-full bg-[#ff5e00] hover:bg-[#e05200] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2">
                                     Book & Pre-order Now
                                 </button>
-                                <button className="w-full bg-[#ff9500] hover:bg-[#e68600] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                                <button
+                                    onClick={handleSaveWishlist}
+                                    className="w-full bg-[#ff9500] hover:bg-[#e68600] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                                >
                                     <Heart size={18} className="fill-white/20" />
                                     Wishlist
                                 </button>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, Menu, X } from "lucide-react";
+import { Bell, Heart, Menu, X } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const UserNavbar = () => {
@@ -57,6 +57,10 @@ const UserNavbar = () => {
                                 <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                             </button>
 
+                            <Link to="/wishlist" className="text-gray-500 hover:text-[#ff5e00] transition-colors">
+                                <Heart size={20} />
+                            </Link>
+
                             <Link to="/profile">
                                 <div className="w-9 h-9 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
                                     <img
@@ -111,6 +115,12 @@ const UserNavbar = () => {
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="block px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-[#ff5e00] rounded-lg">
                                 Offers
+                            </Link>
+                            <Link
+                                to="/wishlist"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="block px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-[#ff5e00] rounded-lg">
+                                Wishlist
                             </Link>
                             <div className="border-t border-gray-100 my-2 pt-2">
                                 <Link

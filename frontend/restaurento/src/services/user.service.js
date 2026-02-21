@@ -47,6 +47,10 @@ const userService = {
   getActiveBanners: async () => {
     const response = await api.get("/banners");
     return response.data;
+  },
+  addToWishlist: async (data) => {
+    const response = await api.post("/wishlist", data);
+    return response.data;
   }
 
 };

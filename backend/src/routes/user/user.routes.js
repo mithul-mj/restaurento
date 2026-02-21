@@ -12,6 +12,8 @@ import { storage } from "../../config/cloudinary.config.js";
 import ROLES from "../../constants/roles.js";
 import { getActiveBanners } from "../../controllers/userDashboardController.js";
 
+import { addToWishlist } from "../../controllers/user/userWishlist.controller.js";
+
 const upload = multer({ storage });
 
 const router = express.Router();
@@ -24,6 +26,7 @@ router.get("/restaurants/:id/menu", getRestaurantMenu);
 // Protected routes
 router.use(verifyRole(ROLES.USER));
 
+router.post("/wishlist", addToWishlist);
 router.get("/profile", getProfile);
 
 router.put("/profile", upload.single("avatar"), updateProfile);
