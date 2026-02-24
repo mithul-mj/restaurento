@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
     Star, MapPin, Clock, Phone, Heart, ChevronRight, AlertTriangle, ChevronDown, User, Minus, Plus, Calendar, Check
@@ -11,12 +11,13 @@ import ImageGallery from "../../components/shared/ImageGallery";
 import RestaurantMenu from "./RestaurantMenu";
 import RestaurantReviews from "./RestaurantReviews";
 import { TAX_RATE, PLATFORM_FEE_RATE } from "../../utils/constants";
-import { formatTime12Hour } from "../../utils/timeUtils";
+import { formatTime12Hour, formatDate } from "../../utils/timeUtils";
 import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
 import { showConfirm, showToast } from "../../utils/alert";
 
 const RestaurantDetails = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("about");
     const [partySize, setPartySize] = useState(2);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -32,7 +33,7 @@ const RestaurantDetails = () => {
         if (i === 0) label = "Today";
         else if (i === 1) label = "Tomorrow";
         else {
-            label = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            label = formatDate(date, { weekday: 'short', month: 'short', day: 'numeric', year: undefined });
         }
         return { value, label };
     });
@@ -61,12 +62,15 @@ const RestaurantDetails = () => {
         if (!confirm.isConfirmed) return;
 
         try {
+            const mealType = getCategoryFromTimeSlot(selectedTimeSlot) || "Lunch"; // Fallback to Lunch if not found
+
             const payload = {
                 restaurantId: id,
                 items: cartItems.map((item) => ({
                     dishId: item._id,
                     qty: item.qty
-                }))
+                })),
+                mealType
             };
 
             const response = await userService.addToWishlist(payload);
@@ -75,6 +79,34 @@ const RestaurantDetails = () => {
             showToast(error.response?.data?.message || 'Something went wrong!', 'error');
         }
     }
+
+    const handleBookNow = () => {
+        if (!selectedTimeSlot) {
+            showToast('Please select a time slot first!', 'error');
+            return;
+        }
+
+        if (Object.keys(cart).length === 0) {
+            showToast('Please add at least one item to your order!', 'error');
+            return;
+        }
+
+        navigate('/booking-summary', {
+            state: {
+                restaurant,
+                partySize,
+                date: selectedDate,
+                timeSlot: selectedTimeSlot,
+                cart,
+                bookingFee,
+                itemTotal,
+                subtotal,
+                tax,
+                platformFee,
+                total: finalTotal
+            }
+        });
+    };
 
 
     const handleUpdateCart = (item, change) => {
@@ -595,7 +627,10 @@ const RestaurantDetails = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <button className="w-full bg-[#ff5e00] hover:bg-[#e05200] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2">
+                                <button
+                                    onClick={handleBookNow}
+                                    className="w-full bg-[#ff5e00] hover:bg-[#e05200] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                >
                                     Book & Pre-order Now
                                 </button>
                                 <button

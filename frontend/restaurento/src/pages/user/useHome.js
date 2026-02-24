@@ -44,7 +44,6 @@ const useHome = () => {
                 const { latitude, longitude } = position.coords;
                 console.log("Detected:", latitude, longitude);
                 setSelectedCoordinates({ lat: latitude, lon: longitude });
-
                 setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
 
                 try {
@@ -178,7 +177,7 @@ const useHome = () => {
     const rowVirtualizer = useVirtualizer({
         count: hasNextPage ? rows.length + 1 : rows.length,
         getScrollElement: () => parentRef.current,
-        estimateSize: (index) => (index === 0 ? 650 : 380),
+        estimateSize: (index) => (index === 0 ? 650 : 480),
         overscan: 3,
     });
 

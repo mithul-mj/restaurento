@@ -18,8 +18,18 @@ const BannerCarousel = ({ banners, isLoading }) => {
         return <div className="w-full h-64 md:h-auto md:aspect-[16/5] rounded-2xl bg-gray-200 animate-pulse mb-4" />;
     }
 
+    const defaultBannerUrl = "https://res.cloudinary.com/dqswnl59e/image/upload/v1771654542/restaurento/onboading/qyihqvrcshwfiiwdbxlb.jpg";
+
     if (!banners || banners.length === 0) {
-        return null;
+        return (
+            <div className="relative w-full h-64 md:h-auto md:aspect-[16/5] rounded-2xl overflow-hidden mb-4 bg-gray-100">
+                <img
+                    src={defaultBannerUrl}
+                    className="w-full h-full object-cover"
+                    alt="Default Banner"
+                />
+            </div>
+        );
     }
 
     return (

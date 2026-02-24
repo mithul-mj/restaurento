@@ -26,3 +26,14 @@ export const formatTime12Hour = (time) => {
     const hour12 = hour % 12 || 12; // Converts 0 to 12
     return `${hour12.toString().padStart(2, '0')}:${m} ${ampm}`;
 };
+
+export const formatDate = (dateString, options = {}) => {
+    if (!dateString) return "";
+    const defaultOptions = {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        ...options
+    };
+    return new Intl.DateTimeFormat("en-US", defaultOptions).format(new Date(dateString));
+};

@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        font-family: "Poppins", system-ui, sans-serif;
+    }
+
     body {
-        @apply font-sans antialiased bg-gray-50;
+        @apply antialiased bg-gray-50 text-gray-900;
+        font-family: "Poppins", system-ui, sans-serif;
     }
 }
 
@@ -18,5 +23,22 @@
         /* IE and Edge */
         scrollbar-width: none;
         /* Firefox */
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 20px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
     }
 }

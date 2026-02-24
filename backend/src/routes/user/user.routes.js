@@ -12,7 +12,7 @@ import { storage } from "../../config/cloudinary.config.js";
 import ROLES from "../../constants/roles.js";
 import { getActiveBanners } from "../../controllers/userDashboardController.js";
 
-import { addToWishlist } from "../../controllers/user/userWishlist.controller.js";
+import { addToWishlist, getWishlists, removeFromWishlist } from "../../controllers/user/userWishlist.controller.js";
 
 const upload = multer({ storage });
 
@@ -27,6 +27,8 @@ router.get("/restaurants/:id/menu", getRestaurantMenu);
 router.use(verifyRole(ROLES.USER));
 
 router.post("/wishlist", addToWishlist);
+router.get("/wishlist", getWishlists);
+router.delete("/wishlist/:id", removeFromWishlist);
 router.get("/profile", getProfile);
 
 router.put("/profile", upload.single("avatar"), updateProfile);

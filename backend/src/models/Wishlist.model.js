@@ -24,6 +24,11 @@ const wishlistSchema = new Schema(
                 },
             },
         ],
+        mealType: {
+            type: String,
+            enum: ["Breakfast", "Lunch", "Dinner"],
+            required: true,
+        },
     },
     { timestamps: true }
 );

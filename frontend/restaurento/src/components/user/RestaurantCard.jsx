@@ -61,13 +61,13 @@ const RestaurantCard = React.memo(({ item }) => {
                 </p>
 
                 <p className="text-sm text-gray-600 mb-4 line-clamp-1">
-                    {item.tags?.join(", ") || "Clasical"}
+                    {item.tags?.join(", ") || "Classical"}
                 </p>
 
                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50 text-sm text-gray-500">
-                    <div className="flex items-center gap-1.5">
-                        <MapPin size={14} className="text-gray-400" />
-                        <span className="line-clamp-1 max-w-[100px]">
+                    <div className="flex items-start gap-1.5 flex-1 mr-4 min-h-[32px]">
+                        <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                        <span className="line-clamp-2 text-[11px] leading-tight text-gray-500">
                             {item.address || "Unknown"}
                         </span>
                     </div>

@@ -65,6 +65,8 @@ const Banners = lazy(() => import("./pages/admin/Banners"));
 const UserRestaurantDetails = lazy(
   () => import("./pages/user/RestaurantDetails"),
 );
+const Wishlist = lazy(() => import("./pages/user/Wishlist"));
+const BookingSummary = lazy(() => import("./pages/user/BookingSummary"));
 
 function App() {
   const dispatch = useDispatch();
@@ -132,6 +134,8 @@ function App() {
             <Route element={<ProtectedRoutes allowedRoles={["USER"]} />}>
               <Route path="/profile" element={<Profile />} />
               <Route path="/edit-profile" element={<EditProfile />} />
+              <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/booking-summary" element={<BookingSummary />} />
             </Route>
           </Route>
 
