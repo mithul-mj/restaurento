@@ -1,5 +1,7 @@
 import { Restaurant } from "../../models/Restaurant.model.js";
 import mongoose from "mongoose";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 export const getUserDashboard = async (req, res, next) => {
   try {
@@ -167,7 +169,7 @@ export const getUserDashboard = async (req, res, next) => {
     const totalRestaurants = result[0].metadata[0] ? result[0].metadata[0].total : 0;
     const totalPages = Math.ceil(totalRestaurants / limit);
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       success: true,
       restaurants,
       pagination: {
@@ -191,7 +193,7 @@ export const getRestaurantDetails = async (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid Restaurant ID" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
     }
 
     const now = new Date();
@@ -238,10 +240,10 @@ export const getRestaurantDetails = async (req, res, next) => {
     ]);
 
     if (!result || result.length === 0) {
-      return res.status(404).json({ success: false, message: "Restaurant not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant not found" });
     }
 
-    res.status(200).json({ success: true, restaurant: result[0] });
+    res.status(STATUS_CODES.OK).json({ success: true, restaurant: result[0] });
   } catch (error) {
     next(error);
   }
@@ -256,7 +258,7 @@ export const getRestaurantMenu = async (req, res, next) => {
     const search = req.query.search || "";
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid Restaurant ID" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
     }
 
     const matchStage = { $match: { _id: new mongoose.Types.ObjectId(id), status: "active" } };
@@ -294,7 +296,7 @@ export const getRestaurantMenu = async (req, res, next) => {
     const totalItems = result[0].metadata[0] ? result[0].metadata[0].total : 0;
     const totalPages = Math.ceil(totalItems / limit);
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       success: true,
       menu: menuItems,
       pagination: {

@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import { Wishlist } from '../../models/Wishlist.model.js'
+import STATUS_CODES from '../../constants/statusCodes.js';
+
 
 
 export const addToWishlist = async (req, res, next) => {
@@ -15,7 +17,7 @@ export const addToWishlist = async (req, res, next) => {
             items,
             mealType
         });
-        res.status(201).json({
+        res.status(STATUS_CODES.CREATED).json({
             success: true,
             message: "Saved to wishlist",
             wishlist: newWishlist,
@@ -88,7 +90,7 @@ export const getWishlists = async (req, res, next) => {
 
         const totalItems = await Wishlist.countDocuments({ userId });
 
-        res.status(200).json({
+        res.status(STATUS_CODES.OK).json({
             success: true,
             wishlists: wishlists,
             pagination: {
@@ -113,10 +115,10 @@ export const removeFromWishlist = async (req, res, next) => {
         const deleted = await Wishlist.findOneAndDelete({ _id: id, userId });
 
         if (!deleted) {
-            return res.status(404).json({ success: false, message: "Wishlist item not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Wishlist item not found" });
         }
 
-        res.status(200).json({
+        res.status(STATUS_CODES.OK).json({
             success: true,
             message: "Removed from wishlist"
         });

@@ -2,6 +2,8 @@ import axios from "axios";
 import { store } from "../redux/store.js";
 import { logout } from "../redux/slices/authSlice";
 import authService from "./auth.service.js";
+import STATUS_CODES from "../constants/statusCodes.js";
+
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v1",
@@ -13,7 +15,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (
-      error.response?.status === 401 &&
+      error.response?.status === STATUS_CODES.UNAUTHORIZED &&
       !originalRequest._retry &&
       !originalRequest.url.includes("/auth/refresh-token") &&
       !originalRequest.url.includes("/login") &&

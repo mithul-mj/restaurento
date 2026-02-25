@@ -7,12 +7,14 @@ import { User } from "../../models/User.model.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { createAccount } from "../../services/commonAuth.service.js";
 import { env } from "../../config/env.config.js";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 export const registerRestaurant = async (req, res, next) => {
   try {
     const newRestaurant = await registerRestaurantService(req.body);
 
-    return res.status(201).json({
+    return res.status(STATUS_CODES.CREATED).json({
       success: true,
       message: "Restaurant registered successfully",
       restaurant: {
@@ -49,7 +51,7 @@ export const loginRestaurant = async (req, res, next) => {
       path: "/api/v1/auth/refresh-token",
     });
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "Restaurant logged in successfully",
       restaurant: {
@@ -88,7 +90,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: `Email already registered as USER. Please login via user portal.`,
       });
@@ -125,7 +127,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
       path: "/api/v1/auth/refresh-token",
     });
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "Restaurant logged in successfully",
       restaurant: {
@@ -163,7 +165,7 @@ export const logout = async (req, res, next) => {
       sameSite: "lax", // Protects against CSRF
       path: "/api/v1/auth/refresh-token",
     });
-    return res.json({ success: true, message: "Logged out" });
+    return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
   } catch (error) {
     next(error);
   }

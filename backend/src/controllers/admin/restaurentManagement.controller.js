@@ -4,6 +4,8 @@ import redisClient from "../../config/redis.js";
 import { env } from "../../config/env.config.js";
 import { sendEmail } from "../../services/commonAuth.service.js";
 import { getVerificationStatusEmailTemplate } from "../../utils/emailTemplates.js";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 export const getAllRestaurants = async (req, res, next) => {
   try {
@@ -64,7 +66,7 @@ export const getAllRestaurants = async (req, res, next) => {
         Restaurant.countDocuments({ status: "suspended" }),
       ]);
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       status: "success",
       meta: {
         totalCount,
@@ -87,7 +89,7 @@ export const toggleRestaurantStatus = async (req, res) => {
     const restaurant = await Restaurant.findById(restaurantId);
 
     if (!restaurant) {
-      return res.status(404).json({ message: "Restaurant not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found." });
     }
 
     const newStatus = restaurant.status === "active" ? "suspended" : "active";
@@ -106,7 +108,7 @@ export const toggleRestaurantStatus = async (req, res) => {
       await redisClient.del(`blacklist:${ROLES.RESTAURANT}:${restaurant._id}`);
     }
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       message: `Restaurant status updated to ${newStatus}`,
       user: {
         id: restaurant._id,
@@ -117,7 +119,7 @@ export const toggleRestaurantStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error toggling status:", error);
-    res.status(500).json({ message: "Internal server error." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
   }
 };
 
@@ -128,7 +130,7 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
     const restaurant = await Restaurant.findById(restaurantId);
 
     if (!restaurant) {
-      return res.status(404).json({ message: "Restaurant not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found." });
     }
 
     // Fix: Update verificationStatus, not status
@@ -174,7 +176,7 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
       // Continue execution
     }
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       message: `Restaurant status updated to ${verificationStatus}`,
       user: {
         id: restaurant._id,
@@ -186,7 +188,7 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error toggling verificationStatus:", error);
-    res.status(500).json({ message: "Internal server error." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
   }
 };
 
@@ -222,10 +224,10 @@ export const RestaurantDetails = async (req, res, next) => {
     });
 
     if (!restaurant) {
-      return res.status(404).json({ message: "Restaurant not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found." });
     }
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       message: `Restaurant details fetched successfully`,
       user: restaurant,
     });

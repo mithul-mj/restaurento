@@ -13,6 +13,8 @@ import {
 } from "../services/commonAuth.service.js";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.config.js";
+import STATUS_CODES from "../constants/statusCodes.js";
+
 
 const getModelByRole = (role) => {
   if (!role) return null;
@@ -29,27 +31,27 @@ export const verifyEmail = async (req, res, next) => {
 
     if (!email || !otp || !role) {
       return res
-        .status(400)
+        .status(STATUS_CODES.BAD_REQUEST)
         .json({ message: "Email, OTP, and Role are required" });
     }
 
     const Model = getModelByRole(role);
-    if (!Model) return res.status(400).json({ message: "Invalid role" });
+    if (!Model) return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Invalid role" });
 
     const isValid = await verifyOtp(email, otp);
     if (!isValid) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Invalid or expired OTP" });
     }
 
     const account = await Model.findOne({ email });
     if (!account) {
-      return res.status(404).json({ message: "Account not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Account not found" });
     }
 
     account.isEmailVerified = true;
     await account.save();
 
-    res.status(200).json({ message: "Email verified successfully" });
+    res.status(STATUS_CODES.OK).json({ message: "Email verified successfully" });
   } catch (error) {
     next(error);
   }
@@ -59,10 +61,10 @@ export const resendOtp = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Email is required" });
     }
     sendVerificationOtp(email);
-    return res.status(200).json({ message: "OTP sent successfully" });
+    return res.status(STATUS_CODES.OK).json({ message: "OTP sent successfully" });
   } catch (error) {
     next(error);
   }
@@ -74,7 +76,7 @@ export const forgotPassword = async (req, res, next) => {
     const Model = getModelByRole(role);
     const account = await Model.findOne({ email });
 
-    if (!account) throw new ApiError(404, "Account not found");
+    if (!account) throw new ApiError(STATUS_CODES.NOT_FOUND, "Account not found");
 
     const secret = env.JWT_FORGOT_PASSWORD_SECRET + account.password;
     const token = jwt.sign({ id: account._id, role: account.role }, secret, {
@@ -88,7 +90,7 @@ export const forgotPassword = async (req, res, next) => {
 
     await sendEmail(email, subject, "Reset your password", html);
 
-    res.status(200).json({ message: "Reset link sent to your email" });
+    res.status(STATUS_CODES.OK).json({ message: "Reset link sent to your email" });
   } catch (error) {
     next(error);
   }
@@ -100,19 +102,19 @@ export const resetPasswordWithLink = async (req, res, next) => {
     const Model = getModelByRole(role);
     const account = await Model.findById(id);
 
-    if (!account) throw new ApiError(404, "Account not found");
+    if (!account) throw new ApiError(STATUS_CODES.NOT_FOUND, "Account not found");
 
     const secret = env.JWT_FORGOT_PASSWORD_SECRET + account.password;
     try {
       jwt.verify(token, secret);
     } catch (err) {
-      throw new ApiError(401, "Invalid or expired reset link");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid or expired reset link");
     }
 
     account.password = newPassword;
     await account.save();
 
-    res.status(200).json({ message: "Password updated successfully" });
+    res.status(STATUS_CODES.OK).json({ message: "Password updated successfully" });
   } catch (error) {
     next(error);
   }
@@ -135,23 +137,23 @@ export const refreshAccessToken = async (req, res, next) => {
     }
 
     if (!incomingRefreshToken) {
-      throw new ApiError(401, "Refresh token is missing");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Refresh token is missing");
     }
 
     let decoded;
     try {
       decoded = jwt.verify(incomingRefreshToken, env.JWT_REFRESH_SECRET);
     } catch (err) {
-      throw new ApiError(401, "Invalid refresh token");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid refresh token");
     }
 
     if (role && decoded.role !== role) {
-      throw new ApiError(401, "Role mismatch during refresh");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Role mismatch during refresh");
     }
     role = decoded.role;
 
     const Model = getModelByRole(role);
-    if (!Model) throw new ApiError(400, "Invalid role");
+    if (!Model) throw new ApiError(STATUS_CODES.BAD_REQUEST, "Invalid role");
 
     const { accessToken, refreshToken } = await verifyAndRefreshToken(
       Model,
@@ -178,7 +180,7 @@ export const refreshAccessToken = async (req, res, next) => {
 
     const userDetails = await Model.findById(decoded._id);
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "Access token refreshed",
       accessToken,

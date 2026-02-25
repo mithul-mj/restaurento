@@ -3,6 +3,8 @@ import { User } from "../../models/User.model.js";
 import redisClient from "../../config/redis.js";
 import { env } from "../../config/env.config.js";
 import ROLES from "../../constants/roles.js";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 export const getAllUsers = async (req, res, next) => {
   try {
@@ -57,7 +59,7 @@ export const getAllUsers = async (req, res, next) => {
         User.countDocuments({ status: "suspended" }),
       ]);
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       status: "success",
       meta: {
         totalCount,
@@ -80,7 +82,7 @@ export const toggleUserStatus = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "User not found." });
     }
 
     const newStatus = user.status === "active" ? "suspended" : "active";
@@ -95,7 +97,7 @@ export const toggleUserStatus = async (req, res) => {
     }
 
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       message: `User status updated to ${newStatus}`,
       user: {
         id: user._id,
@@ -105,6 +107,6 @@ export const toggleUserStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error toggling status:", error);
-    res.status(500).json({ message: "Internal server error." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
   }
 };

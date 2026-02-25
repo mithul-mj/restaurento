@@ -3,6 +3,8 @@ import ROLES from "../../constants/roles.js";
 import { Admin } from "../../models/Admin.model.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { sendVerificationOtp, verifyOtp } from "../../services/commonAuth.service.js";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 export const getProfile = async (req, res, next) => {
   try {
@@ -10,11 +12,11 @@ export const getProfile = async (req, res, next) => {
 
     if (!user) {
       return res
-        .status(404)
+        .status(STATUS_CODES.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       user: {
         walletBalance: user.walletBalance,
@@ -37,7 +39,7 @@ export const updateProfile = async (req, res, next) => {
     const user = await User.findById(userId);
     if (!user) {
       return res
-        .status(404)
+        .status(STATUS_CODES.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -54,7 +56,7 @@ export const updateProfile = async (req, res, next) => {
 
     await user.save();
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "Profile updated successfully",
       user: {
@@ -80,12 +82,12 @@ export const changeEmail = async (req, res, next) => {
     ]);
 
     if (user || restaurant || admin) {
-      return res.status(400).json({ success: false, message: "Email already exists in our system" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Email already exists in our system" });
     }
 
     await sendVerificationOtp(email);
 
-    return res.status(200).json({ success: true, message: "Verification code sent to your new email" });
+    return res.status(STATUS_CODES.OK).json({ success: true, message: "Verification code sent to your new email" });
   } catch (error) {
     next(error);
   }
@@ -99,16 +101,16 @@ export const verifyEmailChange = async (req, res, next) => {
     const isValid = await verifyOtp(newEmail, otp);
 
     if (!isValid) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid or expired OTP" });
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "User not found" });
 
     user.email = newEmail;
     await user.save();
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "Email updated successfully",
       user: { email: user.email }

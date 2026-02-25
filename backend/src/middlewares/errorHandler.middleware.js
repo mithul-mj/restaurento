@@ -1,8 +1,10 @@
 import { ZodError } from "zod";
 import { ApiError } from "../utils/errors/ApiError.js";
+import STATUS_CODES from "../constants/statusCodes.js";
+
 
 const errorHandler = (err, req, res, next) => {
-  let statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || STATUS_CODES.INTERNAL_SERVER_ERROR;
   let errorMessage = err.message || "Internal Server Error";
   let errors = err.errors || [];
 
@@ -12,7 +14,7 @@ const errorHandler = (err, req, res, next) => {
     errorMessage = err.message;
     errors = err.errors;
   } else if (err instanceof ZodError) {
-    statusCode = 400;
+    statusCode = STATUS_CODES.BAD_REQUEST;
     errors = err.issues.map((error) => ({
       field: error.path.join("."),
       message: error.message,

@@ -9,12 +9,14 @@ import { OAuth2Client } from "google-auth-library";
 import { User } from "../../models/User.model.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { createAccount } from "../../services/commonAuth.service.js";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 export const registerUser = async (req, res, next) => {
   try {
     const newUser = await registerUserService(req.body);
 
-    return res.status(201).json({
+    return res.status(STATUS_CODES.CREATED).json({
       success: true,
       message: "User registered successfully",
       user: {
@@ -48,7 +50,7 @@ export const googleAuthUser = async (req, res, next) => {
 
     const existingRestaurant = await Restaurant.findOne({ email });
     if (existingRestaurant) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: `Email already registered as RESTAURANT. Please login via restaurant portal.`,
       });
@@ -73,7 +75,7 @@ export const googleAuthUser = async (req, res, next) => {
     }
 
     if (user.status === "suspended") {
-      return res.status(403).json({
+      return res.status(STATUS_CODES.FORBIDDEN).json({
         success: false,
         message: "Your account has been suspended. Please contact support.",
       });
@@ -98,7 +100,7 @@ export const googleAuthUser = async (req, res, next) => {
       path: "/api/v1/auth/refresh-token",
     });
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "User logged in successfully",
       user: {
@@ -122,7 +124,7 @@ export const loginUser = async (req, res, next) => {
     );
 
     if (account.status === "suspended") {
-      return res.status(403).json({
+      return res.status(STATUS_CODES.FORBIDDEN).json({
         success: false,
         message: "Your account has been suspended. Please contact support.",
       });
@@ -144,7 +146,7 @@ export const loginUser = async (req, res, next) => {
       path: "/api/v1/auth/refresh-token",
     });
 
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: "User logged in successfully",
       user: {
@@ -176,7 +178,7 @@ export const logout = async (req, res, next) => {
       sameSite: "lax", // Protects against CSRF
       path: "/api/v1/auth/refresh-token",
     });
-    return res.json({ success: true, message: "Logged out" });
+    return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
   } catch (error) {
     next(error);
   }

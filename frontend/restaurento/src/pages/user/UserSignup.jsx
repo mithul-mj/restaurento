@@ -9,6 +9,8 @@ import VerifyEmailModal from '../../components/modals/VerifyEmailModal';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../redux/slices/authSlice";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 
 const UserSignup = () => {
     const navigate = useNavigate();
@@ -38,7 +40,7 @@ const UserSignup = () => {
             setShowVerifyModal(true);
         } catch (error) {
 
-            if (error.response?.status === 403) {
+            if (error.response?.status === STATUS_CODES.FORBIDDEN) {
                 setRegisteredEmail(data.email);
                 showToast("Please verify your email", "info");
                 setShowVerifyModal(true);

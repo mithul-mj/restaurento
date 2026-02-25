@@ -10,6 +10,8 @@ import { env } from "../config/env.config.js";
 import { User } from "../models/User.model.js";
 import { Restaurant } from "../models/Restaurant.model.js";
 import { Admin } from "../models/Admin.model.js";
+import STATUS_CODES from "../constants/statusCodes.js";
+
 
 export const checkExistingAccount = async (Model, email) => {
   const existingUserAccount = await User.findOne({ email });
@@ -20,12 +22,12 @@ export const checkExistingAccount = async (Model, email) => {
 
   if (existingAccount) {
     if (existingAccount.isEmailVerified) {
-      throw new ApiError(409, "Account with this email already exists");
+      throw new ApiError(STATUS_CODES.CONFLICT, "Account with this email already exists");
     }
 
     await sendVerificationOtp(email);
 
-    throw new ApiError(403, "Account unverified. Verification code sent.");
+    throw new ApiError(STATUS_CODES.FORBIDDEN, "Account unverified. Verification code sent.");
   }
 };
 
@@ -50,20 +52,20 @@ export const loginAccount = async (Model, email, password, avatar, role) => {
   const account = await Model.findOne({ email });
 
   if (!account) {
-    throw new ApiError(404, "Account does not exist");
+    throw new ApiError(STATUS_CODES.NOT_FOUND, "Account does not exist");
   }
   if (role !== "ADMIN" && !account.isEmailVerified) {
-    throw new ApiError(403, "Please verify your email before logging in");
+    throw new ApiError(STATUS_CODES.FORBIDDEN, "Please verify your email before logging in");
   }
 
   if (account.status === "suspended") {
-    throw new ApiError(403, "Your account has been suspended. Please contact support.");
+    throw new ApiError(STATUS_CODES.FORBIDDEN, "Your account has been suspended. Please contact support.");
   }
 
   const isPasswordValid = await account.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid credentials");
+    throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid credentials");
   }
 
   const accessToken = account.generateAccessToken(role);
@@ -114,7 +116,7 @@ export const sendEmail = async (to, subject, text, html) => {
 
 export const verifyAndRefreshToken = async (Model, token) => {
   if (!token) {
-    throw new ApiError(401, "Refresh token required");
+    throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Refresh token required");
   }
 
   try {
@@ -122,11 +124,11 @@ export const verifyAndRefreshToken = async (Model, token) => {
     const account = await Model.findById(decoded._id);
 
     if (!account) {
-      throw new ApiError(401, "Invalid refresh token");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid refresh token");
     }
 
     if (account.status === "suspended") {
-      throw new ApiError(403, "Your account has been suspended. Please contact support.");
+      throw new ApiError(STATUS_CODES.FORBIDDEN, "Your account has been suspended. Please contact support.");
     }
 
     const accessToken = account.generateAccessToken();
@@ -134,6 +136,6 @@ export const verifyAndRefreshToken = async (Model, token) => {
 
     return { account, accessToken, refreshToken: newRefreshToken };
   } catch (error) {
-    throw new ApiError(401, "Invalid or expired refresh token");
+    throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid or expired refresh token");
   }
 };

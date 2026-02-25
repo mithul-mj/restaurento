@@ -4,6 +4,8 @@ import { Restaurant } from "../../models/Restaurant.model.js";
 import { sendEmail } from "../../services/commonAuth.service.js";
 import { getPreApprovalEmailTemplate } from "../../utils/emailTemplates.js";
 import { timeToMinutes } from "../../utils/timeUtils.js";
+import STATUS_CODES from "../../constants/statusCodes.js";
+
 export const upload = multer({ storage });
 
 export const onboardingUploads = upload.fields([
@@ -95,14 +97,14 @@ export const submitOnboarding = async (req, res, next) => {
     const existingRestaurant = await Restaurant.findById(user._id);
 
     if (!existingRestaurant) {
-      return res.status(404).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         message: "Restaurant not found",
       });
     }
 
     if (existingRestaurant.verificationStatus === "pending") {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: "Application is under review. You cannot edit details while pending approval.",
       });
@@ -127,20 +129,20 @@ export const submitOnboarding = async (req, res, next) => {
     console.log("==================");
 
     if (!updatedRestaurant) {
-      return res.status(404).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         message: "Restaurant not found",
       });
     }
 
-    res.status(201).json({
+    res.status(STATUS_CODES.CREATED).json({
       message: "Onboarding details submitted successfully",
       restaurantId: updatedRestaurant._id,
     });
   } catch (error) {
     console.error("Backend onboarding error:", error);
     res
-      .status(500)
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
       .json({ message: "Internal server error during onboarding" });
   }
 };
