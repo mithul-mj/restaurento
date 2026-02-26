@@ -1,25 +1,24 @@
 import { env } from './env.config.js';
 import { createClient } from 'redis';
-import Redis from 'ioredis'
 
-const redisClient = createClient({
-    username: 'default',
+const redisConfig = {
     password: env.REDIS_PASSWORD,
-    socket: {
-        host: env.REDIS_HOST,
-        port: env.REDIS_PORT
+    socket: { host: env.REDIS_HOST, port: env.REDIS_PORT }
+};
+
+export const redisClient = createClient(redisConfig);
+// Dedicated Subscriber for watching expirations
+export const redisSubscriber = createClient(redisConfig);
+
+const connectRedis = async () => {
+    try {
+        await Promise.all([redisClient.connect(), redisSubscriber.connect()]);
+        console.log("Redis Connected Successfully");
+
+        await redisClient.configSet('notify-keyspace-events', 'Ex');
+    } catch (error) {
+        console.error('Redis connection failed:', error.message);
     }
-});
-
-redisClient.on('error', err => console.log('Redis Client Error', err));
-try {
-    await redisClient.connect();
-    console.log("redis connected")
-} catch (error) {
-    console.error('could not connect to redis', error.message)
-    process.exit(1)
-}
-
-
-export default redisClient
-
+};
+connectRedis();
+export default redisClient;
