@@ -87,13 +87,6 @@ const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
                 <p className="text-xs text-gray-400 truncate">Administrator</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-gray-400 hover:text-red-500 transition-colors p-2"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
           </div>
         </div>
       </div>

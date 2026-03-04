@@ -74,6 +74,14 @@ function WishlistCard({ restaurant, onRemove }) {
                     </div>
                     <Link
                         to={`/restaurants/${restaurant.restaurantId}`}
+                        state={{
+                            prefilledCart: restaurant.items.reduce((acc, curr) => {
+                                if (curr.dishDetails) {
+                                    acc[curr.dishId] = { ...curr.dishDetails, _id: curr.dishId, qty: curr.qty };
+                                }
+                                return acc;
+                            }, {})
+                        }}
                         className="bg-[#f27b21] text-white text-sm font-bold px-8 py-3 rounded-2xl hover:bg-[#e06a12] transition-all shadow-lg shadow-orange-500/10 active:scale-95"
                     >
                         Book Now →

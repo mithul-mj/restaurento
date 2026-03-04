@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
     Star, MapPin, Clock, Phone, Heart, ChevronRight, AlertTriangle, ChevronDown, User, Minus, Plus, Calendar, Check
@@ -20,11 +20,12 @@ import { useSelector } from "react-redux";
 const RestaurantDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [activeTab, setActiveTab] = useState("about");
     const [partySize, setPartySize] = useState(2);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-    const [cart, setCart] = useState({});
+    const [cart, setCart] = useState(location.state?.prefilledCart || {});
     const [isDateOpen, setIsDateOpen] = useState(false);
     const [liveSlotAvailability, setLiveSlotAvailability] = useState({});
     const [isBooking, setIsBooking] = useState(false);
