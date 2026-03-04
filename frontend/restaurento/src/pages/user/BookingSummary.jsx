@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useSocket } from '../../context/SocketContext';
 import {
     ArrowLeft, MapPin, Calendar, Clock, Users,
     Trash2, Info, ChevronDown, Star, Copy,
-    CheckCircle, AlertCircle
+    CheckCircle, AlertCircle, Timer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate } from '../../utils/timeUtils';
 import { getCategoryFromTimeSlot } from '../../utils/timeCategoryUtils';
+import { showToast } from '../../utils/alert';
 
 const BookingSummary = () => {
     const location = useLocation();
@@ -17,6 +20,11 @@ const BookingSummary = () => {
     const initialData = location.state || {};
     const [cart, setCart] = useState(initialData.cart || {});
     const [isPoliciesOpen, setIsPoliciesOpen] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes (matching Redis)
+    const [isBookingConfirmed, setIsBookingConfirmed] = useState(false); // Track if booking is done
+
+    const socket = useSocket();
+    const user = useSelector((state) => state.auth.user);
 
     if (!location.state) {
         return (
@@ -45,6 +53,41 @@ const BookingSummary = () => {
     const platformFee = 2.00; // Fixed as per image or calculated
     const totalAmount = foodTotal + seatPrice + platformFee;
     const amountSaved = 4.00; // Placeholder for logic
+
+    useEffect(() => {
+        if (!restaurant) return;
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    showToast("Your reservation hold has expired. Please try booking again.", "error");
+                    // We let the cleanup effect handle the hold release on navigation
+                    navigate(`/restaurants/${restaurant._id}`);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            clearInterval(timer);
+            // Fix: React StrictMode instantly mounts and unmounts components to test them.
+            // By checking if the window's URL actually changed away from '/booking-summary',
+            // we guarantee we are only firing 'release_hold' on real page navigation!
+            const isAuthenticUnmount = window.location.pathname !== '/booking-summary';
+
+            if (!isBookingConfirmed && socket && user && isAuthenticUnmount) {
+                socket.emit("release_hold", {
+                    restaurantId: restaurant._id,
+                    date: date,
+                    slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                    seats: partySize,
+                    userId: user._id || user.id
+                });
+            }
+        };
+    }, [restaurant, navigate, isBookingConfirmed, socket, user, date, timeSlot, partySize, initialData.timeSlotMinutes]);
 
     const handleRemoveItem = (itemId) => {
         setCart(prev => {
@@ -153,12 +196,12 @@ const BookingSummary = () => {
                                                     )}
                                                 </div>
                                                 <p className="text-xs text-gray-400 mt-1 font-semibold">
-                                                    Qty: {item.qty} @ ${item.price.toFixed(2)}
+                                                    Qty: {item.qty} @ ₹{item.price.toFixed(2)}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-6">
                                                 <p className={`font-black text-sm ${item.isUnavailable ? 'text-gray-300' : 'text-gray-900'}`}>
-                                                    ${(item.price * item.qty).toFixed(2)}
+                                                    ₹{(item.price * item.qty).toFixed(2)}
                                                 </p>
                                                 <button
                                                     onClick={() => handleRemoveItem(item._id)}
@@ -181,23 +224,23 @@ const BookingSummary = () => {
                                 <div className="space-y-4 mb-6">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500 font-medium">Food Total</span>
-                                        <span className="font-bold text-gray-900">${foodTotal.toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">₹{foodTotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500 font-medium">Seat / Slot Price</span>
-                                        <span className="font-bold text-gray-900">${seatPrice.toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">₹{seatPrice.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <div className="flex items-center gap-1.5 text-gray-500">
                                             <span className="font-medium">Platform Fee</span>
                                             <Info size={14} className="text-gray-300 cursor-help" />
                                         </div>
-                                        <span className="font-bold text-gray-900">${platformFee.toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">₹{platformFee.toFixed(2)}</span>
                                     </div>
 
                                     <div className="pt-4 border-t border-dashed border-gray-100 flex justify-between items-center">
                                         <p className="font-black text-gray-900">Final Amount <span className="text-xs text-gray-400 font-bold">(to be paid later)</span></p>
-                                        <p className="text-xl font-black text-gray-900">${totalAmount.toFixed(2)}</p>
+                                        <p className="text-xl font-black text-gray-900">₹{totalAmount.toFixed(2)}</p>
                                     </div>
                                 </div>
 
@@ -245,7 +288,13 @@ const BookingSummary = () => {
                         <div className="sticky top-24 space-y-0">
                             <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                                 <div className="p-6 border-b border-gray-50">
-                                    <h3 className="font-black text-gray-900 text-lg mb-6">Summary</h3>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="font-black text-gray-900 text-lg">Summary</h3>
+                                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs ${timeLeft < 60 ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-orange-50 text-[#ff5e00]'}`}>
+                                            <Timer size={14} />
+                                            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                                        </div>
+                                    </div>
 
                                     {/* Coupons Section */}
                                     <div className="space-y-4">
@@ -260,7 +309,7 @@ const BookingSummary = () => {
                                                         </div>
                                                         <p className="text-lg font-black text-gray-900 leading-none">50% OFF</p>
                                                         <p className="text-[8px] text-gray-400 mt-1 leading-tight font-medium max-w-[120px]">
-                                                            Get up to $15 off on your first order. Minimum order value $30.
+                                                            Get up to ₹15 off on your first order. Minimum order value ₹30.
                                                         </p>
                                                         <div className="flex items-center gap-1 text-[8px] text-gray-400 mt-2 font-bold">
                                                             <Clock size={10} /> Expires in 2 days
@@ -301,19 +350,21 @@ const BookingSummary = () => {
                                             </div>
                                             <div className="flex justify-between items-center text-[10px] font-bold text-gray-500">
                                                 <span>Amount saved (Using coupons)</span>
-                                                <span className="text-gray-900">${amountSaved.toFixed(2)}</span>
+                                                <span className="text-gray-900">₹{amountSaved.toFixed(2)}</span>
                                             </div>
                                         </div>
 
                                         <div className="pt-4 flex justify-between items-end border-t border-gray-100">
                                             <p className="font-black text-gray-900 text-sm">Total to pay later</p>
-                                            <p className="text-xl font-black text-gray-900">${totalAmount.toFixed(2)}</p>
+                                            <p className="text-xl font-black text-gray-900">₹{totalAmount.toFixed(2)}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="p-6">
-                                    <button className="w-full py-4 bg-[#ff5e00] text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 hover:bg-[#e05200] transition-all transform active:scale-[0.98]">
+                                    <button
+                                        onClick={() => setIsBookingConfirmed(true)}
+                                        className="w-full py-4 bg-[#ff5e00] text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 hover:bg-[#e05200] transition-all transform active:scale-[0.98]">
                                         Send Booking Request
                                     </button>
                                     <p className="text-[9px] text-gray-400 font-bold text-center mt-4 leading-tight">

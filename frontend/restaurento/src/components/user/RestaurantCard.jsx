@@ -72,7 +72,7 @@ const RestaurantCard = React.memo(({ item }) => {
                         </span>
                     </div>
                     <div className="font-semibold text-gray-700">
-                        ${item.slotPrice || 3}/slot
+                        ₹{item.slotPrice || 3}/slot
                     </div>
                 </div>
             </div>

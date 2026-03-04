@@ -25,7 +25,7 @@ const envSchema = z.object({
   PORT: z.string().default("3000"),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
 
-  REDIS_PASSWORD: z.string().min(1, "REDIS_PASSWORD is required"),
+  REDIS_PASSWORD: z.string().default(""),
   REDIS_HOST: z.string().min(1, "REDIS_HOST is required"),
   REDIS_PORT: z.string().min(1, "REDIS_PORT is required"),
 

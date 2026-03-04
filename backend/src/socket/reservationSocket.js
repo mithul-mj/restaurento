@@ -1,5 +1,5 @@
 import { RESERVE_SLOT_LUA } from "../utils/redisScripts.js";
-import { getOrInitSlotInventory } from "../services/inventory.service.js";
+import { getOrInitSlotInventory, getOrInitMultipleSlotsInventory } from "../services/inventory.service.js";
 import redisClient from "../config/redis.js";
 
 export const setupReservation = (io) => {
@@ -7,6 +7,17 @@ export const setupReservation = (io) => {
         socket.on("view_date_slots", ({ restaurantId, date }) => {
             socket.join(`res_${restaurantId}_${date}`);
         });
+
+        socket.on("check_availability", async ({ restaurantId, date, slots }) => {
+            try {
+                if (!slots || !Array.isArray(slots)) return;
+                const availabilityMap = await getOrInitMultipleSlotsInventory(restaurantId, date, slots);
+                socket.emit("initial_availability", availabilityMap);
+            } catch (err) {
+                console.error("Check Availability Error:", err);
+            }
+        });
+
 
         socket.on("reserve_seats", async ({ restaurantId, date, slotMinutes, seats, userId }) => {
             const availableKey = `seats:available:${restaurantId}:${date}:${slotMinutes}`;
@@ -38,7 +49,29 @@ export const setupReservation = (io) => {
             }
         });
 
-        // Cleanup: return seats if disconnected (Optional, relies on hold key expiry)
+        socket.on("release_hold", async ({ restaurantId, date, slotMinutes, seats, userId }) => {
+            const availableKey = `seats:available:${restaurantId}:${date}:${slotMinutes}`;
+            const holdKey = `hold:${userId}:${restaurantId}:${date}:${slotMinutes}:seats:${seats}`;
+
+            try {
+                // if the user has seats held, release them back to the available pool
+                const holdExists = await redisClient.exists(holdKey);
+
+                if (holdExists) {
+                    await redisClient.del(holdKey);
+                    const newTotal = await redisClient.incrBy(availableKey, seats);
+
+                    io.to(`res_${restaurantId}_${date}`).emit("slot_update", {
+                        slotMinutes,
+                        available: newTotal
+                    });
+                }
+            } catch (err) {
+                console.error("Release Hold Error:", err);
+            }
+        });
+
+        // no extra cleanup needed on disconnect since redis holds expire automatically
         socket.on("disconnect", () => { });
     });
 };

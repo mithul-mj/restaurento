@@ -61,7 +61,7 @@ const RestaurantDashboard = () => {
                 />
                 <StatsCard
                     title="Total Earnings (This Month)"
-                    value="$4,580"
+                    value="₹4,580"
                     subtext="+12% from last month"
                     icon={<DollarSign className="text-gray-400" />}
                 />

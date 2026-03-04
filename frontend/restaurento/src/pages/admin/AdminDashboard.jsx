@@ -31,7 +31,7 @@ const AdminDashboard = () => {
     const stats = [
         { label: "Total Restaurants", value: "1,245", badge: null },
         { label: "Pending Approvals", value: "12", badge: "12" },
-        { label: "Total Earnings", value: "$1.45M", badge: null },
+        { label: "Total Earnings", value: "₹1.45M", badge: null },
         { label: "Pending Reports", value: "8", badge: "8" },
     ];
 
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
                     <div className="mb-6">
                         <h3 className="font-bold text-lg text-gray-900">Revenue Trends</h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-3xl font-bold text-[#ff5e00]">$250,840</span>
+                            <span className="text-3xl font-bold text-[#ff5e00]">₹250,840</span>
                             <span className="text-xs text-gray-400">Last 6 months</span>
                         </div>
                     </div>

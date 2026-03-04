@@ -14,6 +14,8 @@ import { TAX_RATE, PLATFORM_FEE_RATE } from "../../utils/constants";
 import { formatTime12Hour, formatDate } from "../../utils/timeUtils";
 import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
 import { showConfirm, showToast } from "../../utils/alert";
+import { useSocket } from "../../context/SocketContext";
+import { useSelector } from "react-redux";
 
 const RestaurantDetails = () => {
     const { id } = useParams();
@@ -24,6 +26,12 @@ const RestaurantDetails = () => {
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
     const [cart, setCart] = useState({});
     const [isDateOpen, setIsDateOpen] = useState(false);
+    const [liveSlotAvailability, setLiveSlotAvailability] = useState({});
+    const [isBooking, setIsBooking] = useState(false);
+
+
+    const user = useSelector((state) => state.auth.user);
+    const socket = useSocket();
 
     const dateOptions = Array.from({ length: 5 }, (_, i) => {
         const date = new Date();
@@ -80,33 +88,6 @@ const RestaurantDetails = () => {
         }
     }
 
-    const handleBookNow = () => {
-        if (!selectedTimeSlot) {
-            showToast('Please select a time slot first!', 'error');
-            return;
-        }
-
-        if (Object.keys(cart).length === 0) {
-            showToast('Please add at least one item to your order!', 'error');
-            return;
-        }
-
-        navigate('/booking-summary', {
-            state: {
-                restaurant,
-                partySize,
-                date: selectedDate,
-                timeSlot: selectedTimeSlot,
-                cart,
-                bookingFee,
-                itemTotal,
-                subtotal,
-                tax,
-                platformFee,
-                total: finalTotal
-            }
-        });
-    };
 
 
     const handleUpdateCart = (item, change) => {
@@ -132,44 +113,28 @@ const RestaurantDetails = () => {
         queryFn: () => userService.getRestaurantDetails(id),
     });
 
-    const pricePerPerson = data?.restaurant?.slotPrice || 0;
-
-
+    const restaurant = data?.restaurant;
+    const pricePerPerson = restaurant?.slotPrice || 0;
     const bookingFee = pricePerPerson * partySize;
 
     const cartItems = Object.values(cart);
     const itemTotal = cartItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
-
-    // Total Base Amount = Booking Fee + Food Items
     const subtotal = bookingFee + itemTotal;
-
     const tax = itemTotal * TAX_RATE;
     const platformFee = subtotal * PLATFORM_FEE_RATE;
-
     const finalTotal = subtotal + tax + platformFee;
 
+    const bookingDateRef = useRef(null);
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-[#fcfcfc]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff5e00]"></div>
-            </div>
-        );
-    }
-
-    if (isError || !data?.restaurant) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#fcfcfc]">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Restaurant Not Found</h2>
-                <Link to="/" className="text-[#ff5e00] hover:underline">Back to Home</Link>
-            </div>
-        );
-    }
-
-    const { restaurant } = data;
+    useEffect(() => {
+        bookingDateRef.current = {
+            restaurant, partySize, date: selectedDate, timeSlot: selectedTimeSlot, timeSlotMinutes: availableMinutes[availableLabels.indexOf(selectedTimeSlot)],
+            cart, bookingFee, itemTotal, subtotal, tax, platformFee, total: finalTotal
+        };
+    });
 
     const getSlotStatus = () => {
-        if (!restaurant.openingHours?.days) return { status: 'no_schedule', slots: [] };
+        if (!restaurant?.openingHours?.days) return { status: 'no_schedule', slots: [] };
 
         const date = new Date(selectedDate);
         const jsDay = date.getDay();
@@ -204,6 +169,112 @@ const RestaurantDetails = () => {
     const { status: slotStatus, slots: availableMinutes } = getSlotStatus();
     const availableLabels = availableMinutes.map(m => formatTime12Hour(m));
     const isSlotInvalid = selectedTimeSlot && !availableLabels.includes(selectedTimeSlot);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        if (id && selectedDate) {
+            socket.emit("view_date_slots", { restaurantId: id, date: selectedDate });
+            // Only ask for slots if we know them. Since this runs on date change before getSlotStatus is calculated or availableMinutes is stabilized,
+            // we will fetch them again below when availableMinutes changes.
+        }
+
+        const handleSlotUpdate = ({ slotMinutes, available }) => {
+            setLiveSlotAvailability(prev => ({
+                ...prev,
+                [slotMinutes]: available
+            }));
+        };
+
+        const handleInitialAvailability = (availabilityMap) => {
+            setLiveSlotAvailability(prev => ({ ...prev, ...availabilityMap }));
+        };
+
+        const handleReserveSuccess = () => {
+            setIsBooking(false);
+            navigate('/booking-summary', { state: bookingDateRef.current });
+        };
+
+        const handleReserveFail = ({ message }) => {
+            setIsBooking(false);
+            showToast(message, 'error');
+        };
+        const handleReserveError = ({ message }) => {
+            setIsBooking(false);
+            showToast(message, 'error');
+        };
+
+        socket.on("initial_availability", handleInitialAvailability);
+        socket.on("slot_update", handleSlotUpdate);
+        socket.on("reserve_success", handleReserveSuccess);
+        socket.on("reserve_fail", handleReserveFail);
+        socket.on("reserve_error", handleReserveError);
+
+        return () => {
+            socket.off("initial_availability", handleInitialAvailability);
+            socket.off("slot_update", handleSlotUpdate);
+            socket.off("reserve_success", handleReserveSuccess);
+            socket.off("reserve_fail", handleReserveFail);
+            socket.off("reserve_error", handleReserveError);
+        };
+    }, [socket, id, selectedDate, navigate]);
+
+    // Request initial availability separately when slots are determined
+    useEffect(() => {
+        if (socket && id && selectedDate && availableMinutes.length > 0) {
+            socket.emit("check_availability", { restaurantId: id, date: selectedDate, slots: availableMinutes });
+        }
+    }, [socket, id, selectedDate, availableMinutes]);
+
+
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-[#fcfcfc]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff5e00]"></div>
+            </div>
+        );
+    }
+
+    if (isError || !restaurant) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#fcfcfc]">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Restaurant Not Found</h2>
+                <Link to="/" className="text-[#ff5e00] hover:underline">Back to Home</Link>
+            </div>
+        );
+    }
+
+    const handleBookNow = () => {
+        if (!selectedTimeSlot) {
+            showToast('Please select a time slot first!', 'error');
+            return;
+        }
+
+        if (Object.keys(cart).length === 0) {
+            showToast('Please add at least one item to your order!', 'error');
+            return;
+        }
+
+        if (!socket) {
+            showToast('Live booking connection is not established. Please make sure you are logged in.', 'error');
+            return;
+        }
+
+        if (restaurant) {
+            setIsBooking(true);
+            const slotIndex = availableLabels.indexOf(selectedTimeSlot);
+            const slotMinutes = availableMinutes[slotIndex];
+
+            socket.emit("reserve_seats", {
+                restaurantId: id,
+                date: selectedDate,
+                slotMinutes: slotMinutes,
+                seats: partySize,
+                userId: user?._id || user?.id
+            });
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] pb-20">
@@ -241,7 +312,7 @@ const RestaurantDetails = () => {
                                     {restaurant.ratingStats?.count || 0} reviews
                                 </span>
                                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <span>${pricePerPerson.toFixed(2)} per person</span>
+                                <span>₹{pricePerPerson.toFixed(2)} per person</span>
                             </div>
                         </div>
 
@@ -477,15 +548,26 @@ const RestaurantDetails = () => {
                                                 </motion.div>
                                             </AnimatePresence>
                                         </div>
-                                        <motion.button
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => setPartySize(Math.min(restaurant.totalSeats || 1, Number(partySize) + 1))}
-                                            disabled={partySize >= (restaurant.totalSeats || 1)}
-                                            className="w-9 h-full flex items-center justify-center bg-white rounded-lg text-gray-500 shadow-sm hover:text-[#ff5e00] disabled:opacity-50 disabled:shadow-none transition-colors"
-                                            type="button"
-                                        >
-                                            <Plus size={16} strokeWidth={2.5} />
-                                        </motion.button>
+                                        {(() => {
+                                            const selectedSlotIndex = availableLabels.indexOf(selectedTimeSlot);
+                                            const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
+                                            const liveAvailableSeats = selectedSlotMinutes && liveSlotAvailability[selectedSlotMinutes] !== undefined
+                                                ? liveSlotAvailability[selectedSlotMinutes]
+                                                : restaurant?.totalSeats || 1;
+                                            const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 1, liveAvailableSeats));
+
+                                            return (
+                                                <motion.button
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => setPartySize(Math.min(maxAllowedPartySize, Number(partySize) + 1))}
+                                                    disabled={partySize >= maxAllowedPartySize}
+                                                    className="w-9 h-full flex items-center justify-center bg-white rounded-lg text-gray-500 shadow-sm hover:text-[#ff5e00] disabled:opacity-50 disabled:shadow-none transition-colors"
+                                                    type="button"
+                                                >
+                                                    <Plus size={16} strokeWidth={2.5} />
+                                                </motion.button>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -578,7 +660,7 @@ const RestaurantDetails = () => {
                                                     {item.name}
                                                 </p>
                                                 <p className="text-xs text-gray-400">
-                                                    ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                                                    ₹{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-3 shrink-0">
@@ -594,7 +676,7 @@ const RestaurantDetails = () => {
                                                     >+</button>
                                                 </div>
                                                 <p className="text-sm font-bold text-gray-900 w-12 text-right">
-                                                    ${(item.price * item.qty).toFixed(2)}
+                                                    ₹{(item.price * item.qty).toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
@@ -604,24 +686,24 @@ const RestaurantDetails = () => {
 
                             <div className="space-y-2 mb-6 pt-4 border-t border-gray-50">
                                 <div className="flex justify-between text-xs text-gray-500">
-                                    <span>Booking Fee ({partySize} x ${pricePerPerson})</span>
-                                    <span>${bookingFee.toFixed(2)}</span>
+                                    <span>Booking Fee ({partySize} x ₹{pricePerPerson})</span>
+                                    <span>₹{bookingFee.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-500">
                                     <span>Food Total</span>
-                                    <span>${itemTotal.toFixed(2)}</span>
+                                    <span>₹{itemTotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-500">
                                     <span>Tax (5%)</span>
-                                    <span>${tax.toFixed(2)}</span>
+                                    <span>₹{tax.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-500">
                                     <span>Platform Fee (5%)</span>
-                                    <span>${platformFee.toFixed(2)}</span>
+                                    <span>₹{platformFee.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-black text-gray-900 pt-2 border-t border-gray-100 mt-2">
                                     <span>Total</span>
-                                    <span>${finalTotal.toFixed(2)}</span>
+                                    <span>₹{finalTotal.toFixed(2)}</span>
                                 </div>
 
                             </div>
@@ -629,9 +711,17 @@ const RestaurantDetails = () => {
                             <div className="space-y-3">
                                 <button
                                     onClick={handleBookNow}
-                                    className="w-full bg-[#ff5e00] hover:bg-[#e05200] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                    disabled={isBooking}
+                                    className="w-full bg-[#ff5e00] hover:bg-[#e05200] disabled:bg-[#ff5e00]/70 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
                                 >
-                                    Book & Pre-order Now
+                                    {isBooking ? (
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <span>Booking...</span>
+                                        </div>
+                                    ) : (
+                                        "Book & Pre-order Now"
+                                    )}
                                 </button>
                                 <button
                                     onClick={handleSaveWishlist}

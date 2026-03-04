@@ -172,7 +172,7 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
 
                                     <div className="flex items-center justify-between mt-3">
                                         <span className={`font-bold ${isMismatch ? 'text-gray-500' : 'text-[#ff5e00]'}`}>
-                                            ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                                            ₹{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
                                         </span>
 
                                         {!isDisabled ? (

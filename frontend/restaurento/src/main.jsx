@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SocketProvider } from "./context/SocketContext.jsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,13 +22,15 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-        <QueryClientProvider client={queryClient}>
-          <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-            <App />
-          </ErrorBoundary>
-        </QueryClientProvider>
-      </GoogleOAuthProvider>
+      <SocketProvider>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+          <QueryClientProvider client={queryClient}>
+            <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+              <App />
+            </ErrorBoundary>
+          </QueryClientProvider>
+        </GoogleOAuthProvider>
+      </SocketProvider>
     </Provider>
   </StrictMode>
 );

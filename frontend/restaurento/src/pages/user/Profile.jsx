@@ -157,10 +157,10 @@ const Profile = () => {
                   Referral Code
                 </h2>
                 <p className="text-gray-500 text-sm mb-6">
-                  Get <span className="font-bold text-gray-800">$5</span> on by
+                  Get <span className="font-bold text-gray-800">₹5</span> on by
                   sharing you referral code. The person uses the referral code
                   on register will receive{" "}
-                  <span className="font-bold text-gray-800">$3</span>.
+                  <span className="font-bold text-gray-800">₹3</span>.
                 </p>
 
                 <div className="flex items-center bg-[#f5f5f5] rounded-lg p-1.5 border border-dashed border-gray-300">

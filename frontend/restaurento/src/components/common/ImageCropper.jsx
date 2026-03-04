@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../../utils/canvasUtils';
 import { Check, X, ZoomIn, ZoomOut } from 'lucide-react';
+
+const initialCropArea = { width: 100, height: 100 };
 
 const ImageCropper = ({ imageSrc, onCropComplete, onCancel, aspect = 16 / 9 }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -33,15 +35,15 @@ const ImageCropper = ({ imageSrc, onCropComplete, onCancel, aspect = 16 / 9 }) =
 
     const modalContent = (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-                <div className="p-4 border-b flex justify-between items-center bg-white">
+            <div className="flex flex-col bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+                <div className="p-4 border-b flex justify-between items-center bg-white shrink-0">
                     <h3 className="font-semibold text-lg text-gray-800">Crop Image</h3>
                     <button onClick={onCancel} className="text-gray-500 hover:text-gray-700">
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="relative h-[400px] w-full bg-gray-900">
+                <div className="relative h-[60vh] min-h-[400px] w-full bg-gray-900 shrink-0">
                     <Cropper
                         image={imageSrc}
                         crop={crop}
@@ -50,10 +52,11 @@ const ImageCropper = ({ imageSrc, onCropComplete, onCancel, aspect = 16 / 9 }) =
                         onCropChange={onCropChange}
                         onZoomChange={onZoomChange}
                         onCropComplete={handleCropComplete}
+                        initialCroppedAreaPercentages={initialCropArea}
                     />
                 </div>
 
-                <div className="p-4 bg-white flex flex-col gap-4">
+                <div className="p-4 bg-white flex flex-col gap-4 shrink-0">
                     <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
                         <ZoomOut size={18} className="text-gray-500" />
                         <input

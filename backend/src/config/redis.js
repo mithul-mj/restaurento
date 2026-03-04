@@ -2,9 +2,12 @@ import { env } from './env.config.js';
 import { createClient } from 'redis';
 
 const redisConfig = {
-    password: env.REDIS_PASSWORD,
     socket: { host: env.REDIS_HOST, port: env.REDIS_PORT }
 };
+
+if (env.REDIS_PASSWORD) {
+    redisConfig.password = env.REDIS_PASSWORD;
+}
 
 export const redisClient = createClient(redisConfig);
 // Dedicated Subscriber for watching expirations
