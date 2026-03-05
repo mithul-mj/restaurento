@@ -7,14 +7,31 @@ import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { SocketProvider } from "./context/SocketContext.jsx";
+import { showToast } from "./utils/alert.js";
+import STATUS_CODES from "./constants/statusCodes.js";
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      if (error.response?.status !== STATUS_CODES.UNAUTHORIZED) {
+        showToast(error.response?.data?.message || "Something went wrong fetching data.", "error");
+      }
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      if (error.response?.status !== STATUS_CODES.UNAUTHORIZED) {
+        showToast(error.response?.data?.message || "Action failed. Please try again.", "error");
+      }
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60,
       refetchOnWindowFocus: false,
+      retry: false,
     },
   },
 });

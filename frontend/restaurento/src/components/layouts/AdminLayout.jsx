@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../admin/Sidebar';
 import { Menu } from 'lucide-react';
+import { ErrorBoundary } from "react-error-boundary";
+import ErrorFallback from "../ErrorFallback";
 
 const AdminLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -44,7 +46,12 @@ const AdminLayout = () => {
                 </header>
 
                 <main className="p-6 md:p-10 flex-1 overflow-x-hidden">
-                    <Outlet />
+                    <ErrorBoundary
+                        FallbackComponent={ErrorFallback}
+                        resetKeys={[location.pathname]}
+                    >
+                        <Outlet />
+                    </ErrorBoundary>
                 </main>
             </div>
         </div>

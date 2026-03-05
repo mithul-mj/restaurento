@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../restaurant/Sidebar';
 import { Menu } from 'lucide-react';
+import { ErrorBoundary } from "react-error-boundary";
+import ErrorFallback from "../ErrorFallback";
 
 const RestaurantLayout = () => {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -39,7 +41,12 @@ const RestaurantLayout = () => {
                 </div>
 
                 <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-80px)] w-full">
-                    <Outlet />
+                    <ErrorBoundary
+                        FallbackComponent={ErrorFallback}
+                        resetKeys={[location.pathname]}
+                    >
+                        <Outlet />
+                    </ErrorBoundary>
                 </div>
             </main>
         </div>
