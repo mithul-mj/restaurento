@@ -17,14 +17,14 @@ function WishlistCard({ restaurant, onRemove }) {
 
     return (
         <div className="group h-full bg-white rounded-[24px] border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-xl transition-all duration-300">
-            {/* Image section */}
+
             <div className="relative h-[220px] overflow-hidden">
                 <img
                     src={restaurant.restaurantImage || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80"}
                     alt={restaurant.restaurantName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                {/* Meal Type Badge */}
+
                 <div className={`absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-lg ${mealTypeColors[restaurant.mealType] || "bg-gray-800 text-white"}`}>
                     <Utensils size={12} />
                     {restaurant.mealType}
@@ -129,7 +129,7 @@ export default function Wishlist() {
         <div className="min-h-screen bg-[#fcfcfc] font-sans">
             <main className="max-w-7xl mx-auto px-4 md:px-8 py-10">
 
-                {/* Header */}
+
                 <div className="flex justify-between items-start mb-8">
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-900 mb-1">My Wishlist</h1>
@@ -156,7 +156,7 @@ export default function Wishlist() {
                     </div>
                 ) : (
                     <>
-                        {/* Grid */}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {restaurants.map((r) => (
                                 <WishlistCard
@@ -167,7 +167,7 @@ export default function Wishlist() {
                             ))}
                         </div>
 
-                        {/* Pagination */}
+
                         {pagination.totalPages > 1 && (
                             <div className="flex items-center justify-center gap-4 mt-10">
                                 <button

@@ -61,6 +61,10 @@ const userService = {
   removeFromWishlist: async (id) => {
     const response = await api.delete(`/wishlist/${id}`);
     return response.data;
+  },
+  createBooking: async (bookingData) => {
+    const response = await api.post("/booking", bookingData);
+    return response.data
   }
 
 };

@@ -15,7 +15,7 @@ import userService from "../../services/user.service";
 
 const Profile = () => {
   const { user: reduxUser, avatar, referralCode } = useSelector((state) => state.auth);
-  // Merge Redux user (name/email) with Redux avatar (which is separate)
+  // Merge Redux user and avatar state
   const [user, setUser] = useState({ ...reduxUser, avatar, referralCode });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);

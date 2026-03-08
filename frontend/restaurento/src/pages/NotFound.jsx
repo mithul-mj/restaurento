@@ -8,12 +8,12 @@ const NotFound = () => {
     return (
         <div className="min-h-screen bg-[#fcfcfc] flex flex-col items-center justify-center p-4 text-center">
             <div className="max-w-md w-full">
-                {/* Large 404 Text */}
+
                 <h1 className="text-9xl font-black text-[#ff5e00] opacity-20 mb-4 select-none">
                     404
                 </h1>
 
-                {/* Illustration Placeholder */}
+
                 <div className="relative -mt-20 mb-8">
                     <div className="w-48 h-48 bg-[#fff0e3] rounded-full mx-auto flex items-center justify-center relative overflow-hidden">
                         <span className="text-6xl">🍽️</span>
@@ -48,7 +48,7 @@ const NotFound = () => {
                 </div>
             </div>
 
-            {/* Footer */}
+
             <div className="mt-16 text-gray-400 text-sm">
                 &copy; 2024 Restaurento
             </div>

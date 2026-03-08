@@ -1,5 +1,4 @@
-import { RESERVE_SLOT_LUA } from "../utils/redisScripts.js";
-import { getOrInitSlotInventory, getOrInitMultipleSlotsInventory } from "../services/inventory.service.js";
+import { getRealTimeAvailability, getRealTimeAvailabilityMultiple } from "../services/inventory.service.js";
 import redisClient from "../config/redis.js";
 
 export const setupReservation = (io) => {
@@ -11,36 +10,33 @@ export const setupReservation = (io) => {
         socket.on("check_availability", async ({ restaurantId, date, slots }) => {
             try {
                 if (!slots || !Array.isArray(slots)) return;
-                const availabilityMap = await getOrInitMultipleSlotsInventory(restaurantId, date, slots);
+                const availabilityMap = await getRealTimeAvailabilityMultiple(restaurantId, date, slots);
                 socket.emit("initial_availability", availabilityMap);
             } catch (err) {
                 console.error("Check Availability Error:", err);
             }
         });
 
-
         socket.on("reserve_seats", async ({ restaurantId, date, slotMinutes, seats, userId }) => {
-            const availableKey = `seats:available:${restaurantId}:${date}:${slotMinutes}`;
             const holdKey = `hold:${userId}:${restaurantId}:${date}:${slotMinutes}:seats:${seats}`;
 
             try {
-                await getOrInitSlotInventory(restaurantId, date, slotMinutes);
+                // Determine true organic availability from MongoDB & Redis combined
+                const available = await getRealTimeAvailability(restaurantId, date, slotMinutes);
 
-                const [status, result] = await redisClient.eval(
-                    RESERVE_SLOT_LUA,
-                    {
-                        keys: [availableKey, holdKey],
-                        arguments: [seats.toString(), "600"]
-                    }
-                );
+                if (available >= seats) {
+                    // Lock in the temporary hold for 5 minutes specifically for this user
+                    await redisClient.setEx(holdKey, 300, seats.toString());
 
-                if (status === 1) {
+                    // Tell all users viewing this date that availability has dynamically changed
+                    const newAvailable = available - seats;
                     io.to(`res_${restaurantId}_${date}`).emit("slot_update", {
                         slotMinutes,
-                        available: result
+                        available: newAvailable
                     });
+
                     socket.emit("reserve_success", { seats, slotMinutes });
-                } else if (status === 0) {
+                } else {
                     socket.emit("reserve_fail", { message: "Not enough seats in this slot" });
                 }
             } catch (err) {
@@ -50,20 +46,20 @@ export const setupReservation = (io) => {
         });
 
         socket.on("release_hold", async ({ restaurantId, date, slotMinutes, seats, userId }) => {
-            const availableKey = `seats:available:${restaurantId}:${date}:${slotMinutes}`;
             const holdKey = `hold:${userId}:${restaurantId}:${date}:${slotMinutes}:seats:${seats}`;
 
             try {
-                // if the user has seats held, release them back to the available pool
+                // If the user navigates away, clear their temporary hold early
                 const holdExists = await redisClient.exists(holdKey);
 
                 if (holdExists) {
                     await redisClient.del(holdKey);
-                    const newTotal = await redisClient.incrBy(availableKey, seats);
 
+                    // Recalculate and broadcast the freshly freed up availability
+                    const newAvailable = await getRealTimeAvailability(restaurantId, date, slotMinutes);
                     io.to(`res_${restaurantId}_${date}`).emit("slot_update", {
                         slotMinutes,
-                        available: newTotal
+                        available: newAvailable
                     });
                 }
             } catch (err) {
@@ -71,7 +67,6 @@ export const setupReservation = (io) => {
             }
         });
 
-        // no extra cleanup needed on disconnect since redis holds expire automatically
         socket.on("disconnect", () => { });
     });
 };

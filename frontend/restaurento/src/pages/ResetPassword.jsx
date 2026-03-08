@@ -54,7 +54,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
-      {/* Header/Logo */}
+
       <div className="absolute top-6 left-6 flex items-center gap-2">
         <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
           <UtensilsCrossed size={20} />
@@ -86,7 +86,7 @@ const ResetPassword = () => {
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-5 text-left">
-            {/* New Password */}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 New Password
@@ -95,11 +95,10 @@ const ResetPassword = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
-                                    ${
-                                      errors.password
-                                        ? "border-red-500 bg-red-50 focus:border-red-500"
-                                        : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
-                                    }
+                                    ${errors.password
+                      ? "border-red-500 bg-red-50 focus:border-red-500"
+                      : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
+                    }
                                     text-gray-900 placeholder-gray-400 text-sm pr-10`}
                   placeholder="StrongP@ssw0rd!"
                   {...register("password", {
@@ -128,7 +127,7 @@ const ResetPassword = () => {
               )}
             </div>
 
-            {/* Confirm New Password */}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Confirm New Password
@@ -137,11 +136,10 @@ const ResetPassword = () => {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
-                                    ${
-                                      errors.confirmPassword
-                                        ? "border-red-500 bg-red-50 focus:border-red-500"
-                                        : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
-                                    }
+                                    ${errors.confirmPassword
+                      ? "border-red-500 bg-red-50 focus:border-red-500"
+                      : "border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white"
+                    }
                                     text-gray-900 placeholder-gray-400 text-sm pr-10`}
                   placeholder="StrongP@ssw0rd!"
                   {...register("confirmPassword", {
@@ -185,8 +183,8 @@ const ResetPassword = () => {
                 role === "RESTAURANT"
                   ? "/restaurant/login"
                   : role === "ADMIN"
-                  ? "/admin/login"
-                  : "/login"
+                    ? "/admin/login"
+                    : "/login"
               }
               className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 transition-colors">
               <ArrowLeft size={16} />

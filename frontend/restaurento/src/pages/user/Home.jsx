@@ -77,7 +77,7 @@ const Home = () => {
                     left: 0,
                     width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
-                    zIndex: 50, // Ensure header is above other rows for dropdown visibility
+                    zIndex: 50, // Keep header above rows for dropdown
                   }}>
                   <main className="max-w-7xl mx-auto px-4 md:px-8 pt-1 pb-6">
                     <BannerCarousel

@@ -1,82 +1,73 @@
 import redisClient from "../config/redis.js";
 import { Restaurant } from "../models/Restaurant.model.js";
+import { Booking } from "../models/Booking.model.js";
+import mongoose from "mongoose";
 
 const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes) => {
-    // find all active holds using the key format: hold:userId:restaurantId:date:slotMinutes:seats:seatsCount
+    // 10-minute temporary holds key format string: hold:userId:restaurantId:date:slotMinutes:seats:seatsCount
     const pattern = `hold:*:${restaurantId}:${date}:${slotMinutes}:seats:*`;
     const keys = await redisClient.keys(pattern);
     if (keys.length === 0) return 0;
 
-    // total up the seats currently on hold
+    // total up the temporary seats currently held in shopping carts
     const values = await redisClient.mGet(keys);
     return values.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
 };
 
-export const getOrInitSlotInventory = async (restaurantId, date, slotMinutes) => {
-    // format to track available seats: seats:available:restaurantId:date:slotMinutes
-    const availableKey = `seats:available:${restaurantId}:${date}:${slotMinutes}`;
+export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) => {
+    // 1. Get total seats for restaurant
+    const restaurant = await Restaurant.findById(restaurantId).select("totalSeats");
+    if (!restaurant) throw new Error("Restaurant not found");
+    const totalSeats = restaurant.totalSeats || 0;
 
-    let available = await redisClient.get(availableKey);
+    const searchDate = new Date(date);
+    searchDate.setUTCHours(0, 0, 0, 0);
+    const nextDate = new Date(searchDate);
+    nextDate.setDate(searchDate.getDate() + 1);
 
-    if (available === null) {
-        const restaurant = await Restaurant.findById(restaurantId).select("totalSeats");
-        if (!restaurant) throw new Error("Restaurant not found");
+    // 2. Query MongoDB for highly-accurate permanent bookings that overlap this specific minute!
+    const approvedBookings = await Booking.aggregate([
+        {
+            $match: {
+                restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                bookingDate: { $gte: searchDate, $lt: nextDate },
+                status: "approved",
+                slotTime: { $lte: parseInt(slotMinutes) },
+                slotEndTime: { $gt: parseInt(slotMinutes) }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalGuests: { $sum: "$guests" }
+            }
+        }
+    ]);
 
-        const activeHolds = await getActiveHoldsForSlot(restaurantId, date, slotMinutes);
-        available = Math.max(0, restaurant.totalSeats - activeHolds);
+    const bookedGuests = approvedBookings.length > 0 ? approvedBookings[0].totalGuests : 0;
 
-        await redisClient.setEx(availableKey, 172800, available.toString());
-    }
+    // 3. Query Redis for any unconfirmed temporary holds (users sitting on checkout page)
+    const activeHolds = await getActiveHoldsForSlot(restaurantId, date, slotMinutes);
 
-    return parseInt(available);
+    // 4. Crunch the numbers: Total - Permanent Bookings - Temporary Holds
+    const available = Math.max(0, totalSeats - bookedGuests - activeHolds);
+
+    return available;
 };
 
-export const getOrInitMultipleSlotsInventory = async (restaurantId, date, slotsArray) => {
+export const getRealTimeAvailabilityMultiple = async (restaurantId, date, slotsArray) => {
     if (!slotsArray || slotsArray.length === 0) return {};
 
-    // build redis keys for the requested time slots
-    const keys = slotsArray.map(slot => `seats:available:${restaurantId}:${date}:${slot}`);
-
-    // getting everything from redis in one go
-    const redisResults = await redisClient.mGet(keys);
-
-    // figure out which time slots weren't in the cache
-    const missingIndices = [];
-    redisResults.forEach((val, index) => {
-        if (val === null) missingIndices.push(index);
-    });
-
-    // if there are missing slots, we only need to query the database once for the total seats
-    let totalSeats = null;
-    if (missingIndices.length > 0) {
-        const restaurant = await Restaurant.findById(restaurantId).select("totalSeats");
-        if (!restaurant) throw new Error("Restaurant not found");
-        totalSeats = restaurant.totalSeats;
-
-        // check for any active holds on these missing slots at the same time
-        const holdPromises = missingIndices.map(index =>
-            getActiveHoldsForSlot(restaurantId, date, slotsArray[index])
-        );
-        const holdsResults = await Promise.all(holdPromises);
-
-        // pipeline the redis updates so we don't have to wait for each one individually
-        const pipeline = redisClient.multi();
-        missingIndices.forEach((index, i) => {
-            const activeHolds = holdsResults[i];
-            const available = Math.max(0, totalSeats - activeHolds);
-
-            redisResults[index] = available.toString();
-            pipeline.setEx(keys[index], 172800, available.toString());
-        });
-
-        await pipeline.exec();
-    }
-
-    // map the slots to their available seats and return them
     const availabilityMap = {};
-    slotsArray.forEach((slot, index) => {
-        availabilityMap[slot] = parseInt(redisResults[index]);
+    const promises = slotsArray.map(async (slot) => {
+        try {
+            availabilityMap[slot] = await getRealTimeAvailability(restaurantId, date, slot);
+        } catch (error) {
+            console.error(`Error calculating availability for slot ${slot}:`, error);
+            availabilityMap[slot] = 0;
+        }
     });
 
+    await Promise.all(promises);
     return availabilityMap;
 };

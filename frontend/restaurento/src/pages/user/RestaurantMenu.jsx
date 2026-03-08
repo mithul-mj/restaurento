@@ -14,12 +14,12 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
 
-    // Reset page when filters change
+    // Reset pagination on filter change
     useEffect(() => {
         setPage(1);
     }, [category, debouncedSearch]);
 
-    // select category based on time slot
+    // Set category by time slot
     useEffect(() => {
         const slotCategory = getCategoryFromTimeSlot(selectedTimeSlot);
         if (slotCategory) {
@@ -127,7 +127,7 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                 </div>
             </div>
 
-            {/* Menu Grid */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
                 {menuItems.length === 0 ? (
                     <div className="col-span-full text-center py-12 text-gray-400">

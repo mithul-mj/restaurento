@@ -71,7 +71,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
             </h4>
 
             <div className="space-y-4">
-                {/* SORT TAB */}
+
                 {activeTab === "sort" && (
                     <div className="flex flex-col gap-4">
                         {hasLocation && (
@@ -117,7 +117,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                     </div>
                 )}
 
-                {/* RATING TAB - Normal Radio Buttons */}
+
                 {activeTab === "rating" && (
                     <div className="flex flex-col gap-4">
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -162,7 +162,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                     </div>
                 )}
 
-                {/* PRICE TAB - Normal Checkboxes */}
+
                 {activeTab === "cost" && (
                     <div className="flex flex-col gap-4">
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -226,7 +226,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                 className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col md:max-h-[600px] max-h-[80vh] animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* HEADER */}
+
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h3 className="text-xl font-bold text-gray-800">Filters</h3>
                     <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full">
@@ -234,7 +234,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                     </button>
                 </div>
 
-                {/* FORM BODY */}
+
                 <form
                     className="flex flex-col flex-1 overflow-hidden"
                     onSubmit={handleSubmit(onApply)}
@@ -244,7 +244,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                         {renderContent()}
                     </div>
 
-                    {/* FOOTER */}
+
                     <div className="p-4 border-t border-gray-100 flex justify-end items-center gap-3 bg-white">
                         <button
                             type="button"

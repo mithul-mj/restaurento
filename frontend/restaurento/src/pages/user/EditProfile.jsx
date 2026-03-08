@@ -18,7 +18,6 @@ const EditProfile = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
-  // Cropper State
   const [imageToCrop, setImageToCrop] = useState(null);
 
   const {
@@ -37,17 +36,17 @@ const EditProfile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Create a URL for the selected file to show in cropper
+      // Create cropper preview URL
       const url = URL.createObjectURL(file);
       setImageToCrop(url);
 
-      // Reset input value so same file can be selected again if cancelled
+      // Reset input to allow re-selection
       e.target.value = '';
     }
   };
 
   const handleCropComplete = async (croppedDataUrl) => {
-    // Convert Data URL to File
+    // Convert cropped image to File instance
     const res = await fetch(croppedDataUrl);
     const blob = await res.blob();
     const file = new File([blob], "profile-avatar.jpg", { type: "image/jpeg" });
@@ -84,11 +83,11 @@ const EditProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
-      {/* Cropper Modal */}
+
       {imageToCrop && (
         <ImageCropper
           imageSrc={imageToCrop}
-          aspect={1} // 1:1 for Profile Picture
+          aspect={1} // 1:1 aspect ratio
           onCropComplete={handleCropComplete}
           onCancel={() => setImageToCrop(null)}
         />

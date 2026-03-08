@@ -30,6 +30,17 @@ const RestaurantDetails = () => {
     const [liveSlotAvailability, setLiveSlotAvailability] = useState({});
     const [isBooking, setIsBooking] = useState(false);
 
+    useEffect(() => {
+        if (location.state?.prefilledCart) {
+            const newState = { ...location.state };
+            delete newState.prefilledCart;
+            navigate(location.pathname + location.search, {
+                replace: true,
+                state: Object.keys(newState).length > 0 ? newState : null
+            });
+        }
+    }, [location.pathname, location.search, location.state, navigate]);
+
 
     const user = useSelector((state) => state.auth.user);
     const socket = useSocket();
@@ -47,7 +58,7 @@ const RestaurantDetails = () => {
         return { value, label };
     });
 
-    // Track previous party size for animation direction
+    // Track party size for animation direction
     const prevPartySize = useRef(partySize);
     useEffect(() => {
         prevPartySize.current = partySize;
@@ -71,7 +82,7 @@ const RestaurantDetails = () => {
         if (!confirm.isConfirmed) return;
 
         try {
-            const mealType = getCategoryFromTimeSlot(selectedTimeSlot) || "Lunch"; // Fallback to Lunch if not found
+            const mealType = getCategoryFromTimeSlot(selectedTimeSlot) || "Lunch";
 
             const payload = {
                 restaurantId: id,
@@ -130,7 +141,8 @@ const RestaurantDetails = () => {
     useEffect(() => {
         bookingDateRef.current = {
             restaurant, partySize, date: selectedDate, timeSlot: selectedTimeSlot, timeSlotMinutes: availableMinutes[availableLabels.indexOf(selectedTimeSlot)],
-            cart, bookingFee, itemTotal, subtotal, tax, platformFee, total: finalTotal
+            cart, bookingFee, itemTotal, subtotal, tax, platformFee, total: finalTotal,
+            holdExpirationTime: Date.now() + 5 * 60 * 1000
         };
     });
 
@@ -152,7 +164,7 @@ const RestaurantDetails = () => {
             slots = daySchedule.generatedSlots.map(s => s.startTime);
         }
 
-        // Filter out past slots if today
+        // Hide past time slots for today
         const today = new Date();
         const isToday = today.toISOString().split('T')[0] === selectedDate;
         if (isToday) {
@@ -176,8 +188,7 @@ const RestaurantDetails = () => {
 
         if (id && selectedDate) {
             socket.emit("view_date_slots", { restaurantId: id, date: selectedDate });
-            // Only ask for slots if we know them. Since this runs on date change before getSlotStatus is calculated or availableMinutes is stabilized,
-            // we will fetch them again below when availableMinutes changes.
+            // Subscribe to date channel first
         }
 
         const handleSlotUpdate = ({ slotMinutes, available }) => {
@@ -220,7 +231,7 @@ const RestaurantDetails = () => {
         };
     }, [socket, id, selectedDate, navigate]);
 
-    // Request initial availability separately when slots are determined
+    // Fetch live seat availability
     useEffect(() => {
         if (socket && id && selectedDate && availableMinutes.length > 0) {
             socket.emit("check_availability", { restaurantId: id, date: selectedDate, slots: availableMinutes });
@@ -588,7 +599,7 @@ const RestaurantDetails = () => {
                                                     <button
                                                         key={startTimeInMinutes}
                                                         onClick={async () => {
-                                                            // Check if existing cart items conflict with new slot
+                                                            // Check conflicting cart items
                                                             const newCategory = getCategoryFromTimeSlot(timeLabel);
                                                             const cartItemsList = Object.values(cart);
 

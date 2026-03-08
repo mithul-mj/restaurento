@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Star, Clock, ShieldCheck, UtensilsCrossed, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-// Import images (assuming they are placed correctly as per previous steps)
+
 import HeroImage1 from '../assets/images/hero1.png';
 import HeroImage2 from '../assets/images/hero2.png';
 import HeroImage3 from '../assets/images/hero3.png';
@@ -35,11 +35,11 @@ const Landing = () => {
 
     return (
         <div className="min-h-screen bg-white overflow-hidden">
-            {/* Hero Section */}
+
             <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-40 overflow-hidden">
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                        {/* Text Content */}
+
                         <motion.div
                             className="lg:w-1/2"
                             initial="hidden"
@@ -92,7 +92,7 @@ const Landing = () => {
                             </motion.div>
                         </motion.div>
 
-                        {/* Hero Image */}
+
                         <motion.div
                             className="lg:w-1/2 relative"
                             initial={{ opacity: 0, x: 50 }}
@@ -115,7 +115,7 @@ const Landing = () => {
                                     }}
                                 />
 
-                                {/* Floating Badges */}
+
                                 <motion.div
                                     className="absolute -bottom-10 -left-10 md:bottom-10 md:left-0 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-4 z-20"
                                     initial={{ opacity: 0, scale: 0.8 }}
@@ -137,14 +137,14 @@ const Landing = () => {
                                 </motion.div>
                             </div>
 
-                            {/* Decorative Blobs */}
+
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-gradient-to-tr from-orange-100 to-red-50 rounded-full opacity-60 blur-3xl -z-10" />
                         </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* Features Section */}
+
             <section className="py-20 bg-slate-50">
                 <div className="container mx-auto px-4">
                     <div className="text-center max-w-2xl mx-auto mb-16">
@@ -178,7 +178,7 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Popular Items Showcase */}
+
             <section className="py-20 overflow-hidden">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-end mb-12">
@@ -202,8 +202,7 @@ const Landing = () => {
                                 transition={{ delay: idx * 0.1 }}
                             >
                                 <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
-                                    {/* Placeholder for actual dish image if the hero/uploaded ones aren't perfect fit, 
-                                        but we use what we have with object-cover */}
+                                    {/* Placeholder for actual dish image */}
                                     <img src={img} alt="Dish" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
                                 </div>
@@ -222,7 +221,7 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Newsletter / CTA */}
+
             <section className="py-20">
                 <div className="container mx-auto px-4">
                     <div className="bg-slate-900 rounded-[3rem] p-10 lg:p-20 relative overflow-hidden text-center">
