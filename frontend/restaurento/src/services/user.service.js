@@ -75,8 +75,17 @@ const userService = {
   verifyRazorpayPayment: async (paymentData) => {
     const response = await api.post("/payments/verify", paymentData);
     return response.data;
+  },
+  getMyBookings: async ({ type, page, limit }) => {
+    const response = await api.get("/bookings", {
+      params: { type, page, limit }
+    });
+    return response.data;
+  },
+  cancelBooking: async (bookingId) => {
+    const response = await api.patch(`/bookings/${bookingId}/cancel`);
+    return response.data;
   }
-
 };
 
 export default userService;

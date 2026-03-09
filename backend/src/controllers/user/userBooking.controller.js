@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Booking } from '../../models/Booking.model.js'
 import { Restaurant } from '../../models/Restaurant.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
-import { TAX_RATE, PLATFORM_FEE_RATE } from '../../constants/constants.js';
+import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import redisClient from '../../config/redis.js';
 import { getRealTimeAvailability } from '../../services/inventory.service.js';
 
@@ -160,3 +160,145 @@ export const BookingRestaurant = async (req, res, next) => {
         next(error);
     }
 }
+
+export const getMyBookings = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const { type = 'upcoming', page = 1, limit = 3 } = req.query;
+
+        const now = new Date();
+        const today = new Date(now);
+        today.setUTCHours(0, 0, 0, 0);
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        let matchQuery = { userId: new mongoose.Types.ObjectId(userId) };
+
+        if (type === 'upcoming') {
+            matchQuery.status = 'approved';
+            matchQuery.$or = [
+                { bookingDate: { $gt: today } },
+                {
+                    bookingDate: { $eq: today },
+                    slotTime: { $gte: currentMinutes }
+                }
+            ];
+        } else {
+            // Past or canceled
+            matchQuery.$or = [
+                { status: 'canceled' },
+                {
+                    $and: [
+                        { status: 'approved' },
+                        {
+                            $or: [
+                                { bookingDate: { $lt: today } },
+                                {
+                                    bookingDate: { $eq: today },
+                                    slotTime: { $lt: currentMinutes }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ];
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const sortOrder = type === 'upcoming' ? 1 : -1;
+
+        const result = await Booking.aggregate([
+            { $match: { ...matchQuery } },
+            { $sort: { bookingDate: sortOrder, slotTime: sortOrder } },
+            {
+                $facet: {
+                    metadata: [{ $count: "total" }],
+                    data: [
+                        { $skip: skip },
+                        { $limit: parseInt(limit) },
+                        {
+                            $lookup: {
+                                from: 'restaurants',
+                                localField: 'restaurantId',
+                                foreignField: '_id',
+                                as: 'restaurant'
+                            }
+                        },
+                        { $unwind: '$restaurant' },
+                        {
+                            $addFields: {
+                                restaurant: {
+                                    _id: '$restaurant._id',
+                                    restaurantName: '$restaurant.restaurantName',
+                                    address: '$restaurant.address',
+                                    images: { $slice: ["$restaurant.images", 1] }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const bookings = result[0].data || [];
+        const totalCount = result[0].metadata[0]?.total || 0;
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            data: bookings,
+            meta: {
+                totalCount,
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalCount / parseInt(limit)),
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const cancelBooking = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        const booking = await Booking.findOne({ _id: id, userId });
+
+        if (!booking) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                success: false,
+                message: "Booking not found."
+            });
+        }
+
+        if (booking.status === 'canceled') {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "Booking is already canceled."
+            });
+        }
+
+        // Check if it's already in the past
+        const now = new Date();
+        const today = new Date(now);
+        today.setUTCHours(0, 0, 0, 0);
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        if (booking.bookingDate < today || (booking.bookingDate.getTime() === today.getTime() && booking.slotTime < currentMinutes)) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "Cannot cancel a past booking."
+            });
+        }
+
+        booking.status = 'canceled';
+        await booking.save();
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            message: "Booking canceled successfully.",
+            booking
+        });
+    } catch (error) {
+        next(error);
+    }
+};

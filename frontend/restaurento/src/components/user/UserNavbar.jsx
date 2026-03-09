@@ -40,8 +40,8 @@ const UserNavbar = () => {
                                 Explore
                             </Link>
                             <Link
-                                to="/bookings"
-                                className="text-gray-500 hover:text-[#ff5e00] transition-colors">
+                                to="/my-bookings"
+                                className="text-gray-500 hover:text-[#ff5e00] transition-colors font-medium">
                                 My Bookings
                             </Link>
                             <Link
@@ -105,7 +105,7 @@ const UserNavbar = () => {
                                 Explore
                             </Link>
                             <Link
-                                to="/bookings"
+                                to="/my-bookings"
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="block px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-[#ff5e00] rounded-lg">
                                 My Bookings

@@ -67,6 +67,7 @@ const UserRestaurantDetails = lazy(
 );
 const Wishlist = lazy(() => import("./pages/user/Wishlist"));
 const BookingSummary = lazy(() => import("./pages/user/BookingSummary"));
+const MyBookings = lazy(() => import("./pages/user/MyBookings"));
 
 function App() {
   const dispatch = useDispatch();
@@ -135,6 +136,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/booking-summary" element={<BookingSummary />} />
             </Route>
           </Route>

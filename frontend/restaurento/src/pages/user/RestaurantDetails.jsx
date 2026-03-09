@@ -10,7 +10,7 @@ import LocationViewer from "../../components/shared/LocationViewer";
 import ImageGallery from "../../components/shared/ImageGallery";
 import RestaurantMenu from "./RestaurantMenu";
 import RestaurantReviews from "./RestaurantReviews";
-import { TAX_RATE, PLATFORM_FEE_RATE } from "../../utils/constants";
+import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from "../../constants/constants";
 import { formatTime12Hour, formatDate } from "../../utils/timeUtils";
 import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
 import { showConfirm, showToast } from "../../utils/alert";
