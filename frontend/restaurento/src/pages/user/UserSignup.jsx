@@ -12,6 +12,9 @@ import { setCredentials } from "../../redux/slices/authSlice";
 import STATUS_CODES from "../../constants/statusCodes.js";
 
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema } from "../../schemas/authSchema";
+
 const UserSignup = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +31,9 @@ const UserSignup = () => {
         handleSubmit,
         watch,
         formState: { errors, isSubmitting }
-    } = useForm();
+    } = useForm({
+        resolver: zodResolver(signupSchema)
+    });
 
     const onSubmit = async (data) => {
         try {
@@ -109,7 +114,7 @@ const UserSignup = () => {
                                     : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your Full Name"
-                            {...register("fullName", { required: "Full name is required" })}
+                            {...register("fullName")}
                         />
                     </div>
                     {errors.fullName && <span className="text-red-500 text-xs mt-1">{errors.fullName.message}</span>}
@@ -129,13 +134,7 @@ const UserSignup = () => {
                                     : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your email address"
-                            {...register("email", {
-                                required: "Email is required",
-                                pattern: {
-                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: "Invalid email address"
-                                }
-                            })}
+                            {...register("email")}
                         />
                     </div>
                     {errors.email && <span className="text-red-500 text-xs mt-1">{errors.email.message}</span>}
@@ -155,17 +154,7 @@ const UserSignup = () => {
                                     : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your password"
-                            {...register("password", {
-                                required: "Password is required",
-                                minLength: {
-                                    value: 8,
-                                    message: "Password must be at least 8 characters"
-                                },
-                                pattern: {
-                                    value: /^(?=.*[A-Z])(?=.*\d)/,
-                                    message: "Password must contain at least 1 uppercase letter and 1 number"
-                                }
-                            })}
+                            {...register("password")}
                         />
                         <button
                             type="button"
@@ -192,14 +181,7 @@ const UserSignup = () => {
                                     : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your password"
-                            {...register("confirmPassword", {
-                                required: "Please confirm your password",
-                                validate: (val) => {
-                                    if (watch('password') != val) {
-                                        return "Your passwords do not match";
-                                    }
-                                }
-                            })}
+                            {...register("confirmPassword")}
                         />
                         <button
                             type="button"

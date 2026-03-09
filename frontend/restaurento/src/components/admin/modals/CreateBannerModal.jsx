@@ -1,11 +1,13 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { X, CloudUpload } from "lucide-react";
 import ImageCropper from "../../common/ImageCropper";
+import { bannerSchema } from "../../../schemas/bannerSchema";
 
 const CreateBannerModal = ({ isOpen, onClose, onCreate, isCreating, initialData }) => {
-    const { register, handleSubmit, setValue, watch, reset } = useForm({
+    const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
+        resolver: zodResolver(bannerSchema),
         defaultValues: {
             targetLink: "",
             isActive: true,
@@ -149,6 +151,7 @@ const CreateBannerModal = ({ isOpen, onClose, onCreate, isCreating, initialData 
                             {...register("targetLink")}
                             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#ff5e00]/20 focus:border-[#ff5e00] transition-all placeholder:text-gray-400"
                         />
+                        {errors.targetLink && <p className="text-red-500 text-xs mt-1">{errors.targetLink.message}</p>}
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl">

@@ -11,6 +11,9 @@ import { useDispatch } from "react-redux";
 import { setCredentials } from "../../redux/slices/authSlice";
 import ForgotPasswordModal from "../../components/modals/ForgotPasswordModal";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../../schemas/authSchema";
+
 const UserLogin = () => {
   const from = location.state?.from?.pathname || "/";
   const navigate = useNavigate();
@@ -23,7 +26,9 @@ const UserLogin = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm();
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
 
   const onSubmit = async (data) => {
     try {
@@ -105,13 +110,7 @@ const UserLogin = () => {
                 }
                             text-gray-900 placeholder-gray-400 text-sm`}
               placeholder="Enter your email address"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              })}
+              {...register("email")}
             />
           </div>
           {errors.email && (
@@ -139,13 +138,7 @@ const UserLogin = () => {
                 }
                             text-gray-900 placeholder-gray-400 text-sm`}
               placeholder="Enter your password"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters",
-                },
-              })}
+              {...register("password")}
             />
             <button
               type="button"

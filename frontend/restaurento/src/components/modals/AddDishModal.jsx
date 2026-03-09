@@ -2,13 +2,13 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check } from 'lucide-react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { singleDishSchema } from '../../schemas/onboardingSchema';
+import { menuSchema } from '../../schemas/menuSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import FileUploadCard from '../common/FileUploadCard';
 
 const AddDishModal = ({ onClose, onSave, initialData }) => {
     const methods = useForm({
-        resolver: zodResolver(singleDishSchema),
+        resolver: zodResolver(menuSchema),
         defaultValues: {
             name: "",
             price: "",

@@ -11,15 +11,18 @@ import {
     updateBanner
 } from "../../controllers/admin/banner.controller.js";
 
+import { validate } from "../../middlewares/validate.middleware.js";
+import { bannerSchema, updateBannerSchema } from "../../validators/banner.validator.js";
+
 const router = express.Router();
 const upload = multer({ storage: storage });
 
 router.use(verifyRole(ROLES.ADMIN));
 
-router.post("/", upload.single("image"), createBanner);
+router.post("/", upload.single("image"), validate(bannerSchema), createBanner);
 router.get("/", getAllBanners);
 router.patch("/:id/toggle", toggleBannerStatus);
-router.put("/:id", upload.single("image"), updateBanner);
+router.put("/:id", upload.single("image"), validate(updateBannerSchema), updateBanner);
 router.delete("/:id", deleteBanner);
 
 export default router;

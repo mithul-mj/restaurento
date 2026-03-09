@@ -6,6 +6,9 @@ import ROLES from "../../constants/roles.js";
 import multer from "multer";
 import { storage } from "../../config/cloudinary.config.js";
 
+import { validate } from "../../middlewares/validate.middleware.js";
+import { menuItemSchema, updateMenuItemSchema } from "../../validators/menu.validator.js";
+
 const router = express.Router();
 const upload = multer({ storage: storage });
 
@@ -16,8 +19,8 @@ router.patch("/profile", upload.array("images", 5), updateRestaurantProfile);
 router.patch("/settings", updateRestaurantSettings);
 
 router.get("/menu", getMenu);
-router.post("/menu", upload.single("image"), addMenuItem);
-router.patch("/menu/:itemId", upload.single("image"), updateMenuItem);
+router.post("/menu", upload.single("image"), validate(menuItemSchema), addMenuItem);
+router.patch("/menu/:itemId", upload.single("image"), validate(updateMenuItemSchema), updateMenuItem);
 router.patch("/menu/:itemId/toggle-availability", toggleItemAvailability);
 router.delete("/menu/:itemId", deleteMenuItem)
 

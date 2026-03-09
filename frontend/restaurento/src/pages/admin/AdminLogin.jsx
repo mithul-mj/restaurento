@@ -8,13 +8,18 @@ import authService from '../../services/auth.service';
 import { setCredentials } from '../../redux/slices/authSlice';
 import ForgotPasswordModal from "../../components/modals/ForgotPasswordModal";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../../schemas/authSchema";
+
 const AdminLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [serverError, setServerError] = useState("");
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+        resolver: zodResolver(loginSchema)
+    });
 
     const onSubmit = async (data) => {
         try {
@@ -55,13 +60,7 @@ const AdminLogin = () => {
                         className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
                         ${errors.email ? 'border-red-500 bg-red-50 focus:border-red-500' : 'border-gray-200 bg-white/90 md:bg-white focus:border-[#ff5e00]'}
                         text-gray-900 placeholder-gray-400 text-sm`}
-                        {...register("email", {
-                            required: "Email is required",
-                            pattern: {
-                                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                message: "Invalid email address"
-                            }
-                        })}
+                        {...register("email")}
                     />
                     {errors.email && <span className="text-red-500 text-xs mt-1 ml-1">{errors.email.message}</span>}
                 </div>
@@ -75,7 +74,7 @@ const AdminLogin = () => {
                             className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors pr-10
                             ${errors.password ? 'border-red-500 bg-red-50 focus:border-red-500' : 'border-gray-200 bg-white/90 md:bg-white focus:border-[#ff5e00]'}
                             text-gray-900 placeholder-gray-400 text-sm`}
-                            {...register("password", { required: "Password is required" })}
+                            {...register("password")}
                         />
                         <button
                             type="button"

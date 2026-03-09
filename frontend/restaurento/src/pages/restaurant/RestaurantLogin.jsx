@@ -10,6 +10,9 @@ import { setCredentials } from '../../redux/slices/authSlice';
 import { useGoogleLogin } from "@react-oauth/google";
 import ForgotPasswordModal from "../../components/modals/ForgotPasswordModal";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../../schemas/authSchema";
+
 const RestaurantLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
 
@@ -23,7 +26,9 @@ const RestaurantLogin = () => {
         register,
         handleSubmit,
         formState: { errors, isSubmitting }
-    } = useForm();
+    } = useForm({
+        resolver: zodResolver(loginSchema)
+    });
 
     const onSubmit = async (data) => {
         try {
@@ -84,13 +89,7 @@ const RestaurantLogin = () => {
                                     : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter restaurant email"
-                            {...register("email", {
-                                required: "Email is required",
-                                pattern: {
-                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: "Invalid email address"
-                                }
-                            })}
+                            {...register("email")}
                         />
                     </div>
                     {errors.email && <span className="text-red-500 text-xs mt-1">{errors.email.message}</span>}
@@ -110,9 +109,7 @@ const RestaurantLogin = () => {
                                     : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter password"
-                            {...register("password", {
-                                required: "Password is required",
-                            })}
+                            {...register("password")}
                         />
                         <button
                             type="button"
