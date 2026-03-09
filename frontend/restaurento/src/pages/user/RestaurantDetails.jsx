@@ -169,7 +169,8 @@ const RestaurantDetails = () => {
         const isToday = today.toISOString().split('T')[0] === selectedDate;
         if (isToday) {
             const currentMinutes = today.getHours() * 60 + today.getMinutes();
-            slots = slots.filter(start => start > currentMinutes);
+            // Filter slots based on the shared buffer constant
+            slots = slots.filter(start => start > currentMinutes + BOOKING_BUFFER_MINUTES);
         }
 
         if (slots.length === 0) {

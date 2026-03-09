@@ -9,7 +9,6 @@ import { getRealTimeAvailability } from '../../services/inventory.service.js';
 export const BookingRestaurant = async (req, res, next) => {
     try {
         const { restaurantId, bookingDate, slotTime, guests, preOrderItems } = req.body;
-
         const userId = req.user._id;
 
         const requestedDishIds = (preOrderItems || []).map(
@@ -24,6 +23,7 @@ export const BookingRestaurant = async (req, res, next) => {
                 $project: {
                     slotPrice: 1,
                     slotConfig: 1,
+                    openingHours: 1,
                     menuItems: {
                         $filter: {
                             input: "$menuItems",
@@ -35,28 +35,73 @@ export const BookingRestaurant = async (req, res, next) => {
                     }
                 }
             }
-        ])
+        ]);
 
         if (!restaurant) {
             return res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false, message: "Restaurant not found. "
-            })
+                success: false,
+                message: "Restaurant not found."
+            });
         }
 
-        // --- THE DYNAMIC AVAILABILITY CHECK ---
-        const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
+        // Validate booking date and time
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
 
-        // 1. Immediately delete their specific temporary Redis hold assuming they are verifying
+        const requestedDate = new Date(bookingDate);
+        const bookingDateMidnight = new Date(requestedDate);
+        bookingDateMidnight.setUTCHours(0, 0, 0, 0);
+
+        // 1. Check if the date is in the past
+        if (bookingDateMidnight < today) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "You cannot book for a past date."
+            });
+        }
+
+        if (bookingDateMidnight.getTime() === today.getTime()) {
+            const now = new Date();
+            const currentMinutes = (now.getHours() * 60) + now.getMinutes();
+            if (slotTime <= currentMinutes + BOOKING_BUFFER_MINUTES) {
+                return res.status(STATUS_CODES.BAD_REQUEST).json({
+                    success: false,
+                    message: `This time slot has already passed or is too soon. Please select a slot at least ${BOOKING_BUFFER_MINUTES / 60} hour from now.`
+                });
+            }
+        }
+
+        // Check if the restaurant is open on the requested day
+        const dayOfWeek = requestedDate.getDay();
+        const dayIndex = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+        const dayConfig = restaurant.openingHours?.days?.[dayIndex];
+
+        if (!dayConfig || dayConfig.isClosed) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "The restaurant is closed on this day."
+            });
+        }
+
+        const isValidSlot = dayConfig.generatedSlots?.some(slot => slot.startTime === parseInt(slotTime));
+        if (!isValidSlot) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "The selected time slot is invalid."
+            });
+        }
+
+        // Clear temporary hold and check final availability
+        const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
         await redisClient.del(holdKey);
 
-        // 2. Poll the absolute true availability without their own hold clogging the math
         const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
 
-        // 3. Prevent overbooking!
         if (trueAvailability < guests) {
             return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false, message: "Sorry, this slot no longer has enough seats available!"
-            })
+                success: false,
+                message: "Enough seats are no longer available for this slot."
+            });
         }
 
         const pricePerPerson = restaurant.slotPrice || 0;
@@ -81,6 +126,7 @@ export const BookingRestaurant = async (req, res, next) => {
                 }
             }
         }
+
         const subtotal = bookingFee + itemTotal;
         const tax = itemTotal * TAX_RATE;
         const platformFee = subtotal * PLATFORM_FEE_RATE;
@@ -100,17 +146,17 @@ export const BookingRestaurant = async (req, res, next) => {
             preOrderItems: verifiedPreOrderItems,
             status: 'approved',
             paymentStatus: 'pending'
-        })
+        });
 
         await booking.save();
 
         res.status(201).json({
             success: true,
-            message: "Booking request sent successfully",
+            message: "Booking initiated successfully.",
             booking
-        })
+        });
 
     } catch (error) {
-        next(error)
+        next(error);
     }
 }

@@ -2,6 +2,7 @@ import express from "express";
 
 import userAuthRoutes from "./user/auth.routes.js";
 import userProfileRoutes from "./user/user.routes.js";
+import userPaymentRoutes from "./user/payment.routes.js";
 import adminAuthRoutes from "./admin/auth.routes.js";
 import restaurantAuthRoutes from "./restaurant/auth.routes.js";
 import errorHandler from "../middlewares/errorHandler.middleware.js";
@@ -26,6 +27,7 @@ router.use("/api/v1/restaurant", restaurantRoutes);
 
 router.use("/api/v1/", userAuthRoutes);
 router.use("/api/v1/", userProfileRoutes);
+router.use("/api/v1/", userPaymentRoutes);
 
 router.use(errorHandler);
 

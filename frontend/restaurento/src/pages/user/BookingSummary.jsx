@@ -55,21 +55,55 @@ const BookingSummary = () => {
             const response = await userService.createBooking(bookingData);
 
             if (response.success) {
-                setIsBookingConfirmed(true);
-                showToast("Booking request sent successfully!", "success");
+                const bookingId = response.booking._id;
+                const orderRes = await userService.createRazorpayOrder(bookingId);
+                const order = orderRes.order;
 
-                if (socket && user) {
-                    socket.emit("confirm_booking", {
-                        restaurantId: restaurant._id,
-                        date: date,
-                        slotMinutes: initialData.timeSlotMinutes || timeSlot,
-                        seats: partySize,
-                        userId: user._id || user.id,
-                        bookingId: response.booking._id
-                    });
-                }
+                const options = {
+                    key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "Restaurento",
+                    description: "Table Booking Confirm",
+                    order_id: order.id,
+                    handler: async function (rzpResponse) {
+                        try {
+                            const verifyRes = await userService.verifyRazorpayPayment({
+                                razorpay_order_id: rzpResponse.razorpay_order_id,
+                                razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                                razorpay_signature: rzpResponse.razorpay_signature,
+                                bookingId: bookingId
+                            });
+                            if (verifyRes.success) {
+                                setIsBookingConfirmed(true);
+                                showToast("Payment Successful!", "success");
 
-                navigate('/');
+                                if (socket && user) {
+                                    socket.emit("confirm_booking", {
+                                        restaurantId: restaurant._id,
+                                        date: date,
+                                        slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                                        seats: partySize,
+                                        userId: user._id || user.id,
+                                        bookingId: bookingId
+                                    });
+                                }
+                                navigate('/');
+                            }
+                        } catch (err) {
+                            showToast("Payment verification failed", "error");
+                        }
+                    },
+                    theme: { color: "#ff5e00" }
+                };
+
+                const rzp = new window.Razorpay(options);
+
+                rzp.on('payment.failed', function (response) {
+                    showToast("Payment Failed or Cancelled", "error");
+                });
+
+                rzp.open();
             }
         } catch (error) {
             console.error("Booking error:", error);
@@ -175,7 +209,7 @@ const BookingSummary = () => {
                     {/* Left Column: Details */}
                     <div className="lg:col-span-2">
 
-                        {/* 1. Page Header */}
+                        {/* Header Section */}
                         <div className="mb-8">
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                                 Booking Summary
@@ -192,7 +226,7 @@ const BookingSummary = () => {
                             </div>
                         </div>
 
-                        {/* 2. Booking Details */}
+                        {/* Reservation Details */}
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Reservation Details</h3>
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="space-y-6 relative z-10">
@@ -224,7 +258,7 @@ const BookingSummary = () => {
                             </div>
                         </div>
 
-                        {/* 3. Pre-ordered Food Items */}
+                        {/* Pre-ordered Food Items */}
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Pre-ordered Items</h3>
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="relative z-10">
@@ -271,7 +305,7 @@ const BookingSummary = () => {
                             </div>
                         </div>
 
-                        {/* 4. Pricing Breakdown */}
+                        {/* Pricing Breakdown */}
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Pricing Breakdown</h3>
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="relative z-10">
@@ -297,14 +331,14 @@ const BookingSummary = () => {
                                     </div>
 
                                     <div className="pt-4 border-t border-dashed border-gray-100 flex justify-between items-center">
-                                        <p className="font-black text-gray-900">Final Amount <span className="text-xs text-gray-400 font-bold">(to be paid later)</span></p>
+                                        <p className="font-black text-gray-900">Final Amount</p>
                                         <p className="text-xl font-black text-gray-900">₹{totalAmount.toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 5. Restaurant Policies */}
+                        {/* Restaurant Policies */}
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Restaurant Policies</h3>
                         <div className="bg-gray-50 rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
                             <button

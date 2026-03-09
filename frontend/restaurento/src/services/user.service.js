@@ -65,6 +65,16 @@ const userService = {
   createBooking: async (bookingData) => {
     const response = await api.post("/booking", bookingData);
     return response.data
+  },
+  createRazorpayOrder: async (bookingId) => {
+    const response = await api.post("/payments/create-order", {
+      bookingId
+    });
+    return response.data
+  },
+  verifyRazorpayPayment: async (paymentData) => {
+    const response = await api.post("/payments/verify", paymentData);
+    return response.data;
   }
 
 };

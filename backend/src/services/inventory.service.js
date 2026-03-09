@@ -4,7 +4,7 @@ import { Booking } from "../models/Booking.model.js";
 import mongoose from "mongoose";
 
 const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes) => {
-    // 10-minute temporary holds key format string: hold:userId:restaurantId:date:slotMinutes:seats:seatsCount
+    // Redis key format: hold:userId:restaurantId:date:slotMinutes:seats:seatsCount
     const pattern = `hold:*:${restaurantId}:${date}:${slotMinutes}:seats:*`;
     const keys = await redisClient.keys(pattern);
     if (keys.length === 0) return 0;
@@ -15,7 +15,6 @@ const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes) => {
 };
 
 export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) => {
-    // 1. Get total seats for restaurant
     const restaurant = await Restaurant.findById(restaurantId).select("totalSeats");
     if (!restaurant) throw new Error("Restaurant not found");
     const totalSeats = restaurant.totalSeats || 0;
@@ -25,13 +24,14 @@ export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) =
     const nextDate = new Date(searchDate);
     nextDate.setDate(searchDate.getDate() + 1);
 
-    // 2. Query MongoDB for highly-accurate permanent bookings that overlap this specific minute!
+    // Get permanent bookings for this specific slot
     const approvedBookings = await Booking.aggregate([
         {
             $match: {
                 restaurantId: new mongoose.Types.ObjectId(restaurantId),
                 bookingDate: { $gte: searchDate, $lt: nextDate },
                 status: "approved",
+                paymentStatus: { $ne: "pending" }, // Don't count pending bookings as occupied seats
                 slotTime: { $lte: parseInt(slotMinutes) },
                 slotEndTime: { $gt: parseInt(slotMinutes) }
             }
@@ -46,13 +46,11 @@ export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) =
 
     const bookedGuests = approvedBookings.length > 0 ? approvedBookings[0].totalGuests : 0;
 
-    // 3. Query Redis for any unconfirmed temporary holds (users sitting on checkout page)
+    // Get temporary holds from Redis
     const activeHolds = await getActiveHoldsForSlot(restaurantId, date, slotMinutes);
 
-    // 4. Crunch the numbers: Total - Permanent Bookings - Temporary Holds
-    const available = Math.max(0, totalSeats - bookedGuests - activeHolds);
-
-    return available;
+    // Availability = Total - Permanent Bookings - Temporary Holds
+    return Math.max(0, totalSeats - bookedGuests - activeHolds);
 };
 
 export const getRealTimeAvailabilityMultiple = async (restaurantId, date, slotsArray) => {
