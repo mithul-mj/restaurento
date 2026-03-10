@@ -100,17 +100,11 @@ export const updateRestaurantProfile = async (req, res, next) => {
         if (!restaurant) {
             return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
         }
-
-        // Update basic fields
         if (description) restaurant.description = description;
         if (totalSeats) restaurant.totalSeats = Number(totalSeats);
         if (slotPrice) restaurant.slotPrice = Number(slotPrice);
-
-        // Update JSON fields
         if (slotConfig) restaurant.slotConfig = typeof slotConfig === 'string' ? JSON.parse(slotConfig) : slotConfig;
         if (openingHours) restaurant.openingHours = typeof openingHours === 'string' ? JSON.parse(openingHours) : openingHours;
-
-        // Update tags
         if (tags) {
             restaurant.tags = tags;
         }
@@ -526,4 +520,66 @@ export const verifyCheckIn = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
+
+export const getBookingById = async (req, res, next) => {
+    try {
+        const { bookingId } = req.params;
+        const restaurantId = req.user._id;
+
+        const booking = await Booking.findOne({
+            _id: bookingId,
+            restaurantId: restaurantId
+        }).populate("userId", "fullName email phone");
+
+        if (!booking) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                message: "Booking not found"
+            });
+        }
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            data: booking
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+export const updateBookingStatus = async (req, res, next) => {
+    try {
+        const { bookingId } = req.params;
+        const { status } = req.body;
+        const restaurantId = req.user._id;
+
+        const validStatuses = ["approved", "cancelled", "completed", "checked-in", "canceled"];
+        if (!validStatuses.includes(status)) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                message: "Invalid status"
+            });
+        }
+
+        const booking = await Booking.findOne({
+            _id: bookingId,
+            restaurantId: restaurantId
+        });
+
+        if (!booking) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                message: "Booking not found"
+            });
+        }
+
+        booking.status = status;
+        await booking.save();
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            message: "Booking status updated successfully",
+            data: booking
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

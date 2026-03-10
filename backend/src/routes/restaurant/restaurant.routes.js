@@ -9,7 +9,9 @@ import {
     deleteMenuItem, 
     updateRestaurantProfile, 
     verifyCheckIn,
-    getRestaurantBookings 
+    getRestaurantBookings,
+    getBookingById,
+    updateBookingStatus
 } from "../../controllers/restaurant/restaurant.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
@@ -35,6 +37,8 @@ router.patch("/menu/:itemId", upload.single("image"), validate(updateMenuItemSch
 router.patch("/menu/:itemId/toggle-availability", toggleItemAvailability);
 router.delete("/menu/:itemId", deleteMenuItem)
 router.get("/bookings", getRestaurantBookings);
+router.get("/bookings/:bookingId", getBookingById);
+router.patch("/bookings/:bookingId/status", updateBookingStatus);
 router.post("/bookings/verify-checkin", verifyCheckIn);
 
 export default router;

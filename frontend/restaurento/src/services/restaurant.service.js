@@ -59,6 +59,14 @@ const restaurantService = {
             params: { page, limit, status, search }
         });
         return response.data;
+    },
+    getBookingDetails: async (bookingId) => {
+        const response = await api.get(`/restaurant/bookings/${bookingId}`);
+        return response.data;
+    },
+    updateBookingStatus: async (bookingId, status) => {
+        const response = await api.patch(`/restaurant/bookings/${bookingId}/status`, { status });
+        return response.data;
     }
 }
 

@@ -18,6 +18,9 @@ const RestaurantLogin = lazy(
 const RestaurantDashboard = lazy(
   () => import("./pages/restaurant/RestaurantDashboard"),
 );
+const RestaurantBookingDetails = lazy(
+  () => import("./pages/restaurant/BookingDetails"),
+);
 const RestaurantSignup = lazy(
   () => import("./pages/restaurant/RestaurantSignup"),
 );
@@ -162,6 +165,7 @@ function App() {
               <Route element={<RestaurantLayout />}>
                 <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
                 <Route path="/restaurant/bookings" element={<Bookings />} />
+                <Route path="/restaurant/bookings/:id" element={<RestaurantBookingDetails />} />
                 <Route path="/restaurant/check-in" element={<Scanner />} />
                 <Route path="/restaurant/menu" element={<MenuPage />} />
                 <Route path="/restaurant/earnings" element={<Earnings />} />

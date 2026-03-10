@@ -5,6 +5,7 @@ import {
   ChevronRight,
   X,
   Calendar,
+  Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,10 +91,20 @@ const Bookings = () => {
           </div>
         </div>
 
+
+        <div className="hidden md:grid grid-cols-12 px-10 py-5 bg-gray-50/50 border-b border-gray-50">
+          <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</div>
+          <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule</div>
+          <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Guests</div>
+          <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Summary</div>
+          <div className="col-span-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</div>
+        </div>
+
         <div className="divide-y divide-gray-50">
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div
+                key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -102,53 +113,86 @@ const Bookings = () => {
                 <Loader size="medium" />
               </motion.div>
             ) : bookings.length > 0 ? (
-              bookings.map((booking) => (
-                <motion.div
-                  key={booking._id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="p-6 group hover:bg-gray-50/50 transition-colors flex flex-col md:grid md:grid-cols-12 md:items-center gap-6"
-                >
-                  <div className="md:col-span-4 space-y-1">
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight">
-                      {booking.user?.fullName}
-                    </h3>
-                    <div className="flex flex-col text-sm font-medium text-gray-500">
-                      <span>{formatDate(booking.bookingDate)} @ {formatTime12Hour(booking.slotTime)}</span>
-                      <span>{booking.guests} Guests</span>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-5 flex flex-col items-start gap-2">
-                    <span className="text-sm font-medium text-gray-600">
-                      Pre-order: {booking.preOrderItems?.length > 0
-                        ? booking.preOrderItems.map(item => `${item.qty}x ${item.name}`).join(", ")
-                        : "None"}
-                    </span>
-                  </div>
-
-                  <div className="md:col-span-3 flex justify-end">
-                    <button
-                      onClick={() => navigate(`/restaurant/bookings/${booking._id}`)}
-                      className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
               <motion.div
+                key="content"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-20 text-center"
+                exit={{ opacity: 0 }}
+                className="divide-y divide-gray-50"
               >
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="text-gray-300" size={32} />
+                {bookings.map((booking) => (
+                  <motion.div
+                    key={booking._id}
+                    className="p-6 md:px-10 md:py-8 group hover:bg-gray-50/50 transition-colors flex flex-col md:grid md:grid-cols-12 md:items-center gap-4 md:gap-6"
+                  >
+                    <div className="md:col-span-3 flex justify-between items-start md:block">
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-gray-900 text-lg tracking-tight">
+                          {booking.user?.fullName}
+                        </h3>
+                      </div>
+                      <div className="md:hidden">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          booking.status === 'approved' ? 'bg-blue-100 text-blue-500' :
+                          booking.status === 'checked-in' ? 'bg-green-100 text-green-600' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>
+                          {booking.status === 'approved' ? 'Upcoming' : booking.status.replace('-', ' ')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-3 flex items-center justify-between md:block">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest md:hidden">Schedule</span>
+                      <div className="flex flex-col text-right md:text-left">
+                        <span className="text-sm font-bold text-gray-900">{formatDate(booking.bookingDate, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        <span className="text-xs font-medium text-gray-400">{formatTime12Hour(booking.slotTime)}</span>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 flex items-center justify-between md:block">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest md:hidden">Guests</span>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-gray-100 rounded-lg shadow-sm">
+                        <Users size={12} className="text-gray-400" />
+                        <span className="text-xs font-bold text-gray-900">{booking.guests} People</span>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 flex items-center justify-between md:block">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest md:hidden">Order</span>
+                      <div className="flex flex-col text-right md:text-left">
+                        <span className="text-sm font-black text-gray-900">₹{booking.totalAmount?.toFixed(2)}</span>
+                        <span className="text-[10px] font-bold text-orange-500/80 uppercase tracking-tight">
+                          {booking.preOrderItems?.length || 0} items
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 flex justify-end mt-2 md:mt-0">
+                      <button
+                        onClick={() => navigate(`/restaurant/bookings/${booking._id}`)}
+                        className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-900 text-white rounded-xl text-xs font-black hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-gray-200"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-24 text-center"
+              >
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Calendar className="text-gray-200" size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">No bookings found</h3>
-                <p className="text-gray-500 font-medium">
-                  Try changing your search or filter.
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">No bookings found</h3>
+                <p className="text-gray-400 font-medium max-w-xs mx-auto">
+                  Try adjusting your search or filters to find what you're looking for.
                 </p>
               </motion.div>
             )}
