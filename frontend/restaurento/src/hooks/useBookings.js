@@ -29,3 +29,11 @@ export const useBookings = ({ type = 'upcoming', page = 1, limit = 3 }) => {
         isCanceling: cancelBookingMutation.isPending
     };
 };
+
+export const useBookingDetails = (id) => {
+    return useQuery({
+        queryKey: ["booking", id],
+        queryFn: () => userService.getBookingDetails(id),
+        enabled: !!id,
+    });
+};

@@ -54,6 +54,11 @@ const userSchema = new Schema(
       type: String,
       unique: true,
     },
+    referredBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true }
 );
@@ -62,12 +67,15 @@ userSchema.plugin(authPlugin, { role: "USER" });
 
 userSchema.pre("save", async function () {
   if (!this.referralCode) {
-    const hash = crypto
+    const namePart = this.fullName.replace(/\s+/g, '').slice(0, 4).toUpperCase();
+    const hashPart = crypto
       .createHash("sha256")
       .update(this._id.toString())
-      .digest("base64url");
+      .digest("hex")
+      .slice(0, 6)
+      .toUpperCase();
 
-    this.referralCode = "RESTO" + hash.slice(0, 6).toUpperCase();
+    this.referralCode = `${namePart}${hashPart}`;
   }
 });
 

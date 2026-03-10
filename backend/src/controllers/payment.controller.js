@@ -3,6 +3,8 @@ import crypto from 'crypto'
 import { env } from '../config/env.config.js';
 import { Booking } from '../models/Booking.model.js';
 import STATUS_CODES from '../constants/statusCodes.js';
+import { sendEmail } from '../services/commonAuth.service.js';
+import { getBookingConfirmationEmailTemplate } from '../utils/emailTemplates.js';
 
 const razorpayInstance = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -45,10 +47,30 @@ export const verifyRazorpayPayment = async (req, res) => {
             .digest("hex");
 
         if (expectedSignature === razorpay_signature) {
-            await Booking.findByIdAndUpdate(bookingId, {
-                paymentStatus: 'paid',
-                transactionId: razorpay_payment_id
-            });
+            const booking = await Booking.findByIdAndUpdate(
+                bookingId,
+                {
+                    paymentStatus: 'paid',
+                    transactionId: razorpay_payment_id
+                },
+                { new: true }
+            )
+                .populate('userId', 'fullName email')
+                .populate('restaurantId', 'restaurantName address');
+
+            if (booking && booking.userId && booking.restaurantId) {
+                try {
+                    const user = booking.userId;
+                    const restaurant = booking.restaurantId;
+                    const html = getBookingConfirmationEmailTemplate(booking, restaurant, user.fullName);
+                    const subject = `Booking Confirmed: ${restaurant.restaurantName}`;
+                    const text = `Your booking at ${restaurant.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()}.`;
+
+                    await sendEmail(user.email, subject, text, html);
+                } catch (emailError) {
+                    console.error("Failed to send confirmation email:", emailError);
+                }
+            }
 
             res.status(STATUS_CODES.OK).json({ success: true, message: "Payment successful!" });
         } else {

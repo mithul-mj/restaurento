@@ -49,6 +49,10 @@ const restaurantService = {
     deleteMenuItem: async (itemId) => {
         const response = await api.delete(`/restaurant/menu/${itemId}`);
         return response.data;
+    },
+    verifyCheckIn: async (token) => {
+        const response = await api.post("/restaurant/bookings/verify-checkin", { token });
+        return response.data;
     }
 }
 

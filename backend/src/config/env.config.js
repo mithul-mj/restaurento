@@ -74,6 +74,7 @@ const envSchema = z.object({
   RAZORPAY_KEY_ID: z.string().min(1, "RAZORPAY_KEY_ID is required"),
   RAZORPAY_KEY_SECRET: z.string().min(1, "RAZORPAY_KEY_SECRET is required"),
 
+  QR_CODE_SECRET: z.string().min(1, "QR_CODE_SECRET is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);

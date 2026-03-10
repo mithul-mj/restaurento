@@ -82,6 +82,10 @@ const userService = {
     });
     return response.data;
   },
+  getBookingDetails: async (bookingId) => {
+    const response = await api.get(`/bookings/${bookingId}`);
+    return response.data;
+  },
   cancelBooking: async (bookingId) => {
     const response = await api.patch(`/bookings/${bookingId}/cancel`);
     return response.data;

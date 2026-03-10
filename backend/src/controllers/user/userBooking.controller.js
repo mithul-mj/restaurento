@@ -143,6 +143,9 @@ export const BookingRestaurant = async (req, res, next) => {
             slotEndTime,
             guests,
             totalAmount: finalTotal,
+            slotPrice: pricePerPerson,
+            tax,
+            platformFee,
             preOrderItems: verifiedPreOrderItems,
             status: 'approved',
             paymentStatus: 'pending'
@@ -250,6 +253,65 @@ export const getMyBookings = async (req, res, next) => {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(totalCount / parseInt(limit)),
             }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getBookingDetails = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+        const bookings = await Booking.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(id),
+                    userId: new mongoose.Types.ObjectId(userId)
+                }
+            },
+            {
+                $lookup: {
+                    from: "restaurants",
+                    localField: "restaurantId",
+                    foreignField: "_id",
+                    as: "restaurant"
+                }
+            },
+            { $unwind: "$restaurant" },
+            {
+                $addFields: {
+                    restaurant: {
+                        _id: "$restaurant._id",
+                        restaurantName: "$restaurant.restaurantName",
+                        address: "$restaurant.address",
+                        restaurantPhone: "$restaurant.restaurantPhone",
+                        email: "$restaurant.email",
+                        location: "$restaurant.location",
+                        slotPrice: "$restaurant.slotPrice",
+                        images: { $slice: ["$restaurant.images", 1] }
+                    }
+                }
+            },
+            {
+                $project: {
+                    restaurantId: 0,
+                    userId: 0,
+                    __v: 0
+                }
+            }
+        ]);
+
+        if (!bookings.length) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                success: false,
+                message: "Booking not found."
+            });
+        }
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            data: bookings[0]
         });
     } catch (error) {
         next(error);

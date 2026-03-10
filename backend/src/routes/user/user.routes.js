@@ -2,7 +2,8 @@ import express from "express";
 import {
     BookingRestaurant,
     getMyBookings,
-    cancelBooking
+    cancelBooking,
+    getBookingDetails
 } from "../../controllers/user/userBooking.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
@@ -46,6 +47,7 @@ router.patch("/profile/change-email/verify", verifyEmailChange);
 
 router.post("/booking", validate(createBookingSchema), BookingRestaurant);
 router.get("/bookings", getMyBookings);
+router.get("/bookings/:id", getBookingDetails);
 router.patch("/bookings/:id/cancel", cancelBooking);
 
 export default router;

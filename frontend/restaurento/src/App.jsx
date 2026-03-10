@@ -26,6 +26,7 @@ const RestaurantOnboarding = lazy(
 );
 const NotFound = lazy(() => import("./pages/NotFound"));
 const EditRestaurant = lazy(() => import("./pages/restaurant/EditRestaurant"));
+const Scanner = lazy(() => import("./pages/restaurant/Scanner"));
 
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthFailed } from "./redux/slices/authSlice";
@@ -68,6 +69,7 @@ const UserRestaurantDetails = lazy(
 const Wishlist = lazy(() => import("./pages/user/Wishlist"));
 const BookingSummary = lazy(() => import("./pages/user/BookingSummary"));
 const MyBookings = lazy(() => import("./pages/user/MyBookings"));
+const BookingDetails = lazy(() => import("./pages/user/BookingDetails"));
 
 function App() {
   const dispatch = useDispatch();
@@ -137,6 +139,7 @@ function App() {
               <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/my-bookings/:id" element={<BookingDetails />} />
               <Route path="/booking-summary" element={<BookingSummary />} />
             </Route>
           </Route>
@@ -157,11 +160,9 @@ function App() {
               />
 
               <Route element={<RestaurantLayout />}>
-                <Route
-                  path="/restaurant/dashboard"
-                  element={<RestaurantDashboard />}
-                />
+                <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
                 <Route path="/restaurant/bookings" element={<Bookings />} />
+                <Route path="/restaurant/check-in" element={<Scanner />} />
                 <Route path="/restaurant/menu" element={<MenuPage />} />
                 <Route path="/restaurant/earnings" element={<Earnings />} />
                 <Route path="/restaurant/wallet" element={<WalletPage />} />

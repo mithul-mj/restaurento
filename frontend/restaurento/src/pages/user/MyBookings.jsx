@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
     Calendar,
     Clock,
@@ -45,7 +46,7 @@ const MyBookings = () => {
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
             <header className="mb-10">
-                <h1 className="text-3xl font-black text-gray-900 mb-6">My Bookings</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">My Bookings</h1>
 
                 {/* Tabs */}
                 <div className="flex gap-8 border-b border-gray-100">
@@ -116,7 +117,7 @@ const MyBookings = () => {
                 {/* Pagination */}
                 {meta.totalPages > 1 && (
                     <div className="flex items-center justify-between pt-8 border-t border-gray-100">
-                        <p className="text-xs font-bold text-gray-400">
+                        <p className="text-xs font-semibold text-gray-400">
                             Page {meta.currentPage} of {meta.totalPages}
                         </p>
                         <div className="flex gap-3">
@@ -162,10 +163,10 @@ const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
                 <div className="flex-1 flex flex-col justify-between">
                     <div>
                         <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-xl font-black text-gray-900 leading-none">
+                            <h3 className="text-xl font-bold text-gray-900 leading-none">
                                 {restaurant?.restaurantName}
                             </h3>
-                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isCanceled
+                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isCanceled
                                 ? "bg-red-50 text-red-500 border border-red-100"
                                 : "bg-green-50 text-green-600 border border-green-100"
                                 }`}>
@@ -200,9 +201,12 @@ const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
                                 Cancel Booking
                             </button>
                         )}
-                        <button className="px-6 py-2.5 bg-[#ff5e00] text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all">
+                        <Link
+                            to={`/my-bookings/${booking._id}`}
+                            className="px-6 py-2.5 bg-[#ff5e00] text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all"
+                        >
                             View Details
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>

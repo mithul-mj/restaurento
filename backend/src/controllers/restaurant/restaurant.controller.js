@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 import ROLES from "../../constants/roles.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
-
+import jwt from 'jsonwebtoken';
+import { env } from "../../config/env.config.js";
+import { Booking } from "../../models/Booking.model.js";
 
 export const preApprovalRestaurant = async (req, res, next) => {
     try {
@@ -69,7 +71,6 @@ export const preApprovalRestaurant = async (req, res, next) => {
         next(error);
     }
 };
-
 
 export const getRestaurantProfile = async (req, res, next) => {
     try {
@@ -138,7 +139,6 @@ export const updateRestaurantProfile = async (req, res, next) => {
             }
         }
 
-        // 2. Add new uploaded images
         if (req.files && req.files.length > 0) {
             const newImageUrls = req.files.map(file => file.path);
             currentImages = [...currentImages, ...newImageUrls];
@@ -372,5 +372,70 @@ export const deleteMenuItem = async (req, res, next) => {
 
     } catch (error) {
         next(error)
+    }
+}
+
+export const verifyCheckIn = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        const restaurantId = req.user._id;
+
+        if (!token) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                message: 'No token found'
+            });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, env.QR_CODE_SECRET);
+        } catch (error) {
+            return res.status(STATUS_CODES.UNAUTHORIZED).json({
+                message: "Invalid or expired QR code"
+            });
+        }
+
+        const { bid, rid } = decoded;
+        if (!bid || !rid) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                message: "Invalid token payload"
+            });
+        }
+
+        if (rid !== restaurantId.toString()) {
+            return res.status(STATUS_CODES.FORBIDDEN).json({
+                message: "Unauthorized: this booking belongs to another restaurant"
+            });
+        }
+
+        const booking = await Booking.findById(bid).populate("userId", "fullName email");
+        if (!booking) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                message: "Booking record not found"
+            });
+        }
+
+        if (booking.status === "checked-in") {
+            return res.status(STATUS_CODES.CONFLICT).json({ message: "Guest is already checked-in" });
+        }
+
+        if (booking.paymentStatus !== "paid") {
+            return res.status(STATUS_CODES.PAYMENT_REQUIRED).json({ message: "Payment has not been completed for this booking" });
+        }
+
+        booking.status = "checked-in";
+        await booking.save();
+
+        return res.status(STATUS_CODES.OK).json({
+            success: true,
+            message: "Check-in successful!",
+            guest: {
+                name: booking.userId?.fullName || "Guest",
+                guests: booking.guests,
+                preOrders: booking.preOrderItems?.length || 0
+            }
+        });
+    } catch (error) {
+        next(error);
     }
 }

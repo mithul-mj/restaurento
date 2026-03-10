@@ -1,12 +1,34 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { Bell, Heart, Menu, X } from "lucide-react";
 import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
 
 const UserNavbar = () => {
     const { user, avatar } = useSelector((state) => state.auth);
-
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isJumping, setIsJumping] = useState(false);
+
+    const logoLetters = "Restauranto".split("");
+
+    const handleLogoClick = () => {
+        if (isJumping) return;
+        setIsJumping(true);
+        setTimeout(() => setIsJumping(false), 800); // Reset after animation duration
+    };
+
+    const letterVariants = {
+        jump: (i) => ({
+            y: [0, -18, 0],
+            transition: {
+                duration: 0.6,
+                times: [0, 0.4, 1],
+                delay: i * 0.04,
+                ease: "easeInOut"
+            }
+        }),
+        initial: { y: 0 }
+    };
 
     return (
         <nav className="sticky top-0 z-[100] bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3">
@@ -27,28 +49,44 @@ const UserNavbar = () => {
                             <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
                         </svg>
                     </div>
-                    <span className="font-bold text-xl text-gray-900 tracking-tight">
-                        Restauranto
-                    </span>
+                    <motion.div
+                        className="font-bold text-xl text-gray-900 tracking-tight flex cursor-pointer"
+                        onClick={handleLogoClick}
+                        animate={isJumping ? "jump" : "initial"}
+                    >
+                        {logoLetters.map((char, i) => (
+                            <motion.span
+                                key={i}
+                                custom={i}
+                                variants={letterVariants}
+                                className="inline-block"
+                            >
+                                {char}
+                            </motion.span>
+                        ))}
+                    </motion.div>
                 </Link>
                 {user ? (
                     <>
                         <div className="hidden md:flex items-center gap-8">
-                            <Link
-                                to="/"
-                                className="text-gray-900 font-medium hover:text-[#ff5e00] transition-colors">
-                                Explore
-                            </Link>
-                            <Link
-                                to="/my-bookings"
-                                className="text-gray-500 hover:text-[#ff5e00] transition-colors font-medium">
-                                My Bookings
-                            </Link>
-                            <Link
-                                to="/offers"
-                                className="text-gray-500 hover:text-[#ff5e00] transition-colors">
-                                Offers
-                            </Link>
+                            {[
+                                { to: "/", label: "Explore" },
+                                { to: "/my-bookings", label: "My Bookings" },
+                                { to: "/offers", label: "Offers" }
+                            ].map((link) => (
+                                <NavLink
+                                    key={link.to}
+                                    to={link.to}
+                                    className={({ isActive }) =>
+                                        `text-sm font-medium transition-all duration-200 ${isActive
+                                            ? "text-[#ff5e00] border-b-2 border-[#ff5e00] pb-1"
+                                            : "text-gray-500 hover:text-gray-900"
+                                        }`
+                                    }
+                                >
+                                    {link.label}
+                                </NavLink>
+                            ))}
                         </div>
 
                         <div className="hidden md:flex items-center gap-4">
@@ -98,30 +136,26 @@ const UserNavbar = () => {
                 <div className="absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-lg md:hidden pt-4 pb-6 px-4 space-y-3 animate-in fade-in slide-in-from-top-5 duration-200 z-[90]">
                     {user ? (
                         <>
-                            <Link
-                                to="/"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-4 py-2 text-gray-900 font-medium hover:bg-gray-50 rounded-lg">
-                                Explore
-                            </Link>
-                            <Link
-                                to="/my-bookings"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-[#ff5e00] rounded-lg">
-                                My Bookings
-                            </Link>
-                            <Link
-                                to="/offers"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-[#ff5e00] rounded-lg">
-                                Offers
-                            </Link>
-                            <Link
-                                to="/wishlist"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-[#ff5e00] rounded-lg">
-                                Wishlist
-                            </Link>
+                            {[
+                                { to: "/", label: "Explore" },
+                                { to: "/my-bookings", label: "My Bookings" },
+                                { to: "/offers", label: "Offers" },
+                                { to: "/wishlist", label: "Wishlist" }
+                            ].map((link) => (
+                                <NavLink
+                                    key={link.to}
+                                    to={link.to}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={({ isActive }) =>
+                                        `block px-4 py-2 rounded-lg font-lig transition-all ${isActive
+                                            ? "bg-orange-50 text-[#ff5e00]"
+                                            : "text-gray-500 hover:bg-gray-50"
+                                        }`
+                                    }
+                                >
+                                    {link.label}
+                                </NavLink>
+                            ))}
                             <div className="border-t border-gray-100 my-2 pt-2">
                                 <Link
                                     to="/profile"

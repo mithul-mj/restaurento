@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import jwt from 'jsonwebtoken'
+import { env } from "../config/env.config.js";
 
 const bookingSchema = new Schema(
     {
@@ -17,11 +19,11 @@ const bookingSchema = new Schema(
             required: true,
         },
         slotTime: {
-            type: Number, // Stored as minutes since midnight (e.g. 840 for 2:00 PM)
+            type: Number,
             required: true,
         },
         slotEndTime: {
-            type: Number, // Exact minute the table should be cleared
+            type: Number,
             required: true,
         },
         guests: {
@@ -31,7 +33,7 @@ const bookingSchema = new Schema(
         },
         status: {
             type: String,
-            enum: ["approved", "canceled"],
+            enum: ["approved", "canceled", "checked-in"],
             default: "approved",
             required: true,
         },
@@ -45,6 +47,22 @@ const bookingSchema = new Schema(
             type: Number,
             required: true,
         },
+        slotPrice: {
+            type: Number,
+            required: true,
+        },
+        tax: {
+            type: Number,
+            required: true,
+        },
+        platformFee: {
+            type: Number,
+            required: true,
+        },
+        checkInToken: {
+            type: String,
+            unique: true,
+        },
         preOrderItems: [
             {
                 dishId: { type: Schema.Types.ObjectId },
@@ -56,5 +74,17 @@ const bookingSchema = new Schema(
     },
     { timestamps: true }
 );
+
+bookingSchema.pre('save', function () {
+    if (this.isNew) {
+        const payload = {
+            bid: this._id,
+            rid: this.restaurantId,
+            uid: this.userId,
+            exp: Math.floor(new Date(this.bookingDate).getTime() / 1000) + (this.slotEndTime * 60)
+        };
+        this.checkInToken = jwt.sign(payload, env.QR_CODE_SECRET);
+    }
+});
 
 export const Booking = mongoose.model("Booking", bookingSchema);

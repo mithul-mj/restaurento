@@ -8,7 +8,8 @@ import {
     Bell,
     Settings,
     X,
-    LogOut
+    LogOut,
+    Maximize
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -20,6 +21,7 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
     const menuItems = [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/restaurant/dashboard' },
         { id: 'bookings', icon: CalendarDays, label: 'Bookings', path: '/restaurant/bookings' },
+        { id: 'check-in', icon: Maximize, label: 'Scan & Check-in', path: '/restaurant/check-in' },
         { id: 'menu', icon: UtensilsCrossed, label: 'Menu', path: '/restaurant/menu' },
         { id: 'earnings', icon: TrendingUp, label: 'Earnings', path: '/restaurant/earnings' },
         { id: 'wallet', icon: Wallet, label: 'Wallet & Payout', path: '/restaurant/wallet' },

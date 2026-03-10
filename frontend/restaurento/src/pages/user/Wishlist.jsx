@@ -34,7 +34,7 @@ function WishlistCard({ restaurant, onRemove }) {
             <div className="p-6 flex flex-col gap-4 flex-1">
                 <div className="flex justify-between items-start min-h-[56px]">
                     <div className="flex-1 mr-4">
-                        <h3 className="text-xl font-extrabold text-gray-900 leading-tight line-clamp-2">{restaurant.restaurantName}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 leading-tight line-clamp-2">{restaurant.restaurantName}</h3>
                     </div>
                     <button
                         onClick={onRemove}
@@ -45,7 +45,7 @@ function WishlistCard({ restaurant, onRemove }) {
                 </div>
 
                 <div className="bg-[#f8fafc] rounded-2xl p-5 border border-gray-100/50">
-                    <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] mb-4">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-4">
                         <Utensils size={12} className="text-[#ff5e00]" />
                         Pre-ordered Items
                     </div>
@@ -54,7 +54,7 @@ function WishlistCard({ restaurant, onRemove }) {
                             restaurant.items.map((item, i) => (
                                 <div key={i} className="flex justify-between items-center">
                                     <span className="text-sm font-semibold text-gray-700 truncate mr-4">{item.dishDetails?.name || "Dish"}</span>
-                                    <span className="px-2 py-0.5 bg-orange-100 text-[#ff5e00] text-[10px] font-black rounded-lg shrink-0">
+                                    <span className="px-2 py-0.5 bg-orange-100 text-[#ff5e00] text-[10px] font-bold rounded-lg shrink-0">
                                         x{item.qty}
                                     </span>
                                 </div>
@@ -132,7 +132,7 @@ export default function Wishlist() {
 
                 <div className="flex justify-between items-start mb-8">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 mb-1">My Wishlist</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-1">My Wishlist</h1>
                         <p className="text-gray-500 text-sm">Your saved restaurants and pre-planned meals.</p>
                     </div>
                 </div>
