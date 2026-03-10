@@ -53,6 +53,12 @@ const restaurantService = {
     verifyCheckIn: async (token) => {
         const response = await api.post("/restaurant/bookings/verify-checkin", { token });
         return response.data;
+    },
+    getBookings: async ({ page, limit, status, search }) => {
+        const response = await api.get("/restaurant/bookings", {
+            params: { page, limit, status, search }
+        });
+        return response.data;
     }
 }
 

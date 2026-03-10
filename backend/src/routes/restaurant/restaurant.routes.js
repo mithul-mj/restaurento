@@ -1,5 +1,16 @@
 import express from "express";
-import { getRestaurantProfile, updateRestaurantSettings, getMenu, toggleItemAvailability, updateMenuItem, addMenuItem, deleteMenuItem, updateRestaurantProfile, verifyCheckIn } from "../../controllers/restaurant/restaurant.controller.js";
+import { 
+    getRestaurantProfile, 
+    updateRestaurantSettings, 
+    getMenu, 
+    toggleItemAvailability, 
+    updateMenuItem, 
+    addMenuItem, 
+    deleteMenuItem, 
+    updateRestaurantProfile, 
+    verifyCheckIn,
+    getRestaurantBookings 
+} from "../../controllers/restaurant/restaurant.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
 
@@ -23,6 +34,7 @@ router.post("/menu", upload.single("image"), validate(menuItemSchema), addMenuIt
 router.patch("/menu/:itemId", upload.single("image"), validate(updateMenuItemSchema), updateMenuItem);
 router.patch("/menu/:itemId/toggle-availability", toggleItemAvailability);
 router.delete("/menu/:itemId", deleteMenuItem)
+router.get("/bookings", getRestaurantBookings);
 router.post("/bookings/verify-checkin", verifyCheckIn);
 
 export default router;

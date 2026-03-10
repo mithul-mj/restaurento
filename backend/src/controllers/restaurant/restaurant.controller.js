@@ -115,14 +115,10 @@ export const updateRestaurantProfile = async (req, res, next) => {
             restaurant.tags = tags;
         }
 
-        // Handle Images
         let currentImages = [];
-        // 1. Keep existing images that were sent back
         if (existingImages) {
             try {
-                // If it's a string, try to parse it (in case it came as JSON array string)
                 if (typeof existingImages === 'string') {
-                    // Try to parse if it looks like JSON array
                     if (existingImages.startsWith('[') && existingImages.endsWith(']')) {
                         currentImages = JSON.parse(existingImages);
                     } else {
@@ -134,7 +130,6 @@ export const updateRestaurantProfile = async (req, res, next) => {
                     currentImages = [existingImages];
                 }
             } catch (e) {
-                // If parsing fails, it might be a single string URL
                 currentImages = Array.isArray(existingImages) ? existingImages : [existingImages];
             }
         }
@@ -373,7 +368,100 @@ export const deleteMenuItem = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
+
+export const getRestaurantBookings = async (req, res, next) => {
+    try {
+        const restaurantId = req.user._id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = (req.query.search || "").trim();
+        const status = req.query.status || "all";
+
+        const skip = (page - 1) * limit;
+
+        const matchQuery = { 
+            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+            $or: [
+                { paymentStatus: "paid" },
+                { status: "canceled" }
+            ]
+        };
+
+        if (status !== "all") {
+            const now = new Date();
+            const today = new Date(now);
+            today.setUTCHours(0, 0, 0, 0);
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            if (status === "upcoming") {
+                matchQuery.status = "approved";
+                matchQuery.$or = [
+                    { bookingDate: { $gt: today } },
+                    {
+                        bookingDate: { $eq: today },
+                        slotTime: { $gt: currentMinutes }
+                    }
+                ];
+            } else if (status === "completed") {
+                matchQuery.status = "checked-in";
+            } else if (status === "cancelled") {
+                matchQuery.status = "canceled";
+            }
+        }
+
+        const aggregate = [
+            { $match: matchQuery },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            { $unwind: "$user" }
+        ];
+
+        if (search) {
+            aggregate.push({
+                $match: {
+                    $or: [
+                        { "user.fullName": { $regex: search, $options: "i" } },
+                        { "user.email": { $regex: search, $options: "i" } }
+                    ]
+                }
+            });
+        }
+
+        const result = await Booking.aggregate([
+            ...aggregate,
+            { $sort: { bookingDate: -1, slotTime: -1 } },
+            {
+                $facet: {
+                    metadata: [{ $count: "total" }],
+                    data: [{ $skip: skip }, { $limit: limit }]
+                }
+            }
+        ]);
+
+        const total = result[0].metadata[0]?.total || 0;
+        const bookings = result[0].data || [];
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            data: bookings,
+            meta: {
+                totalCount: total,
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                perPage: limit
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 export const verifyCheckIn = async (req, res, next) => {
     try {
