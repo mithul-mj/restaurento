@@ -15,6 +15,7 @@ export const signupSchema = z.object({
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
         .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
+    referralCode: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],

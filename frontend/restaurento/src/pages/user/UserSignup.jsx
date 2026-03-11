@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { showError, showToast, showSuccess } from "../../utils/alert";
 import { Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AuthLayout from '../../components/layouts/AuthLayout';
 import authService from '../../services/auth.service';
@@ -17,6 +17,8 @@ import { signupSchema } from "../../schemas/authSchema";
 
 const UserSignup = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams()
+    const referralUrlCode = searchParams.get('ref');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const dispatch = useDispatch();
@@ -32,7 +34,9 @@ const UserSignup = () => {
         watch,
         formState: { errors, isSubmitting }
     } = useForm({
-        resolver: zodResolver(signupSchema)
+        resolver: zodResolver(signupSchema), defaultValues: {
+            referralCode: referralUrlCode || ""
+        }
     });
 
     const onSubmit = async (data) => {
@@ -70,10 +74,11 @@ const UserSignup = () => {
 
     const handleGoogleSuccess = async (tokenResponse) => {
         try {
-            const response = await authService.googleLogin(tokenResponse.access_token, 'USER');
+            const response = await authService.googleLogin(tokenResponse.access_token, 'USER', referralUrlCode);
             dispatch(setCredentials({
                 user: response.data.user,
-                role: 'USER'
+                role: 'USER',
+                avatar: response.data.user.avatar
             }))
             showToast("Login Successful", "success");
         } catch (error) {
@@ -195,8 +200,14 @@ const UserSignup = () => {
                 </div>
 
                 <div className="hidden">
-
+                    <input type="hidden" {...register("referralCode")} />
                 </div>
+
+                {referralUrlCode && (
+                    <div className="bg-orange-500/10 border border-orange-500/40 text-[#ff5e00] px-4 py-3 rounded-lg text-sm font-bold text-center">
+                        🎁 Referral Code Applied: {referralUrlCode}
+                    </div>
+                )}
 
                 <button
                     type="submit"

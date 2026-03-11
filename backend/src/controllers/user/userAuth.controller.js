@@ -24,6 +24,8 @@ export const registerUser = async (req, res, next) => {
         fullName: newUser.fullName,
         email: newUser.email,
         role: ROLES.USER,
+        walletBalance: newUser.walletBalance,
+        referralCode: newUser.referralCode
       },
     });
   } catch (error) {
@@ -34,7 +36,7 @@ export const registerUser = async (req, res, next) => {
 const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 export const googleAuthUser = async (req, res, next) => {
-  const { token } = req.body;
+  const { token, referralCode } = req.body;
   try {
     const response = await fetch(
       `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
@@ -59,6 +61,18 @@ export const googleAuthUser = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      let referrerId = null;
+      let initialBalance = 5;
+
+      if (referralCode) {
+        const referrer = await User.findOne({ referralCode });
+        if (referrer) {
+          referrerId = referrer._id;
+          referrer.walletBalance += 10;
+          await referrer.save();
+        }
+      }
+
       user = await createAccount(User, {
         fullName: name,
         email,
@@ -68,6 +82,8 @@ export const googleAuthUser = async (req, res, next) => {
           Math.random().toString(36).slice(-8) +
           Math.random().toString(36).slice(-8),
         role: ROLES.USER,
+        referredBy: referrerId,
+        walletBalance: initialBalance,
       });
     } else if (!user.avatar && picture) {
       user.avatar = picture;
@@ -109,6 +125,8 @@ export const googleAuthUser = async (req, res, next) => {
         email: user.email,
         role: ROLES.USER,
         avatar: user.avatar,
+        walletBalance: user.walletBalance,
+        referralCode: user.referralCode
       },
     });
   } catch (error) {
@@ -155,6 +173,8 @@ export const loginUser = async (req, res, next) => {
         email: account.email,
         role: ROLES.USER,
         avatar: account.avatar,
+        walletBalance: account.walletBalance,
+        referralCode: account.referralCode
       },
     });
   } catch (error) {

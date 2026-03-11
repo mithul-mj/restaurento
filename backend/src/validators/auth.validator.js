@@ -10,6 +10,7 @@ export const signupSchema = z.object({
     fullName: z.string().min(2, "Full name must be at least 2 characters").max(100, "Full name too long"),
     email: z.string().email("Invalid email format").max(100, "Email must be less than 100 characters"),
     password: z.string().min(6, "Password must be at least 6 characters").max(50, "Password too long"),
+    referralCode: z.string().optional(),
 });
 
 export const verifyEmailSchema = z.object({

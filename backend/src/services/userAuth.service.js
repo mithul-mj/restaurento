@@ -8,12 +8,26 @@ import {
 
 } from "./commonAuth.service.js";
 
-export const registerUserService = async ({ fullName, email, password }) => {
+export const registerUserService = async ({ fullName, email, password, referralCode }) => {
   await checkExistingAccount(User, email);
+
+  let referrerId = null;
+  let initialBalance = 5;
+
+  if (referralCode) {
+    const referrer = await User.findOne({ referralCode })
+    referrerId = referrer._id;
+    referrer.walletBalance += 10
+    await referrer.save();
+  }
+
+
   const newUser = await createAccount(User, {
     fullName,
     email,
     password,
+    referredBy: referrerId,
+    walletBalance: initialBalance
   });
 
   await sendVerificationOtp(email);

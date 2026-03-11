@@ -14,9 +14,12 @@ import authService from "../../services/auth.service";
 import userService from "../../services/user.service";
 
 const Profile = () => {
-  const { user: reduxUser, avatar, referralCode } = useSelector((state) => state.auth);
-  // Merge Redux user and avatar state
-  const [user, setUser] = useState({ ...reduxUser, avatar, referralCode });
+  const { user: reduxUser } = useSelector((state) => state.auth);
+  const [user, setUser] = useState({
+    ...reduxUser,
+    avatar: reduxUser?.avatar,
+    referralCode: reduxUser?.referralCode
+  });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const dispatch = useDispatch();
@@ -39,9 +42,10 @@ const Profile = () => {
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(user.referralCode);
+    const inviteLink = `${window.location.origin}/signup?ref=${user.referralCode}`;
+    navigator.clipboard.writeText(inviteLink);
     setCopied(true);
-    showToast("Referral Code Copied", "success");
+    showToast("Share Link Copied", "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -164,8 +168,8 @@ const Profile = () => {
                 </p>
 
                 <div className="flex items-center bg-[#f5f5f5] rounded-lg p-1.5 border border-dashed border-gray-300">
-                  <span className="flex-1 px-4 font-mono font-bold text-gray-700 tracking-wider text-sm">
-                    {user.referralCode}
+                  <span className="flex-1 px-4 font-mono font-bold text-gray-700 tracking-wider text-sm truncate">
+                    {`${window.location.origin}/signup?ref=${user.referralCode}`}
                   </span>
                   <button
                     onClick={handleCopy}

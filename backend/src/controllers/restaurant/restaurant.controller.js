@@ -374,34 +374,48 @@ export const getRestaurantBookings = async (req, res, next) => {
 
         const skip = (page - 1) * limit;
 
-        const matchQuery = { 
-            restaurantId: new mongoose.Types.ObjectId(restaurantId),
-            $or: [
-                { paymentStatus: "paid" },
-                { status: "canceled" }
-            ]
+        const now = new Date();
+        const today = new Date(now);
+        today.setUTCHours(0, 0, 0, 0);
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        let matchQuery = {
+            restaurantId: new mongoose.Types.ObjectId(restaurantId)
         };
 
-        if (status !== "all") {
-            const now = new Date();
-            const today = new Date(now);
-            today.setUTCHours(0, 0, 0, 0);
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-            if (status === "upcoming") {
-                matchQuery.status = "approved";
-                matchQuery.$or = [
-                    { bookingDate: { $gt: today } },
-                    {
-                        bookingDate: { $eq: today },
-                        slotTime: { $gt: currentMinutes }
-                    }
-                ];
-            } else if (status === "completed") {
-                matchQuery.status = "checked-in";
-            } else if (status === "canceled" || status === "cancelled") {
-                matchQuery.status = "canceled";
-            }
+        if (status === "upcoming") {
+            matchQuery.status = "approved";
+            matchQuery.paymentStatus = "paid";
+            matchQuery.$or = [
+                { bookingDate: { $gt: today } },
+                {
+                    bookingDate: { $eq: today },
+                    slotEndTime: { $gt: currentMinutes }
+                }
+            ];
+        } else if (status === "completed") {
+            matchQuery.$or = [
+                { status: "checked-in", paymentStatus: "paid" },
+                {
+                    status: "approved",
+                    paymentStatus: "paid",
+                    $or: [
+                        { bookingDate: { $lt: today } },
+                        {
+                            bookingDate: { $eq: today },
+                            slotEndTime: { $lte: currentMinutes }
+                        }
+                    ]
+                }
+            ];
+        } else if (status === "canceled" || status === "cancelled") {
+            matchQuery.status = "canceled";
+        } else {
+            // all status
+            matchQuery.$or = [
+                { paymentStatus: "paid" },
+                { status: "canceled" }
+            ];
         }
 
         const aggregate = [
@@ -514,7 +528,8 @@ export const verifyCheckIn = async (req, res, next) => {
             guest: {
                 name: booking.userId?.fullName || "Guest",
                 guests: booking.guests,
-                preOrders: booking.preOrderItems?.length || 0
+                totalAmount: booking.totalAmount,
+                preOrders: booking.preOrderItems || []
             }
         });
     } catch (error) {
