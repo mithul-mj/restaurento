@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Star, MapPin, Clock, Phone, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check
+    Star, MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "../../services/user.service";
