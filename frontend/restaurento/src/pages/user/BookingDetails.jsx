@@ -8,13 +8,9 @@ import {
     Phone,
     CheckCircle2,
     XCircle,
-    ArrowLeft,
     Navigation,
     AlertCircle,
     ChevronRight,
-    Info,
-    Receipt,
-    QrCode,
     Mail
 } from "lucide-react";
 import { useBookingDetails, useBookings } from "../../hooks/useBookings";
@@ -281,7 +277,10 @@ const BookingDetails = () => {
                                     </div>
                                     <h4 className="text-lg font-bold text-red-600 mb-2">Cancelled</h4>
                                     <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto">
-                                        This booking has been cancelled and is no longer valid.
+                                        {booking.canceledBy === 'RESTAURANT' 
+                                            ? "The restaurant had to cancel this booking. We apologize for the inconvenience."
+                                            : "You've successfully cancelled this booking."
+                                        }
                                     </p>
                                 </div>
                             )}
@@ -317,6 +316,28 @@ const BookingDetails = () => {
                                             </>
                                         )}
                                     </button>
+                                )}
+
+                                {isCanceled && (
+                                    <Link
+                                        to={`/restaurants/${restaurant?._id}`}
+                                        state={{
+                                            prefilledGuests: booking.guests,
+                                            prefilledCart: booking.preOrderItems?.reduce((acc, item) => ({
+                                                ...acc,
+                                                [item.dishId]: {
+                                                    _id: item.dishId,
+                                                    name: item.name,
+                                                    price: item.priceAtBooking,
+                                                    qty: item.qty
+                                                }
+                                            }), {}) || {}
+                                        }}
+                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#ff5e00] border border-orange-200 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-sm mt-3"
+                                    >
+                                        <Calendar size={18} />
+                                        Rebook Now
+                                    </Link>
                                 )}
                             </div>
                         </section>

@@ -6,8 +6,6 @@ import {
     Users,
     ChevronLeft,
     ChevronRight,
-    AlertCircle,
-    MapPin,
     CheckCircle2,
     XCircle
 } from "lucide-react";
@@ -20,7 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const MyBookings = () => {
     const [activeTab, setActiveTab] = useState("upcoming");
     const [page, setPage] = useState(1);
-    const limit = 3;
+    const limit = 2;
 
     const { data, isLoading, isError, cancelBooking, isCanceling } = useBookings({
         type: activeTab,
@@ -50,7 +48,7 @@ const MyBookings = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-8 border-b border-gray-100">
-                    {["upcoming", "past"].map((tab) => (
+                    {["upcoming", "past", "canceled"].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -166,12 +164,20 @@ const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
                             <h3 className="text-xl font-bold text-gray-900 leading-none">
                                 {restaurant?.restaurantName}
                             </h3>
-                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isCanceled
-                                ? "bg-red-50 text-red-500 border border-red-100"
-                                : "bg-green-50 text-green-600 border border-green-100"
-                                }`}>
-                                {isCanceled ? <XCircle size={12} /> : <CheckCircle2 size={12} />}
-                                {booking.status}
+                            <div className="flex flex-col items-end gap-1">
+                                {booking.status === 'checked-in' && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-600 border border-green-100">
+                                        <CheckCircle2 size={12} />
+                                        Completed
+                                    </div>
+                                )}
+                                {isCanceled && (
+                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
+                                        booking.canceledBy === 'RESTAURANT' ? 'bg-orange-50 text-[#ff5e00]' : 'bg-gray-100 text-gray-500'
+                                    }`}>
+                                        {booking.canceledBy === 'RESTAURANT' ? 'Cancelled by restaurant' : 'Cancelled by you'}
+                                    </span>
+                                )}
                             </div>
                         </div>
 
@@ -200,6 +206,26 @@ const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
                             >
                                 Cancel Booking
                             </button>
+                        )}
+                        {isCanceled && (
+                            <Link
+                                to={`/restaurants/${restaurant._id}`}
+                                state={{
+                                    prefilledGuests: booking.guests,
+                                    prefilledCart: booking.preOrderItems?.reduce((acc, item) => ({
+                                        ...acc,
+                                        [item.dishId]: {
+                                            _id: item.dishId,
+                                            name: item.name,
+                                            price: item.priceAtBooking,
+                                            qty: item.qty
+                                        }
+                                    }), {}) || {}
+                                }}
+                                className="px-6 py-2.5 bg-orange-50 text-[#ff5e00] font-bold text-xs rounded-xl hover:bg-orange-100 transition-colors"
+                            >
+                                Rebook
+                            </Link>
                         )}
                         <Link
                             to={`/my-bookings/${booking._id}`}

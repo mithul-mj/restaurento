@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Star, MapPin, Clock, Phone, Heart, ChevronRight, AlertTriangle, ChevronDown, User, Minus, Plus, Calendar, Check
+    Star, MapPin, Clock, Phone, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "../../services/user.service";
@@ -22,7 +22,7 @@ const RestaurantDetails = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [activeTab, setActiveTab] = useState("about");
-    const [partySize, setPartySize] = useState(2);
+    const [partySize, setPartySize] = useState(location.state?.prefilledGuests || 2);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
     const [cart, setCart] = useState(location.state?.prefilledCart || {});
@@ -31,9 +31,10 @@ const RestaurantDetails = () => {
     const [isBooking, setIsBooking] = useState(false);
 
     useEffect(() => {
-        if (location.state?.prefilledCart) {
+        if (location.state?.prefilledCart || location.state?.prefilledGuests) {
             const newState = { ...location.state };
             delete newState.prefilledCart;
+            delete newState.prefilledGuests;
             navigate(location.pathname + location.search, {
                 replace: true,
                 state: Object.keys(newState).length > 0 ? newState : null

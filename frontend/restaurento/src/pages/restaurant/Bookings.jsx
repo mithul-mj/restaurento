@@ -17,7 +17,7 @@ import { formatDate, formatTime12Hour } from "../../utils/timeUtils";
 const statusTabs = [
   { id: "upcoming", label: "Upcoming" },
   { id: "completed", label: "Completed" },
-  { id: "cancelled", label: "Cancelled" },
+  { id: "canceled", label: "Cancelled" },
 ];
 
 const Bookings = () => {
@@ -29,7 +29,7 @@ const Bookings = () => {
 
   const { data, isLoading, isError } = useRestaurantBookings({
     page,
-    limit: 6,
+    limit: 2,
     status: activeTab,
     search: debouncedSearch,
   });
@@ -127,18 +127,32 @@ const Bookings = () => {
                   >
                     <div className="md:col-span-3 flex justify-between items-start md:block">
                       <div className="space-y-1">
-                        <h3 className="font-bold text-gray-900 text-lg tracking-tight">
+                        <h3 className="font-bold text-gray-900 text-lg tracking-tight flex items-center gap-2">
                           {booking.user?.fullName}
                         </h3>
+                        {booking.status === 'canceled' && (
+                          <div className="hidden md:block">
+                             <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
+                               booking.canceledBy === 'RESTAURANT' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
+                             }`}>
+                               {booking.canceledBy === 'RESTAURANT' ? 'Cancelled by you' : 'Cancelled by customer'}
+                             </span>
+                          </div>
+                        )}
                       </div>
-                      <div className="md:hidden">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          booking.status === 'approved' ? 'bg-blue-100 text-blue-500' :
-                          booking.status === 'checked-in' ? 'bg-green-100 text-green-600' :
-                          'bg-gray-100 text-gray-500'
-                        }`}>
-                          {booking.status === 'approved' ? 'Upcoming' : booking.status.replace('-', ' ')}
-                        </span>
+                      <div className="md:hidden flex flex-col items-end gap-1">
+                        {booking.status === 'checked-in' && (
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-600">
+                            Completed
+                          </span>
+                        )}
+                        {booking.status === 'canceled' && (
+                           <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
+                             booking.canceledBy === 'RESTAURANT' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
+                           }`}>
+                             {booking.canceledBy === 'RESTAURANT' ? 'By you' : 'By customer'}
+                           </span>
+                        )}
                       </div>
                     </div>
 

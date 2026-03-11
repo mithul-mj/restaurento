@@ -91,9 +91,20 @@ const BookingDetails = () => {
             </h1>
           </div>
 
-          <span className="px-5 py-1.5 rounded-full bg-blue-100 text-blue-500 text-[10px] font-bold uppercase tracking-wider">
-            {booking.status === 'approved' ? 'Upcoming' : booking.status.replace('-', ' ')}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            {booking.status === 'checked-in' && (
+              <span className="px-5 py-1.5 rounded-full bg-green-100 text-green-600 text-[10px] font-bold uppercase tracking-wider">
+                Completed
+              </span>
+            )}
+            {booking.status === 'canceled' && (
+              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
+                booking.canceledBy === 'RESTAURANT' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
+              }`}>
+                {booking.canceledBy === 'RESTAURANT' ? 'Cancelled by you' : 'Cancelled by customer'}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">

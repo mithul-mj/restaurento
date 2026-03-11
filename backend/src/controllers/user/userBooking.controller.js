@@ -185,23 +185,16 @@ export const getMyBookings = async (req, res, next) => {
                     slotTime: { $gte: currentMinutes }
                 }
             ];
+        } else if (type === 'canceled') {
+            matchQuery.status = 'canceled';
         } else {
-            // Past or canceled
+            // Past
+            matchQuery.status = 'approved';
             matchQuery.$or = [
-                { status: 'canceled' },
+                { bookingDate: { $lt: today } },
                 {
-                    $and: [
-                        { status: 'approved' },
-                        {
-                            $or: [
-                                { bookingDate: { $lt: today } },
-                                {
-                                    bookingDate: { $eq: today },
-                                    slotTime: { $lt: currentMinutes }
-                                }
-                            ]
-                        }
-                    ]
+                    bookingDate: { $eq: today },
+                    slotTime: { $lt: currentMinutes }
                 }
             ];
         }
@@ -353,6 +346,7 @@ export const cancelBooking = async (req, res, next) => {
         }
 
         booking.status = 'canceled';
+        booking.canceledBy = 'USER';
         await booking.save();
 
         res.status(STATUS_CODES.OK).json({

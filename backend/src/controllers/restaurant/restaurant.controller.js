@@ -399,7 +399,7 @@ export const getRestaurantBookings = async (req, res, next) => {
                 ];
             } else if (status === "completed") {
                 matchQuery.status = "checked-in";
-            } else if (status === "cancelled") {
+            } else if (status === "canceled" || status === "cancelled") {
                 matchQuery.status = "canceled";
             }
         }
@@ -570,7 +570,13 @@ export const updateBookingStatus = async (req, res, next) => {
             });
         }
 
-        booking.status = status;
+        if (status === 'canceled' || status === 'cancelled') {
+            booking.status = 'canceled';
+            booking.canceledBy = 'RESTAURANT';
+        } else {
+            booking.status = status;
+        }
+
         await booking.save();
 
         res.status(STATUS_CODES.OK).json({
