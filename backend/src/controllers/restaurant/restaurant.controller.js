@@ -587,7 +587,7 @@ export const updateBookingStatus = async (req, res, next) => {
 
         if (status === 'canceled' || status === 'cancelled') {
             booking.status = 'canceled';
-            booking.canceledBy = 'RESTAURANT';
+            booking.canceledBy = ROLES.RESTAURANT;
         } else {
             booking.status = status;
         }
@@ -603,4 +603,57 @@ export const updateBookingStatus = async (req, res, next) => {
         next(error);
     }
 };
+export const getRestaurantStats = async (req, res, next) => {
+    try {
+        const restaurantId = req.user._id;
 
+        const stats = await Booking.aggregate([
+            {
+                $match: {
+                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                    paymentStatus: { $in: ['paid', 'refunded'] }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalEarnings: {
+                        $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$totalAmount", 0] }
+                    },
+                    totalRefunded: {
+                        $sum: { $cond: [{ $eq: ["$paymentStatus", "refunded"] }, "$totalAmount", 0] }
+                    },
+                    successfulBookings: {
+                        $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] }
+                    },
+                    refundedBookings: {
+                        $sum: { $cond: [{ $eq: ["$paymentStatus", "refunded"] }, 1, 0] }
+                    }
+                }
+            }
+        ]);
+
+        const result = stats[0] || {
+            totalEarnings: 0,
+            totalRefunded: 0,
+            successfulBookings: 0,
+            refundedBookings: 0
+        };
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            data: {
+                totalRevenue: result.totalEarnings,
+                totalRefunded: result.totalRefunded,
+                netRevenue: result.totalEarnings - result.totalRefunded,
+                bookingStats: {
+                    successful: result.successfulBookings,
+                    refunded: result.refundedBookings,
+                    total: result.successfulBookings + result.refundedBookings
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};

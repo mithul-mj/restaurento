@@ -79,7 +79,6 @@ function App() {
   const { isInitializing } = useSelector((state) => state.auth);
 
   useEffect(() => {
-
     const initializeAuth = async () => {
       try {
         let role = "USER";
@@ -163,9 +162,15 @@ function App() {
               />
 
               <Route element={<RestaurantLayout />}>
-                <Route path="/restaurant/dashboard" element={<RestaurantDashboard />} />
+                <Route
+                  path="/restaurant/dashboard"
+                  element={<RestaurantDashboard />}
+                />
                 <Route path="/restaurant/bookings" element={<Bookings />} />
-                <Route path="/restaurant/bookings/:id" element={<RestaurantBookingDetails />} />
+                <Route
+                  path="/restaurant/bookings/:id"
+                  element={<RestaurantBookingDetails />}
+                />
                 <Route path="/restaurant/check-in" element={<Scanner />} />
                 <Route path="/restaurant/menu" element={<MenuPage />} />
                 <Route path="/restaurant/earnings" element={<Earnings />} />

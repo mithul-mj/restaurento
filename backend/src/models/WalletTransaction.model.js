@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const transactionSchema = new Schema(
+const walletTransactionSchema = new Schema(
     {
         userId: {
             type: Schema.Types.ObjectId,
@@ -13,12 +13,7 @@ const transactionSchema = new Schema(
         },
         amount: {
             type: Number,
-            required: true,
-        },
-        type: {
-            type: String,
-            enum: ["credit", "debit"],
-            required: true,
+            required: true, // Positive for credit (+), Negative for debit (-)
         },
         description: {
             type: String,
@@ -28,4 +23,4 @@ const transactionSchema = new Schema(
     { timestamps: true }
 );
 
-export const Transaction = mongoose.model("Transaction", transactionSchema);
+export const WalletTransaction = mongoose.model("WalletTransaction", walletTransactionSchema);

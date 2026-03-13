@@ -72,7 +72,7 @@ const Scanner = () => {
             if (scannerRef.current) {
                 const s = scannerRef.current;
                 if (s.getState() > 1) {
-                    s.stop().catch(() => {}).finally(() => s.clear().catch(() => {}));
+                    s.stop().catch(() => { }).finally(() => s.clear().catch(() => { }));
                 }
             }
         };
@@ -95,10 +95,10 @@ const Scanner = () => {
 
                 <AnimatePresence mode="wait">
                     {!scanResult && !error && !isVerifying ? (
-                        <motion.div 
-                            key="scanner-ui" 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
+                        <motion.div
+                            key="scanner-ui"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="flex flex-col gap-6"
                         >
@@ -114,9 +114,8 @@ const Scanner = () => {
                             <div className="space-y-4">
                                 <button
                                     onClick={isScanning ? shutdownScanner : startScanner}
-                                    className={`w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 ${
-                                        isScanning ? 'bg-gray-900 text-white' : 'bg-orange-500 text-white hover:bg-orange-600'
-                                    }`}
+                                    className={`w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 ${isScanning ? 'bg-gray-900 text-white' : 'bg-orange-500 text-white hover:bg-orange-600'
+                                        }`}
                                 >
                                     {isScanning ? <><CameraOff size={20} /> Stop Scanner</> : <><Camera size={20} /> Start Scanner</>}
                                 </button>
@@ -143,10 +142,10 @@ const Scanner = () => {
                             </div>
                         </motion.div>
                     ) : isVerifying ? (
-                        <motion.div 
-                            key="verifying-ui" 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
+                        <motion.div
+                            key="verifying-ui"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="py-32 text-center"
                         >
@@ -154,9 +153,9 @@ const Scanner = () => {
                             <p className="font-bold text-gray-600 uppercase tracking-widest text-xs">Authenticating...</p>
                         </motion.div>
                     ) : scanResult ? (
-                        <motion.div 
-                            key="success-ui" 
-                            initial={{ opacity: 0 }} 
+                        <motion.div
+                            key="success-ui"
+                            initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="bg-white border-2 border-emerald-500 rounded-3xl p-6 space-y-6"
                         >
@@ -205,7 +204,7 @@ const Scanner = () => {
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={reset}
                                 className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition-all"
                             >
@@ -213,9 +212,9 @@ const Scanner = () => {
                             </button>
                         </motion.div>
                     ) : (
-                        <motion.div 
-                            key="error-ui" 
-                            initial={{ opacity: 0 }} 
+                        <motion.div
+                            key="error-ui"
+                            initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="p-8 text-center border-2 border-red-500 rounded-3xl bg-white"
                         >

@@ -68,6 +68,17 @@ const bookingSchema = new Schema(
             type: String,
             unique: true,
         },
+        walletTransactionId: {
+            type: Schema.Types.ObjectId,
+            ref: "WalletTransaction",
+        },
+        razorpayPaymentId: {
+            type: String,
+        },
+        walletAmountUsed: {
+            type: Number,
+            default: 0,
+        },
         preOrderItems: [
             {
                 dishId: { type: Schema.Types.ObjectId },

@@ -1,14 +1,20 @@
 import mongoose from 'mongoose';
 import { Booking } from '../../models/Booking.model.js'
+import { WalletTransaction } from '../../models/WalletTransaction.model.js'
+import { User } from '../../models/User.model.js'
 import { Restaurant } from '../../models/Restaurant.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import redisClient from '../../config/redis.js';
 import { getRealTimeAvailability } from '../../services/inventory.service.js';
+import ROLES from '../../constants/roles.js';
 
 export const BookingRestaurant = async (req, res, next) => {
+    const session = await mongoose.startSession();
     try {
-        const { restaurantId, bookingDate, slotTime, guests, preOrderItems } = req.body;
+        session.startTransaction();
+
+        const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet } = req.body;
         const userId = req.user._id;
 
         const requestedDishIds = (preOrderItems || []).map(
@@ -21,6 +27,7 @@ export const BookingRestaurant = async (req, res, next) => {
             },
             {
                 $project: {
+                    restaurantName: 1, // Added for wallet description
                     slotPrice: 1,
                     slotConfig: 1,
                     openingHours: 1,
@@ -35,9 +42,10 @@ export const BookingRestaurant = async (req, res, next) => {
                     }
                 }
             }
-        ]);
+        ]).session(session);
 
         if (!restaurant) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.NOT_FOUND).json({
                 success: false,
                 message: "Restaurant not found."
@@ -52,8 +60,8 @@ export const BookingRestaurant = async (req, res, next) => {
         const bookingDateMidnight = new Date(requestedDate);
         bookingDateMidnight.setUTCHours(0, 0, 0, 0);
 
-        // 1. Check if the date is in the past
         if (bookingDateMidnight < today) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: "You cannot book for a past date."
@@ -64,6 +72,7 @@ export const BookingRestaurant = async (req, res, next) => {
             const now = new Date();
             const currentMinutes = (now.getHours() * 60) + now.getMinutes();
             if (slotTime <= currentMinutes + BOOKING_BUFFER_MINUTES) {
+                await session.abortTransaction();
                 return res.status(STATUS_CODES.BAD_REQUEST).json({
                     success: false,
                     message: `This time slot has already passed or is too soon. Please select a slot at least ${BOOKING_BUFFER_MINUTES / 60} hour from now.`
@@ -71,12 +80,12 @@ export const BookingRestaurant = async (req, res, next) => {
             }
         }
 
-        // Check if the restaurant is open on the requested day
         const dayOfWeek = requestedDate.getDay();
         const dayIndex = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
         const dayConfig = restaurant.openingHours?.days?.[dayIndex];
 
         if (!dayConfig || dayConfig.isClosed) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: "The restaurant is closed on this day."
@@ -85,19 +94,20 @@ export const BookingRestaurant = async (req, res, next) => {
 
         const isValidSlot = dayConfig.generatedSlots?.some(slot => slot.startTime === parseInt(slotTime));
         if (!isValidSlot) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: "The selected time slot is invalid."
             });
         }
 
-        // Clear temporary hold and check final availability
         const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
         await redisClient.del(holdKey);
 
         const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
 
         if (trueAvailability < guests) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: "Enough seats are no longer available for this slot."
@@ -135,6 +145,24 @@ export const BookingRestaurant = async (req, res, next) => {
         const duration = restaurant.slotConfig?.duration || 60;
         const slotEndTime = slotTime + duration;
 
+        // --- Wallet Logic ---
+        let walletAmountUsed = 0;
+        let paymentStatus = 'pending';
+
+        if (useWallet) {
+            const user = await User.findById(userId).session(session);
+            if (user && user.walletBalance > 0) {
+                walletAmountUsed = Math.min(user.walletBalance, finalTotal);
+
+                // If FULL wallet payment, deduct now
+                if (walletAmountUsed === finalTotal) {
+                    user.walletBalance -= walletAmountUsed;
+                    await user.save({ session });
+                    paymentStatus = 'paid';
+                }
+            }
+        }
+
         const booking = new Booking({
             userId,
             restaurantId,
@@ -148,21 +176,44 @@ export const BookingRestaurant = async (req, res, next) => {
             platformFee,
             preOrderItems: verifiedPreOrderItems,
             status: 'approved',
-            paymentStatus: 'pending'
+            paymentStatus: paymentStatus,
+            walletAmountUsed: walletAmountUsed // Store intent for partial payments
         });
 
-        await booking.save();
+        // Create transaction log only for FULL wallet payments
+        if (paymentStatus === 'paid' && walletAmountUsed > 0) {
+            const walletTx = await WalletTransaction.create([{
+                userId,
+                bookingId: booking._id,
+                amount: -walletAmountUsed, // Negative for debit
+                description: `Used wallet for booking at ${restaurant.restaurantName}`
+            }], { session });
+
+            // Link the wallet transaction ID to the booking
+            booking.walletTransactionId = walletTx[0]._id;
+        }
+
+        await booking.save({ session });
+
+        await session.commitTransaction();
 
         res.status(201).json({
             success: true,
-            message: "Booking initiated successfully.",
-            booking
+            message: walletAmountUsed === finalTotal ? "Booking successful using wallet." : "Booking initiated successfully.",
+            booking,
+            remainingAmount: finalTotal - walletAmountUsed
         });
 
     } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         next(error);
+    } finally {
+        session.endSession();
     }
 }
+
 
 export const getMyBookings = async (req, res, next) => {
     try {
@@ -312,13 +363,20 @@ export const getBookingDetails = async (req, res, next) => {
 };
 
 export const cancelBooking = async (req, res, next) => {
+    const session = await mongoose.startSession();
     try {
+        session.startTransaction();
+
         const { id } = req.params;
         const userId = req.user._id;
 
-        const booking = await Booking.findOne({ _id: id, userId });
+        // Perform lookup inside session for transactional safety
+        const booking = await Booking.findOne({ _id: id, userId })
+            .populate('restaurantId', 'restaurantName')
+            .session(session);
 
         if (!booking) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.NOT_FOUND).json({
                 success: false,
                 message: "Booking not found."
@@ -326,6 +384,7 @@ export const cancelBooking = async (req, res, next) => {
         }
 
         if (booking.status === 'canceled') {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: "Booking is already canceled."
@@ -339,22 +398,50 @@ export const cancelBooking = async (req, res, next) => {
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         if (booking.bookingDate < today || (booking.bookingDate.getTime() === today.getTime() && booking.slotTime < currentMinutes)) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: "Cannot cancel a past booking."
             });
         }
 
+        // 1. Mark booking as canceled and refunded
         booking.status = 'canceled';
-        booking.canceledBy = 'USER';
-        await booking.save();
+        booking.paymentStatus = 'refunded';
+        booking.canceledBy = ROLES.USER;
+        await booking.save({ session });
+
+        // 2. Refund to wallet
+        await User.findByIdAndUpdate(
+            userId,
+            { $inc: { walletBalance: booking.totalAmount } },
+            { session }
+        );
+
+        // 3. Create wallet transaction log
+        await WalletTransaction.create([{
+            userId,
+            bookingId: booking._id,
+            amount: booking.totalAmount, // Positive value represents a credit/refund
+            description: `Refund for cancelled booking at ${booking.restaurantId.restaurantName}`
+        }], { session });
+
+        // Commit all changes
+        await session.commitTransaction();
 
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Booking canceled successfully.",
+            message: "Booking canceled successfully and amount refunded to wallet.",
             booking
         });
+
     } catch (error) {
+        // Only abort if the transaction hasn't been committed/aborted already
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         next(error);
+    } finally {
+        session.endSession();
     }
 };

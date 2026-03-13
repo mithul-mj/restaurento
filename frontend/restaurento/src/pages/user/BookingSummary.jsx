@@ -5,7 +5,7 @@ import { useSocket } from '../../context/SocketContext';
 import {
     ArrowLeft, Calendar, Clock, Users,
     Trash2, ChevronDown, Star, Copy,
-    CheckCircle, AlertCircle, Timer
+    CheckCircle, AlertCircle, Timer, Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate } from '../../utils/timeUtils';
@@ -32,6 +32,8 @@ const BookingSummary = () => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
     const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [useWallet, setUseWallet] = useState(false);
+    const [walletBalance, setWalletBalance] = useState(0);
 
     const socket = useSocket();
     const user = useSelector((state) => state.auth.user);
@@ -44,6 +46,7 @@ const BookingSummary = () => {
                 bookingDate: date,
                 slotTime: initialData.timeSlotMinutes || timeSlot,
                 guests: partySize,
+                useWallet,
                 preOrderItems: cartItems.map(item => ({
                     dishId: item._id,
                     name: item.name,
@@ -56,6 +59,26 @@ const BookingSummary = () => {
 
             if (response.success) {
                 const bookingId = response.booking._id;
+
+                // Handle Full Wallet Payment
+                if (response.remainingAmount === 0) {
+                    setIsBookingConfirmed(true);
+                    showToast("Booking successful using wallet!", "success");
+                    if (socket && user) {
+                        socket.emit("confirm_booking", {
+                            restaurantId: restaurant._id,
+                            date: date,
+                            slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                            seats: partySize,
+                            userId: user._id || user.id,
+                            bookingId: bookingId
+                        });
+                    }
+                    navigate('/my-bookings');
+                    return;
+                }
+
+                // Proceed with Razorpay for remaining amount
                 const orderRes = await userService.createRazorpayOrder(bookingId);
                 const order = orderRes.order;
 
@@ -88,7 +111,7 @@ const BookingSummary = () => {
                                         bookingId: bookingId
                                     });
                                 }
-                                navigate('/');
+                                navigate('/my-bookings');
                             }
                         } catch (err) {
                             showToast("Payment verification failed", "error");
@@ -143,8 +166,22 @@ const BookingSummary = () => {
     const platformFee = subtotal * PLATFORM_FEE_RATE;
     const totalAmount = subtotal + tax + platformFee;
 
-    // Mock coupon savings
     const amountSaved = 4.00;
+
+    const walletAmountToUse = useWallet ? Math.min(walletBalance, totalAmount) : 0;
+    const finalPayable = totalAmount - walletAmountToUse;
+
+    useEffect(() => {
+        const fetchWallet = async () => {
+            try {
+                const profile = await userService.getProfile();
+                setWalletBalance(profile.user.walletBalance || 0);
+            } catch (error) {
+                console.error("Failed to fetch wallet:", error);
+            }
+        };
+        fetchWallet();
+    }, []);
 
     useEffect(() => {
         if (!restaurant) return;
@@ -434,6 +471,49 @@ const BookingSummary = () => {
                                             <p className="text-xl font-black text-gray-900">₹{totalAmount.toFixed(2)}</p>
                                         </div>
                                     </div>
+
+                                    {/* Wallet Section */}
+                                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100 shadow-sm text-[#ff5e00]">
+                                                    <Wallet size={20} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-900">Wallet Balance</p>
+                                                    <p className="text-[10px] text-gray-400 font-medium">Available: ₹{walletBalance.toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setUseWallet(!useWallet)}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useWallet ? 'bg-[#ff5e00]' : 'bg-gray-200'}`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useWallet ? 'translate-x-6' : 'translate-x-1'}`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {useWallet && walletAmountToUse > 0 && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="mt-4 pt-4 border-t border-dashed border-gray-200"
+                                                >
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-gray-500 font-medium">Wallet Applied</span>
+                                                        <span className="text-[#ff5e00] font-black">-₹{walletAmountToUse.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-sm mt-2">
+                                                        <span className="text-gray-900 font-bold">Payable Amount</span>
+                                                        <span className="text-gray-900 font-black">₹{finalPayable.toFixed(2)}</span>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
 
                                 <div className="p-6">
@@ -444,7 +524,7 @@ const BookingSummary = () => {
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
                                             : 'bg-[#ff5e00] text-white shadow-orange-500/20 hover:bg-[#e05200]'
                                             }`}>
-                                        {isSubmitting ? 'Processing Payment...' : 'Pay Now'}
+                                        {isSubmitting ? 'Processing...' : finalPayable === 0 ? 'Book with Wallet' : 'Pay Now'}
                                     </button>
                                     <p className="text-[9px] text-gray-400 font-bold text-center mt-4 leading-tight">
                                         You will be redirected to the secure payment gateway.
