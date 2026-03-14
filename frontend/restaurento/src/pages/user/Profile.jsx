@@ -13,12 +13,13 @@ import { logout } from "../../redux/slices/authSlice";
 import authService from "../../services/auth.service";
 import userService from "../../services/user.service";
 
+import { REFERRAL_REWARD_REFERRER, REFERRAL_REWARD_NEW_USER } from "../../constants/constants";
+
 const Profile = () => {
   const { user: reduxUser } = useSelector((state) => state.auth);
   const [user, setUser] = useState({
     ...reduxUser,
     avatar: reduxUser?.avatar,
-    referralCode: reduxUser?.referralCode
   });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -84,10 +85,11 @@ const Profile = () => {
                 src={
                   user?.avatar ||
                   "https://ui-avatars.com/api/?name=" +
-                  (user?.fullName || "User") +
-                  "&background=random"
+                  encodeURIComponent(user?.fullName || "User") +
+                  "&background=ff5e00&color=fff"
                 }
                 alt={user?.fullName || "Profile"}
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -134,9 +136,11 @@ const Profile = () => {
               <div className="text-3xl font-extrabold text-gray-900">
                 ₹{user?.walletBalance ?? 0}
               </div>
-              <button className="text-[#ff5e00] text-xs font-bold hover:underline">
-                View Transactions
-              </button>
+              <Link to="/my-wallet">
+                <button className="text-[#ff5e00] text-xs font-bold hover:underline">
+                  View Transactions
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -161,10 +165,10 @@ const Profile = () => {
                   Referral Code
                 </h2>
                 <p className="text-gray-500 text-sm mb-6">
-                  Get <span className="font-bold text-gray-800">₹5</span> on by
-                  sharing you referral code. The person uses the referral code
-                  on register will receive{" "}
-                  <span className="font-bold text-gray-800">₹3</span>.
+                  Get <span className="font-bold text-gray-800">₹{REFERRAL_REWARD_REFERRER}</span> by
+                  sharing your referral code. The person who uses the referral code
+                  at registration will receive{" "}
+                  <span className="font-bold text-gray-800">₹{REFERRAL_REWARD_NEW_USER}</span>.
                 </p>
 
                 <div className="flex items-center bg-[#f5f5f5] rounded-lg p-1.5 border border-dashed border-gray-300">

@@ -89,6 +89,16 @@ const userService = {
   cancelBooking: async (bookingId) => {
     const response = await api.patch(`/bookings/${bookingId}/cancel`);
     return response.data;
+  },
+  getMyWalletHistory: async (page = 1, limit = 3) => {
+    const response = await api.get('/wallet', {
+      params: { page, limit }
+    })
+    return response.data
+  },
+  getWalletBalance: async () => {
+    const response = await api.get('/wallet/balance');
+    return response.data;
   }
 };
 

@@ -13,7 +13,9 @@ import ImageCropper from "../../components/common/ImageCropper";
 const EditProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user, avatar, role } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
+  const avatar = user?.avatar;
+  const role = user?.role;
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -67,8 +69,7 @@ const EditProfile = () => {
       if (response.success) {
         dispatch(
           setCredentials({
-            user: { ...user, fullName: response.user.fullName },
-            avatar: response.user.avatar,
+            user: { ...user, fullName: response.user.fullName, avatar: response.user.avatar },
             role,
           })
         );
@@ -103,8 +104,9 @@ const EditProfile = () => {
             <div className="relative">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#fff0e3]">
                 <img
-                  src={previewUrl || avatar}
+                  src={previewUrl || avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=ff5e00&color=fff`}
                   alt="Profile"
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -232,7 +234,6 @@ const EditProfile = () => {
           setValue("email", newEmail);
           dispatch(setCredentials({
             user: { ...user, email: newEmail },
-            avatar,
             role
           }));
         }}

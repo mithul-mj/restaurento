@@ -4,8 +4,6 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user: null,
   isAuthenticated: false,
-  role: null,
-  avatar: null,
   isInitializing: true,
 };
 
@@ -14,10 +12,18 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { user, role, avatar } = action.payload;
-      state.user = user;
-      state.role = role;
-      state.avatar = avatar;
+      const { user, role } = action.payload;
+      state.user = {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        avatar: user.avatar,
+        role: role,
+        // Critical fields for Restaurant and Admin guards/status
+        verificationStatus: user.verificationStatus,
+        isOnboardingCompleted: user.isOnboardingCompleted,
+        status: user.status,
+      };
       state.isAuthenticated = true;
       state.isInitializing = false;
     },
@@ -29,7 +35,6 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
-      state.role = null;
     },
     updateUser: (state, action) => {
       if (state.user) {

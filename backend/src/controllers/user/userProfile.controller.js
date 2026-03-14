@@ -4,7 +4,9 @@ import { Admin } from "../../models/Admin.model.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { sendVerificationOtp, verifyOtp } from "../../services/commonAuth.service.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
-
+import { WalletTransaction } from '../../models/WalletTransaction.model.js'
+import mongoose from "mongoose";
+import { success } from "zod";
 
 export const getProfile = async (req, res, next) => {
   try {
@@ -43,7 +45,7 @@ export const updateProfile = async (req, res, next) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Handle Avatar Upload
+
     if (req.file) {
       user.avatar = req.file.path;
     }
@@ -115,6 +117,66 @@ export const verifyEmailChange = async (req, res, next) => {
       message: "Email updated successfully",
       user: { email: user.email }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const getMyWalletHistory = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 3;
+    const skip = (page - 1) * limit;
+
+    const transactions = await WalletTransaction.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      { $sort: { createdAt: -1 } },
+      {
+        $facet: {
+          metaData: [{ $count: "total" }],
+          transactions: [
+            { $skip: skip }, { $limit: limit }
+          ]
+        }
+      }
+    ])
+
+    const data = transactions[0];
+
+    const totalTransactions = data.metaData.length > 0 ? data.metaData[0].total : 0;
+
+    const walletTransactions = data.transactions;
+
+    const totalPages = Math.ceil(totalTransactions / limit);
+
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      transactions: walletTransactions,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalTransactions,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
+
+
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+export const getWalletBalance = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select("walletBalance");
+    if (!user) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "User not found" });
+    }
+    return res.status(STATUS_CODES.OK).json({ success: true, walletBalance: user.walletBalance });
   } catch (error) {
     next(error);
   }

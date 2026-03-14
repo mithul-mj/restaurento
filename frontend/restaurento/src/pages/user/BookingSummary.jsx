@@ -12,7 +12,7 @@ import { formatDate } from '../../utils/timeUtils';
 import { getCategoryFromTimeSlot } from '../../utils/timeCategoryUtils';
 import { showToast } from '../../utils/alert';
 import userService from '../../services/user.service';
-import { TAX_RATE, PLATFORM_FEE_RATE } from '../../constants/constants';
+import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_HOLD_TIME_SECONDS } from '../../constants/constants';
 
 const BookingSummary = () => {
     const location = useLocation();
@@ -24,7 +24,7 @@ const BookingSummary = () => {
 
     // Calculate remaining hold time (defaults to 5 minutes)
     const calculateTimeLeft = () => {
-        if (!initialData.holdExpirationTime) return 300;
+        if (!initialData.holdExpirationTime) return BOOKING_HOLD_TIME_SECONDS;
         const remaining = Math.floor((initialData.holdExpirationTime - Date.now()) / 1000);
         return remaining > 0 ? remaining : 0;
     };
@@ -44,14 +44,14 @@ const BookingSummary = () => {
             const bookingData = {
                 restaurantId: restaurant._id,
                 bookingDate: date,
-                slotTime: initialData.timeSlotMinutes || timeSlot,
-                guests: partySize,
+                slotTime: Number(initialData.timeSlotMinutes ?? 0),
+                guests: Number(partySize),
                 useWallet,
                 preOrderItems: cartItems.map(item => ({
                     dishId: item._id,
                     name: item.name,
-                    qty: item.qty,
-                    priceAtBooking: item.price
+                    qty: Number(item.qty),
+                    priceAtBooking: Number(item.price)
                 }))
             };
 
@@ -130,7 +130,10 @@ const BookingSummary = () => {
             }
         } catch (error) {
             console.error("Booking error:", error);
-            showToast(error.response?.data?.message || "Failed to submit booking request.", "error");
+            const errorMsg = error.response?.data?.errors
+                ? error.response.data.errors.map(err => `${err.field}: ${err.message}`).join(", ")
+                : error.response?.data?.message || "Failed to submit booking request.";
+            showToast(errorMsg, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -174,8 +177,8 @@ const BookingSummary = () => {
     useEffect(() => {
         const fetchWallet = async () => {
             try {
-                const profile = await userService.getProfile();
-                setWalletBalance(profile.user.walletBalance || 0);
+                const response = await userService.getWalletBalance();
+                setWalletBalance(response.walletBalance || 0);
             } catch (error) {
                 console.error("Failed to fetch wallet:", error);
             }

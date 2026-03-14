@@ -10,6 +10,8 @@ import { User } from "../../models/User.model.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { createAccount } from "../../services/commonAuth.service.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
+import { WalletTransaction } from "../../models/WalletTransaction.model.js";
+import { REFERRAL_REWARD_REFERRER, REFERRAL_REWARD_NEW_USER } from "../../constants/constants.js";
 
 
 export const registerUser = async (req, res, next) => {
@@ -24,8 +26,6 @@ export const registerUser = async (req, res, next) => {
         fullName: newUser.fullName,
         email: newUser.email,
         role: ROLES.USER,
-        walletBalance: newUser.walletBalance,
-        referralCode: newUser.referralCode
       },
     });
   } catch (error) {
@@ -62,14 +62,24 @@ export const googleAuthUser = async (req, res, next) => {
 
     if (!user) {
       let referrerId = null;
-      let initialBalance = 5;
+      let signupBonus = 0;
 
       if (referralCode) {
         const referrer = await User.findOne({ referralCode });
         if (referrer) {
           referrerId = referrer._id;
-          referrer.walletBalance += 10;
+          signupBonus = REFERRAL_REWARD_NEW_USER;
+
+          // 1. Update Referrer Balance
+          referrer.walletBalance += REFERRAL_REWARD_REFERRER;
           await referrer.save();
+
+          // 2. Create Transaction for Referrer
+          await WalletTransaction.create({
+            userId: referrer._id,
+            amount: REFERRAL_REWARD_REFERRER,
+            description: `Referral Bonus for inviting ${name}`
+          });
         }
       }
 
@@ -83,8 +93,17 @@ export const googleAuthUser = async (req, res, next) => {
           Math.random().toString(36).slice(-8),
         role: ROLES.USER,
         referredBy: referrerId,
-        walletBalance: initialBalance,
+        walletBalance: signupBonus,
       });
+
+      // 3. Create Transaction for New User only if they got a bonus
+      if (signupBonus > 0) {
+        await WalletTransaction.create({
+          userId: user._id,
+          amount: signupBonus,
+          description: "Referral Signup Bonus"
+        });
+      }
     } else if (!user.avatar && picture) {
       user.avatar = picture;
       await user.save();
@@ -125,8 +144,6 @@ export const googleAuthUser = async (req, res, next) => {
         email: user.email,
         role: ROLES.USER,
         avatar: user.avatar,
-        walletBalance: user.walletBalance,
-        referralCode: user.referralCode
       },
     });
   } catch (error) {
@@ -173,8 +190,6 @@ export const loginUser = async (req, res, next) => {
         email: account.email,
         role: ROLES.USER,
         avatar: account.avatar,
-        walletBalance: account.walletBalance,
-        referralCode: account.referralCode
       },
     });
   } catch (error) {

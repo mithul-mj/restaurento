@@ -22,7 +22,7 @@ const RestaurantDetails = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [activeTab, setActiveTab] = useState("about");
-    const [partySize, setPartySize] = useState(location.state?.prefilledGuests || 2);
+    const [partySize, setPartySize] = useState(Number(location.state?.prefilledGuests || 2));
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
     const [cart, setCart] = useState(location.state?.prefilledCart || {});

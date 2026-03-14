@@ -5,7 +5,8 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
 const UserNavbar = () => {
-    const { user, avatar } = useSelector((state) => state.auth);
+    const { user } = useSelector((state) => state.auth);
+    const avatar = user?.avatar;
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isJumping, setIsJumping] = useState(false);
 
@@ -72,6 +73,7 @@ const UserNavbar = () => {
                             {[
                                 { to: "/", label: "Explore" },
                                 { to: "/my-bookings", label: "My Bookings" },
+                                { to: "/my-wallet", label: "My Wallet" },
                                 { to: "/offers", label: "Offers" }
                             ].map((link) => (
                                 <NavLink
@@ -104,9 +106,10 @@ const UserNavbar = () => {
                                     <img
                                         src={
                                             avatar ||
-                                            `https://ui-avatars.com/api/?name=${user?.fullName || user}&background=random`
+                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=ff5e00&color=fff`
                                         }
                                         alt="Profile"
+                                        referrerPolicy="no-referrer"
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
@@ -139,6 +142,7 @@ const UserNavbar = () => {
                             {[
                                 { to: "/", label: "Explore" },
                                 { to: "/my-bookings", label: "My Bookings" },
+                                { to: "/my-wallet", label: "My Wallet" },
                                 { to: "/offers", label: "Offers" },
                                 { to: "/wishlist", label: "Wishlist" }
                             ].map((link) => (
@@ -165,9 +169,10 @@ const UserNavbar = () => {
                                         <img
                                             src={
                                                 avatar ||
-                                                `https://ui-avatars.com/api/?name=${user?.fullName || user}&background=random`
+                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=ff5e00&color=fff`
                                             }
                                             alt="Profile"
+                                            referrerPolicy="no-referrer"
                                             className="w-full h-full object-cover"
                                         />
                                     </div>

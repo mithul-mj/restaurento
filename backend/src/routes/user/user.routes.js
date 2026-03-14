@@ -10,7 +10,9 @@ import { validate } from "../../middlewares/validate.middleware.js";
 import { createBookingSchema } from "../../validators/booking.validator.js";
 import {
     changeEmail,
+    getMyWalletHistory,
     getProfile,
+    getWalletBalance,
     updateProfile,
     verifyEmailChange,
 } from "../../controllers/user/userProfile.controller.js";
@@ -49,5 +51,7 @@ router.post("/booking", validate(createBookingSchema), BookingRestaurant);
 router.get("/bookings", getMyBookings);
 router.get("/bookings/:id", getBookingDetails);
 router.patch("/bookings/:id/cancel", cancelBooking);
+router.get('/wallet/balance', getWalletBalance)
+router.get('/wallet', getMyWalletHistory)
 
 export default router;

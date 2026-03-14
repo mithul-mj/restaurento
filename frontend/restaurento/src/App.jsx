@@ -73,6 +73,7 @@ const Wishlist = lazy(() => import("./pages/user/Wishlist"));
 const BookingSummary = lazy(() => import("./pages/user/BookingSummary"));
 const MyBookings = lazy(() => import("./pages/user/MyBookings"));
 const BookingDetails = lazy(() => import("./pages/user/BookingDetails"));
+const MyWallet = lazy(() => import("./pages/user/MyWallet"));
 
 function App() {
   const dispatch = useDispatch();
@@ -97,7 +98,6 @@ function App() {
           setCredentials({
             user: response.data.user,
             role: response.data.role?.toUpperCase(),
-            avatar: response.data.user.avatar,
           }),
         );
       } catch (error) {
@@ -143,6 +143,7 @@ function App() {
               <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/my-bookings/:id" element={<BookingDetails />} />
               <Route path="/booking-summary" element={<BookingSummary />} />
+              <Route path="/my-wallet" element={<MyWallet />} />
             </Route>
           </Route>
 

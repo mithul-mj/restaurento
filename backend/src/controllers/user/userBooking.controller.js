@@ -27,7 +27,7 @@ export const BookingRestaurant = async (req, res, next) => {
             },
             {
                 $project: {
-                    restaurantName: 1, // Added for wallet description
+                    restaurantName: 1,
                     slotPrice: 1,
                     slotConfig: 1,
                     openingHours: 1,
