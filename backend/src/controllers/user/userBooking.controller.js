@@ -8,6 +8,15 @@ import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../const
 import redisClient from '../../config/redis.js';
 import { getRealTimeAvailability } from '../../services/inventory.service.js';
 import ROLES from '../../constants/roles.js';
+import Razorpay from 'razorpay';
+import { env } from '../../config/env.config.js';
+import { sendEmail } from '../../services/commonAuth.service.js';
+import { getBookingConfirmationEmailTemplate } from '../../utils/emailTemplates.js';
+
+const razorpayInstance = new Razorpay({
+    key_id: env.RAZORPAY_KEY_ID,
+    key_secret: env.RAZORPAY_KEY_SECRET,
+});
 
 export const BookingRestaurant = async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -102,9 +111,9 @@ export const BookingRestaurant = async (req, res, next) => {
         }
 
         const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
-        await redisClient.del(holdKey);
-
-        const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
+        
+        // Check availability but ignore the user's own current hold so they don't block themselves
+        const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime, userId);
 
         if (trueAvailability < guests) {
             await session.abortTransaction();
@@ -147,25 +156,24 @@ export const BookingRestaurant = async (req, res, next) => {
 
         // --- Wallet Logic ---
         let walletAmountUsed = 0;
-        let paymentStatus = 'pending';
 
         if (useWallet) {
             const user = await User.findById(userId).session(session);
             if (user && user.walletBalance > 0) {
                 walletAmountUsed = Math.min(user.walletBalance, finalTotal);
 
-                // If FULL wallet payment, deduct now
+                // For full wallet payments, we deduct the balance immediately
                 if (walletAmountUsed === finalTotal) {
                     user.walletBalance -= walletAmountUsed;
                     await user.save({ session });
-                    paymentStatus = 'paid';
                 }
             }
         }
 
-        const booking = new Booking({
+        const pendingBookingData = {
             userId,
             restaurantId,
+            restaurantName: restaurant.restaurantName,
             bookingDate,
             slotTime,
             slotEndTime,
@@ -176,32 +184,72 @@ export const BookingRestaurant = async (req, res, next) => {
             platformFee,
             preOrderItems: verifiedPreOrderItems,
             status: 'approved',
-            paymentStatus: paymentStatus,
-            walletAmountUsed: walletAmountUsed // Store intent for partial payments
-        });
+            walletAmountUsed: walletAmountUsed,
+            holdKey: holdKey // Pass this so we can delete it after payment
+        };
 
-        // Create transaction log only for FULL wallet payments
-        if (paymentStatus === 'paid' && walletAmountUsed > 0) {
+        // --- CASE 1: FULL WALLET PAYMENT (Immediate DB Save) ---
+        if (walletAmountUsed === finalTotal) {
+            const booking = new Booking(pendingBookingData);
+
             const walletTx = await WalletTransaction.create([{
                 userId,
                 bookingId: booking._id,
-                amount: -walletAmountUsed, // Negative for debit
+                amount: -walletAmountUsed,
                 description: `Used wallet for booking at ${restaurant.restaurantName}`
             }], { session });
 
-            // Link the wallet transaction ID to the booking
             booking.walletTransactionId = walletTx[0]._id;
+
+            await booking.save({ session });
+            await session.commitTransaction();
+
+            // Delete the hold now that booking is confirmed
+            await redisClient.del(holdKey);
+
+            // Send Confirmation Email for Wallet Payment
+            try {
+                const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: restaurant.restaurantName }, req.user.fullName);
+                const subject = `Booking Confirmed: ${restaurant.restaurantName}`;
+                const text = `Your booking at ${restaurant.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()}.`;
+                await sendEmail(req.user.email, subject, text, html);
+            } catch (emailError) {
+                console.error("Email Error:", emailError);
+            }
+
+            return res.status(201).json({
+                success: true,
+                message: "Booking successful using wallet.",
+                booking,
+                remainingAmount: 0
+            });
         }
 
-        await booking.save({ session });
-
+        // --- CASE 2: ONLINE PAYMENT (Store in Redis) ---
+        // End current DB session as we don't save to MongoDB yet
         await session.commitTransaction();
+
+        const amountToPay = finalTotal - walletAmountUsed;
+        const options = {
+            amount: Math.round(amountToPay * 100),
+            currency: "INR",
+            receipt: `pending_rcpt_${Date.now()}`,
+        };
+
+        const order = await razorpayInstance.orders.create(options);
+
+        // Store data in Redis (10 minutes expiry)
+        const redisKey = `pending_booking:${order.id}`;
+        await redisClient.setEx(redisKey, 600, JSON.stringify(pendingBookingData));
+
+        // Keep the seats held for 10 minutes while the user completes payment
+        await redisClient.expire(holdKey, 600);
 
         res.status(201).json({
             success: true,
-            message: walletAmountUsed === finalTotal ? "Booking successful using wallet." : "Booking initiated successfully.",
-            booking,
-            remainingAmount: finalTotal - walletAmountUsed
+            message: "Booking initiated successfully.",
+            order,
+            remainingAmount: amountToPay
         });
 
     } catch (error) {
@@ -233,19 +281,24 @@ export const getMyBookings = async (req, res, next) => {
                 { bookingDate: { $gt: today } },
                 {
                     bookingDate: { $eq: today },
-                    slotTime: { $gte: currentMinutes }
+                    slotEndTime: { $gte: currentMinutes }
                 }
             ];
         } else if (type === 'canceled') {
             matchQuery.status = 'canceled';
         } else {
             // Past
-            matchQuery.status = 'approved';
             matchQuery.$or = [
-                { bookingDate: { $lt: today } },
-                {
-                    bookingDate: { $eq: today },
-                    slotTime: { $lt: currentMinutes }
+                { status: 'checked-in' },
+                { 
+                    status: 'approved',
+                    $or: [
+                        { bookingDate: { $lt: today } },
+                        {
+                            bookingDate: { $eq: today },
+                            slotEndTime: { $lt: currentMinutes }
+                        }
+                    ]
                 }
             ];
         }
@@ -265,20 +318,31 @@ export const getMyBookings = async (req, res, next) => {
                         {
                             $lookup: {
                                 from: 'restaurants',
-                                localField: 'restaurantId',
-                                foreignField: '_id',
+                                let: { rid: '$restaurantId' },
+                                pipeline: [
+                                    { $match: { $expr: { $eq: ['$_id', '$$rid'] } } },
+                                    {
+                                        $project: {
+                                            restaurantName: 1,
+                                            images: { $slice: ['$images', 1] }
+                                        }
+                                    }
+                                ],
                                 as: 'restaurant'
                             }
                         },
                         { $unwind: '$restaurant' },
                         {
-                            $addFields: {
-                                restaurant: {
-                                    _id: '$restaurant._id',
-                                    restaurantName: '$restaurant.restaurantName',
-                                    address: '$restaurant.address',
-                                    images: { $slice: ["$restaurant.images", 1] }
-                                }
+                            $project: {
+                                _id: 1,
+                                bookingDate: 1,
+                                slotTime: 1,
+                                guests: 1,
+                                status: 1,
+                                canceledBy: 1,
+                                totalAmount: 1,
+                                preOrderItems: 1,
+                                restaurant: 1
                             }
                         }
                     ]
@@ -405,9 +469,8 @@ export const cancelBooking = async (req, res, next) => {
             });
         }
 
-        // 1. Mark booking as canceled and refunded
+        // 1. Mark booking as canceled
         booking.status = 'canceled';
-        booking.paymentStatus = 'refunded';
         booking.canceledBy = ROLES.USER;
         await booking.save({ session });
 

@@ -58,10 +58,9 @@ const BookingSummary = () => {
             const response = await userService.createBooking(bookingData);
 
             if (response.success) {
-                const bookingId = response.booking._id;
-
-                // Handle Full Wallet Payment
+                // CASE 1: Full Wallet Payment (Booking ID is returned immediately)
                 if (response.remainingAmount === 0) {
+                    const bookingId = response.booking._id;
                     setIsBookingConfirmed(true);
                     showToast("Booking successful using wallet!", "success");
                     if (socket && user) {
@@ -78,9 +77,8 @@ const BookingSummary = () => {
                     return;
                 }
 
-                // Proceed with Razorpay for remaining amount
-                const orderRes = await userService.createRazorpayOrder(bookingId);
-                const order = orderRes.order;
+                // CASE 2: Online/Partial Payment (Order is returned, No Booking ID yet)
+                const order = response.order;
 
                 const options = {
                     key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -94,10 +92,11 @@ const BookingSummary = () => {
                             const verifyRes = await userService.verifyRazorpayPayment({
                                 razorpay_order_id: rzpResponse.razorpay_order_id,
                                 razorpay_payment_id: rzpResponse.razorpay_payment_id,
-                                razorpay_signature: rzpResponse.razorpay_signature,
-                                bookingId: bookingId
+                                razorpay_signature: rzpResponse.razorpay_signature
                             });
+
                             if (verifyRes.success) {
+                                const finalBookingId = verifyRes.bookingId;
                                 setIsBookingConfirmed(true);
                                 showToast("Payment Successful!", "success");
 
@@ -108,7 +107,7 @@ const BookingSummary = () => {
                                         slotMinutes: initialData.timeSlotMinutes || timeSlot,
                                         seats: partySize,
                                         userId: user._id || user.id,
-                                        bookingId: bookingId
+                                        bookingId: finalBookingId
                                     });
                                 }
                                 navigate('/my-bookings');
@@ -121,11 +120,9 @@ const BookingSummary = () => {
                 };
 
                 const rzp = new window.Razorpay(options);
-
-                rzp.on('payment.failed', function (response) {
+                rzp.on('payment.failed', function (rzpResponse) {
                     showToast("Payment Failed or Cancelled", "error");
                 });
-
                 rzp.open();
             }
         } catch (error) {

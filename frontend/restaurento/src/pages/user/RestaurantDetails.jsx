@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Star, MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check, AlertTriangle
+    Star, MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check, AlertTriangle, Armchair
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "../../services/user.service";
@@ -567,8 +567,9 @@ const RestaurantDetails = () => {
                                             const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
                                             const liveAvailableSeats = selectedSlotMinutes && liveSlotAvailability[selectedSlotMinutes] !== undefined
                                                 ? liveSlotAvailability[selectedSlotMinutes]
-                                                : restaurant?.totalSeats || 1;
-                                            const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 1, liveAvailableSeats));
+                                                : restaurant?.totalSeats || 10;
+                                            
+                                            const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 10, liveAvailableSeats));
 
                                             return (
                                                 <motion.button
@@ -583,6 +584,30 @@ const RestaurantDetails = () => {
                                             );
                                         })()}
                                     </div>
+                                    
+                                    {/* Subtle Seat Availability UI */}
+                                    {(() => {
+                                        const selectedSlotIndex = availableLabels.indexOf(selectedTimeSlot);
+                                        const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
+                                        const seatsLeft = selectedSlotMinutes !== null && liveSlotAvailability[selectedSlotMinutes] !== undefined
+                                            ? liveSlotAvailability[selectedSlotMinutes]
+                                            : null;
+
+                                        if (seatsLeft === null) return null;
+
+                                        return (
+                                            <motion.div 
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="mt-1.5 flex items-center gap-1.5 text-gray-400"
+                                            >
+                                                <Armchair size={13} className="text-gray-300" />
+                                                <span className="text-[11px] font-medium">
+                                                    {seatsLeft} {seatsLeft === 1 ? 'seat' : 'seats'} left, hurry up!
+                                                </span>
+                                            </motion.div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 
@@ -601,6 +626,30 @@ const RestaurantDetails = () => {
                                                     <button
                                                         key={startTimeInMinutes}
                                                         onClick={async () => {
+                                                            const availableSeats = liveSlotAvailability[startTimeInMinutes];
+
+                                                            // Handle fully booked slots
+                                                            if (availableSeats === 0) {
+                                                                showToast(`Sorry, ${timeLabel} is now fully booked!`, 'info');
+                                                                return;
+                                                            }
+
+                                                            // Handle partial availability by asking to adjust party size
+                                                            if (availableSeats !== undefined && availableSeats < partySize) {
+                                                                const confirmAdjust = await showConfirm(
+                                                                    "Adjust Party Size?",
+                                                                    `Only <b>${availableSeats}</b> seats are available at ${timeLabel}. Do you want to reduce your party size to <b>${availableSeats}</b> and select this slot?`,
+                                                                    "Yes, Adjust",
+                                                                    true // isHtml
+                                                                );
+
+                                                                if (confirmAdjust.isConfirmed) {
+                                                                    setPartySize(availableSeats);
+                                                                } else {
+                                                                    return;
+                                                                }
+                                                            }
+
                                                             // Check conflicting cart items
                                                             const newCategory = getCategoryFromTimeSlot(timeLabel);
                                                             const cartItemsList = Object.values(cart);
@@ -636,12 +685,17 @@ const RestaurantDetails = () => {
                                                                 setActiveTab("menu");
                                                             }
                                                         }}
-                                                        className={`py-2 text-xs font-semibold rounded-lg border transition-all ${selectedTimeSlot === timeLabel
+                                                        className={`relative py-2 text-xs font-semibold rounded-lg border transition-all ${selectedTimeSlot === timeLabel
                                                             ? "bg-[#ff5e00] text-white border-[#ff5e00] shadow-md shadow-orange-200 scale-105"
-                                                            : "bg-white text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                                                            : (liveSlotAvailability[startTimeInMinutes] === 0
+                                                                ? "bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed opacity-60"
+                                                                : "bg-white text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-50")
                                                             }`}
                                                     >
                                                         {timeLabel}
+                                                        {liveSlotAvailability[startTimeInMinutes] === 0 && (
+                                                            <span className="absolute -top-1.5 -right-1.5 px-1 bg-red-500 text-[8px] text-white rounded-md font-black uppercase tracking-tighter shadow-sm">Full</span>
+                                                        )}
                                                     </button>
                                                 );
                                             });

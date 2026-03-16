@@ -3,18 +3,24 @@ import { Restaurant } from "../models/Restaurant.model.js";
 import { Booking } from "../models/Booking.model.js";
 import mongoose from "mongoose";
 
-const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes) => {
+const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes, excludeUserId = null) => {
     // Redis key format: hold:userId:restaurantId:date:slotMinutes:seats:seatsCount
     const pattern = `hold:*:${restaurantId}:${date}:${slotMinutes}:seats:*`;
-    const keys = await redisClient.keys(pattern);
+    let keys = await redisClient.keys(pattern);
+    
+    if (excludeUserId) {
+        const excludePattern = `hold:${excludeUserId}:${restaurantId}:${date}:${slotMinutes}:seats:`;
+        keys = keys.filter(key => !key.startsWith(excludePattern));
+    }
+
     if (keys.length === 0) return 0;
 
-    // total up the temporary seats currently held in shopping carts
+    // Sum up all temporary seat holds found in Redis
     const values = await redisClient.mGet(keys);
     return values.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
 };
 
-export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) => {
+export const getRealTimeAvailability = async (restaurantId, date, slotMinutes, excludeUserId = null) => {
     const restaurant = await Restaurant.findById(restaurantId).select("totalSeats");
     if (!restaurant) throw new Error("Restaurant not found");
     const totalSeats = restaurant.totalSeats || 0;
@@ -30,8 +36,7 @@ export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) =
             $match: {
                 restaurantId: new mongoose.Types.ObjectId(restaurantId),
                 bookingDate: { $gte: searchDate, $lt: nextDate },
-                status: "approved",
-                paymentStatus: { $ne: "pending" }, // Don't count pending bookings as occupied seats
+                status: { $in: ["approved", "checked-in"] },
                 slotTime: { $lte: parseInt(slotMinutes) },
                 slotEndTime: { $gt: parseInt(slotMinutes) }
             }
@@ -47,9 +52,9 @@ export const getRealTimeAvailability = async (restaurantId, date, slotMinutes) =
     const bookedGuests = approvedBookings.length > 0 ? approvedBookings[0].totalGuests : 0;
 
     // Get temporary holds from Redis
-    const activeHolds = await getActiveHoldsForSlot(restaurantId, date, slotMinutes);
+    const activeHolds = await getActiveHoldsForSlot(restaurantId, date, slotMinutes, excludeUserId);
 
-    // Availability = Total - Permanent Bookings - Temporary Holds
+    // Total available = Restaurant Capacity - Confirmed Bookings - Current Holds
     return Math.max(0, totalSeats - bookedGuests - activeHolds);
 };
 

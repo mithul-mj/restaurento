@@ -385,7 +385,6 @@ export const getRestaurantBookings = async (req, res, next) => {
 
         if (status === "upcoming") {
             matchQuery.status = "approved";
-            matchQuery.paymentStatus = "paid";
             matchQuery.$or = [
                 { bookingDate: { $gt: today } },
                 {
@@ -395,10 +394,9 @@ export const getRestaurantBookings = async (req, res, next) => {
             ];
         } else if (status === "completed") {
             matchQuery.$or = [
-                { status: "checked-in", paymentStatus: "paid" },
+                { status: "checked-in" },
                 {
                     status: "approved",
-                    paymentStatus: "paid",
                     $or: [
                         { bookingDate: { $lt: today } },
                         {
@@ -412,10 +410,7 @@ export const getRestaurantBookings = async (req, res, next) => {
             matchQuery.status = "canceled";
         } else {
             // all status
-            matchQuery.$or = [
-                { paymentStatus: "paid" },
-                { status: "canceled" }
-            ];
+            matchQuery.status = { $in: ["approved", "checked-in", "canceled"] };
         }
 
         const aggregate = [
@@ -515,10 +510,6 @@ export const verifyCheckIn = async (req, res, next) => {
             return res.status(STATUS_CODES.CONFLICT).json({ message: "Guest is already checked-in" });
         }
 
-        if (booking.paymentStatus !== "paid") {
-            return res.status(STATUS_CODES.PAYMENT_REQUIRED).json({ message: "Payment has not been completed for this booking" });
-        }
-
         booking.status = "checked-in";
         await booking.save();
 
@@ -611,23 +602,23 @@ export const getRestaurantStats = async (req, res, next) => {
             {
                 $match: {
                     restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                    paymentStatus: { $in: ['paid', 'refunded'] }
+                    status: { $in: ['approved', 'checked-in', 'canceled'] }
                 }
             },
             {
                 $group: {
                     _id: null,
                     totalEarnings: {
-                        $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, "$totalAmount", 0] }
+                        $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, "$totalAmount", 0] }
                     },
                     totalRefunded: {
-                        $sum: { $cond: [{ $eq: ["$paymentStatus", "refunded"] }, "$totalAmount", 0] }
+                        $sum: { $cond: [{ $eq: ["$status", "canceled"] }, "$totalAmount", 0] }
                     },
                     successfulBookings: {
-                        $sum: { $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0] }
+                        $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, 1, 0] }
                     },
                     refundedBookings: {
-                        $sum: { $cond: [{ $eq: ["$paymentStatus", "refunded"] }, 1, 0] }
+                        $sum: { $cond: [{ $eq: ["$status", "canceled"] }, 1, 0] }
                     }
                 }
             }

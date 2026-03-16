@@ -52,7 +52,13 @@ const BookingDetails = () => {
     const booking = data.data;
     const restaurant = booking.restaurant;
     const isCanceled = booking.status === "canceled";
-    const isPast = new Date(booking.bookingDate) < new Date();
+
+    // Simplified expiration logic: Create a single "Expiry Moment"
+    const slotEndTime = booking.slotEndTime || (booking.slotTime + 60);
+    const expiryTime = new Date(booking.bookingDate);
+    expiryTime.setHours(Math.floor(slotEndTime / 60), slotEndTime % 60, 0, 0);
+
+    const isPast = new Date() > expiryTime;
 
     const handleCancel = () => {
         showConfirm(

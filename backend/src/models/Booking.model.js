@@ -42,12 +42,6 @@ const bookingSchema = new Schema(
             enum: ["USER", "RESTAURANT"],
             default: null,
         },
-        paymentStatus: {
-            type: String,
-            enum: ["pending", "paid", "failed", "refunded"],
-            default: "pending",
-            required: true,
-        },
         totalAmount: {
             type: Number,
             required: true,
