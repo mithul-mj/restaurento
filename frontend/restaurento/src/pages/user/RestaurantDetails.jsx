@@ -568,7 +568,7 @@ const RestaurantDetails = () => {
                                             const liveAvailableSeats = selectedSlotMinutes && liveSlotAvailability[selectedSlotMinutes] !== undefined
                                                 ? liveSlotAvailability[selectedSlotMinutes]
                                                 : restaurant?.totalSeats || 10;
-                                            
+
                                             const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 10, liveAvailableSeats));
 
                                             return (
@@ -584,7 +584,7 @@ const RestaurantDetails = () => {
                                             );
                                         })()}
                                     </div>
-                                    
+
                                     {/* Subtle Seat Availability UI */}
                                     {(() => {
                                         const selectedSlotIndex = availableLabels.indexOf(selectedTimeSlot);
@@ -596,7 +596,7 @@ const RestaurantDetails = () => {
                                         if (seatsLeft === null) return null;
 
                                         return (
-                                            <motion.div 
+                                            <motion.div
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 className="mt-1.5 flex items-center gap-1.5 text-gray-400"
