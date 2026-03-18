@@ -1,4 +1,5 @@
 import { Restaurant } from "../../models/Restaurant.model.js";
+import { Schedule } from "../../models/Schedule.model.js";
 import mongoose from "mongoose";
 import STATUS_CODES from "../../constants/statusCodes.js";
 
@@ -45,9 +46,39 @@ export const getUserDashboard = async (req, res, next) => {
       pipeline.push({ $match: baseQuery });
     }
 
-    // (Search, Rating, Cost)
-    const matchConditions = [];
+    // Get the active schedule to handle filtering/sorting
+    const lookupScheduleStage = [
+      {
+        $lookup: {
+          from: "schedules",
+          let: { rid: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$restaurantId", "$$rid"] },
+                validFrom: { $lte: new Date() }
+              }
+            },
+            { $sort: { validFrom: -1 } },
+            { $limit: 1 }
+          ],
+          as: "schedule"
+        }
+      },
+      { $unwind: "$schedule" },
+      {
+        $addFields: {
+          slotPrice: "$schedule.slotPrice",
+          openingHours: "$schedule.openingHours",
+          slotConfig: "$schedule.slotConfig"
+        }
+      }
+    ];
 
+    pipeline.push(...lookupScheduleStage);
+
+    // Filter by Search, Rating, and Cost
+    const matchConditions = [];
     if (search) {
       matchConditions.push({
         $or: [
@@ -57,19 +88,16 @@ export const getUserDashboard = async (req, res, next) => {
       });
     }
 
-    // Rating
     if (rating === '3.5+') matchConditions.push({ 'ratingStats.average': { $gte: 3.5 } });
     else if (rating === '4.0+') matchConditions.push({ 'ratingStats.average': { $gte: 4.0 } });
     else if (rating === '4.5+') matchConditions.push({ 'ratingStats.average': { $gte: 4.5 } });
 
-    // Cost
     let costFilters = [];
     if (cost) {
       if (typeof cost === 'string') costFilters = cost.split(',').map(c => c.trim());
       else if (Array.isArray(cost)) costFilters = cost.map(c => c.trim());
     }
     const priceConditions = [];
-
     for (const c of costFilters) {
       if (c === '100-200') priceConditions.push({ slotPrice: { $gte: 100, $lte: 200 } });
       else if (c === '200-300') priceConditions.push({ slotPrice: { $gte: 200, $lte: 300 } });
@@ -77,21 +105,19 @@ export const getUserDashboard = async (req, res, next) => {
       else if (c === '400-500') priceConditions.push({ slotPrice: { $gte: 400, $lte: 500 } });
       else if (c === '500+') priceConditions.push({ slotPrice: { $gte: 500 } });
     }
-    if (priceConditions.length > 0) {
-      matchConditions.push({ $or: priceConditions });
-    }
+    if (priceConditions.length > 0) matchConditions.push({ $or: priceConditions });
 
-    // Apply all
     if (matchConditions.length > 0) {
       pipeline.push({ $match: { $and: matchConditions } });
     }
 
-    // 3. Sorting
+    // Sorting
     let sortOptions = {};
     if (sort === 'rating_high_low') sortOptions = { 'ratingStats.average': -1 };
     else if (sort === 'cost_low_high') sortOptions = { slotPrice: 1 };
     else if (sort === 'cost_high_low') sortOptions = { slotPrice: -1 };
     else if (sort === 'distance' && !isNaN(lat) && !isNaN(lng)) sortOptions = { distanceFromUser: 1 };
+
     if (Object.keys(sortOptions).length > 0) {
       pipeline.push({ $sort: sortOptions });
     }
@@ -196,54 +222,52 @@ export const getRestaurantDetails = async (req, res, next) => {
       return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
     }
 
+    // Get restaurant info and current schedule in parallel
+    const [restaurant, activeSchedule] = await Promise.all([
+      Restaurant.findOne({ _id: id, status: "active" })
+        .select("-documents -onboardingStep -submissionAttempts -verificationStatus -isOnboardingCompleted -ownerId -menuItems -__v")
+        .lean(),
+      Schedule.findOne({
+        restaurantId: id,
+        validFrom: { $lte: new Date() }
+      })
+        .sort({ validFrom: -1 })
+        .lean()
+    ]);
+
+    if (!restaurant) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant not found" });
+    }
+
+    if (!activeSchedule) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant schedule not found" });
+    }
+
+    // 2. Prepare for "Currently Open" calculation
     const now = new Date();
     const day = now.getDay();
     const currentDayIndex = day === 0 ? 6 : day - 1;
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const result = await Restaurant.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(id), status: "active" } },
-      {
-        $addFields: {
-          todaySchedule: { $arrayElemAt: ["$openingHours.days", currentDayIndex] }
-        }
-      },
-      {
-        $addFields: {
-          isCurrentlyOpen: {
-            $cond: {
-              if: {
-                $and: [
-                  { $eq: ["$isTemporaryClosed", false] },
-                  { $eq: ["$todaySchedule.isClosed", false] },
-                  { $gte: [currentMinutes, "$todaySchedule.startTime"] },
-                  { $lte: [currentMinutes, "$todaySchedule.endTime"] }
-                ]
-              },
-              then: true,
-              else: false
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          documents: 0,
-          onboardingStep: 0,
-          submissionAttempts: 0,
-          verificationStatus: 0,
-          isOnboardingCompleted: 0,
-          ownerId: 0,
-          menuItems: 0,
-        }
-      }
-    ]);
+    const todaySchedule = activeSchedule.openingHours.days[currentDayIndex];
 
-    if (!result || result.length === 0) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant not found" });
-    }
+    // Logic to check if open for business right now
+    const isCurrentlyOpen = !restaurant.isTemporaryClosed &&
+      !todaySchedule.isClosed &&
+      currentMinutes >= todaySchedule.startTime &&
+      currentMinutes <= todaySchedule.endTime;
 
-    res.status(STATUS_CODES.OK).json({ success: true, restaurant: result[0] });
+    // Combine everything for the frontend
+    const finalRestaurantData = {
+      ...restaurant,
+      openingHours: activeSchedule.openingHours,
+      slotConfig: activeSchedule.slotConfig,
+      totalSeats: activeSchedule.totalSeats,
+      slotPrice: activeSchedule.slotPrice,
+      isCurrentlyOpen: isCurrentlyOpen
+    };
+
+    res.status(STATUS_CODES.OK).json({ success: true, restaurant: finalRestaurantData });
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import ROLES from "../../constants/roles.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
+import { Schedule } from "../../models/Schedule.model.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import jwt from 'jsonwebtoken';
 import { env } from "../../config/env.config.js";
@@ -74,11 +75,29 @@ export const preApprovalRestaurant = async (req, res, next) => {
 
 export const getRestaurantProfile = async (req, res, next) => {
     try {
-        const restaurant = await Restaurant.findById(req.user._id);
+        const [restaurant, activeSchedule] = await Promise.all([
+            Restaurant.findById(req.user._id).lean(),
+            Schedule.findOne({
+                restaurantId: req.user._id,
+                validFrom: { $lte: new Date() }
+            }).sort({ validFrom: -1 }).lean()
+        ]);
+
         if (!restaurant) {
             return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
         }
-        return res.status(STATUS_CODES.OK).json({ success: true, restaurant });
+
+        const mergedProfile = {
+            ...restaurant,
+            ...(activeSchedule ? {
+                openingHours: activeSchedule.openingHours,
+                slotConfig: activeSchedule.slotConfig,
+                totalSeats: activeSchedule.totalSeats,
+                slotPrice: activeSchedule.slotPrice,
+            } : {})
+        };
+
+        return res.status(STATUS_CODES.OK).json({ success: true, restaurant: mergedProfile });
     } catch (error) {
         next(error);
     }
@@ -100,15 +119,12 @@ export const updateRestaurantProfile = async (req, res, next) => {
         if (!restaurant) {
             return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
         }
-        if (description) restaurant.description = description;
-        if (totalSeats) restaurant.totalSeats = Number(totalSeats);
-        if (slotPrice) restaurant.slotPrice = Number(slotPrice);
-        if (slotConfig) restaurant.slotConfig = typeof slotConfig === 'string' ? JSON.parse(slotConfig) : slotConfig;
-        if (openingHours) restaurant.openingHours = typeof openingHours === 'string' ? JSON.parse(openingHours) : openingHours;
-        if (tags) {
-            restaurant.tags = tags;
-        }
 
+        // Static profile updates
+        if (description) restaurant.description = description;
+        if (tags) restaurant.tags = tags;
+
+        // Image management
         let currentImages = [];
         if (existingImages) {
             try {
@@ -132,17 +148,41 @@ export const updateRestaurantProfile = async (req, res, next) => {
             const newImageUrls = req.files.map(file => file.path);
             currentImages = [...currentImages, ...newImageUrls];
         }
-
         restaurant.images = currentImages;
+
+        // Timing/Seats/Price changes trigger the 5-day lead time rule
+        if (totalSeats || slotPrice || slotConfig || openingHours) {
+            const transitionDate = new Date();
+            transitionDate.setDate(transitionDate.getDate() + 5);
+            transitionDate.setUTCHours(0, 0, 0, 0); // Start of the 6th day
+
+            const scheduleData = {
+                restaurantId: req.user._id,
+                validFrom: transitionDate,
+                totalSeats: totalSeats ? Number(totalSeats) : undefined,
+                slotPrice: slotPrice ? Number(slotPrice) : undefined,
+                slotConfig: slotConfig ? (typeof slotConfig === 'string' ? JSON.parse(slotConfig) : slotConfig) : undefined,
+                openingHours: openingHours ? (typeof openingHours === 'string' ? JSON.parse(openingHours) : openingHours) : undefined
+            };
+
+            // Fallback to previous settings for any fields not being changed
+            const lastSchedule = await Schedule.findOne({ restaurantId: req.user._id }).sort({ validFrom: -1 });
+            if (lastSchedule) {
+                scheduleData.totalSeats = scheduleData.totalSeats ?? lastSchedule.totalSeats;
+                scheduleData.slotPrice = scheduleData.slotPrice ?? lastSchedule.slotPrice;
+                scheduleData.slotConfig = scheduleData.slotConfig ?? lastSchedule.slotConfig;
+                scheduleData.openingHours = scheduleData.openingHours ?? lastSchedule.openingHours;
+            }
+
+            await Schedule.create(scheduleData);
+        }
 
         await restaurant.save();
 
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Restaurant profile updated successfully",
-            restaurant
+            message: "Profile updated successfully. Timing changes will take effect in 5 days."
         });
-
     } catch (error) {
         next(error);
     }

@@ -64,21 +64,7 @@ const restaurantSchema = new Schema(
     },
     tags: [{ type: String }], // Cuisine tags: ["Italian", "Fast Food", etc.]
 
-    openingHours: {
-      isSameEveryDay: { type: Boolean, default: false },
-      days: [dayHoursSchema], // Array of 7 days (index 0=Monday to 6=Sunday)
-    },
-
-    slotConfig: {
-      duration: { type: Number, default: 60 }, // Minutes per slot
-      gap: { type: Number, default: 0 }, // Gap between slots
-    },
-
     // Onboarding Step 2: Seating & Location
-    totalSeats: {
-      type: Number,
-      min: 0,
-    },
     images: [{ type: String }],
     address: {
       type: String,
@@ -105,10 +91,6 @@ const restaurantSchema = new Schema(
 
     // Onboarding Step 4: Menu & Pricing
     menuItems: [menuSchema],
-    slotPrice: {
-      type: Number,
-      min: 0,
-    },
 
     // System fields
     status: {

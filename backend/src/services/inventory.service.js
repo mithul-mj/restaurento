@@ -1,5 +1,6 @@
 import redisClient from "../config/redis.js";
 import { Restaurant } from "../models/Restaurant.model.js";
+import { Schedule } from "../models/Schedule.model.js";
 import { Booking } from "../models/Booking.model.js";
 import mongoose from "mongoose";
 
@@ -21,9 +22,15 @@ const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes, excludeUse
 };
 
 export const getRealTimeAvailability = async (restaurantId, date, slotMinutes, excludeUserId = null) => {
-    const restaurant = await Restaurant.findById(restaurantId).select("totalSeats");
-    if (!restaurant) throw new Error("Restaurant not found");
-    const totalSeats = restaurant.totalSeats || 0;
+    // Get the schedule applicable for the booking date
+    const bookingDate = new Date(date);
+    const activeSchedule = await Schedule.findOne({
+        restaurantId: restaurantId,
+        validFrom: { $lte: bookingDate }
+    }).sort({ validFrom: -1 }).select("totalSeats");
+
+    if (!activeSchedule) throw new Error("Restaurant schedule not found for this date");
+    const totalSeats = activeSchedule.totalSeats || 0;
 
     const searchDate = new Date(date);
     searchDate.setUTCHours(0, 0, 0, 0);

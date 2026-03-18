@@ -1,6 +1,7 @@
 import multer from "multer";
 import { storage } from "../../config/cloudinary.config.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
+import { Schedule } from "../../models/Schedule.model.js";
 import { sendEmail } from "../../services/commonAuth.service.js";
 import { getPreApprovalEmailTemplate } from "../../utils/emailTemplates.js";
 import { timeToMinutes } from "../../utils/timeUtils.js";
@@ -81,18 +82,18 @@ export const submitOnboarding = async (req, res, next) => {
 
     const restaurantData = {
       description: body.description,
-      totalSeats: Number(body.totalSeats),
-      slotPrice: Number(body.slotPrice),
       tags: tags,
-      openingHours,
-      slotConfig,
       menuItems,
       images: galleryUrls,
       isOnboardingCompleted: true,
     };
 
-
-
+    const scheduleData = {
+      openingHours,
+      slotConfig,
+      totalSeats: Number(body.totalSeats),
+      slotPrice: Number(body.slotPrice),
+    };
 
     const existingRestaurant = await Restaurant.findById(user._id);
 
@@ -120,13 +121,21 @@ export const submitOnboarding = async (req, res, next) => {
       { new: true }
     );
 
-    console.log("=== DEBUG INFO ===");
-    console.log("Tags received:", tags);
-    console.log("Menu items parsed:", menuItems);
-    console.log("Images received:", galleryUrls);
-    console.log("Opening Hours:", JSON.stringify(openingHours, null, 2));
-    console.log("Slot Config:", slotConfig);
-    console.log("==================");
+    // Initial schedule entry starting from today midnight
+    const startDate = new Date();
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    await Schedule.create({
+      restaurantId: user._id,
+      validFrom: startDate,
+      ...scheduleData,
+    });
+
+    console.log("=== Onboarding Debug ===");
+    console.log("Tags:", tags);
+    console.log("Menu Items:", menuItems.length);
+    console.log("Images:", galleryUrls.length);
+    console.log("========================");
 
     if (!updatedRestaurant) {
       return res.status(STATUS_CODES.NOT_FOUND).json({

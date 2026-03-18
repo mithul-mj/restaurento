@@ -3,6 +3,7 @@ import { Booking } from '../../models/Booking.model.js'
 import { WalletTransaction } from '../../models/WalletTransaction.model.js'
 import { User } from '../../models/User.model.js'
 import { Restaurant } from '../../models/Restaurant.model.js';
+import { Schedule } from '../../models/Schedule.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import redisClient from '../../config/redis.js';
@@ -30,34 +31,30 @@ export const BookingRestaurant = async (req, res, next) => {
             item => new mongoose.Types.ObjectId(item.dishId)
         );
 
-        const [restaurant] = await Restaurant.aggregate([
-            {
-                $match: { _id: new mongoose.Types.ObjectId(restaurantId) }
-            },
-            {
-                $project: {
-                    restaurantName: 1,
-                    slotPrice: 1,
-                    slotConfig: 1,
-                    openingHours: 1,
-                    menuItems: {
-                        $filter: {
-                            input: "$menuItems",
-                            as: "item",
-                            cond: {
-                                $in: ["$$item._id", requestedDishIds]
-                            }
-                        }
+        const [restaurant, activeSchedule] = await Promise.all([
+            Restaurant.findOne({ 
+                _id: new mongoose.Types.ObjectId(restaurantId) 
+            }, {
+                restaurantName: 1,
+                menuItems: {
+                    $filter: {
+                        input: "$menuItems",
+                        as: "item",
+                        cond: { $in: ["$$item._id", requestedDishIds] }
                     }
                 }
-            }
-        ]).session(session);
+            }).lean(),
+            Schedule.findOne({
+                restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                validFrom: { $lte: new Date(bookingDate) }
+            }).sort({ validFrom: -1 }).lean()
+        ]);
 
-        if (!restaurant) {
+        if (!restaurant || !activeSchedule) {
             await session.abortTransaction();
             return res.status(STATUS_CODES.NOT_FOUND).json({
                 success: false,
-                message: "Restaurant not found."
+                message: "Restaurant or Active Schedule not found."
             });
         }
 
@@ -91,7 +88,7 @@ export const BookingRestaurant = async (req, res, next) => {
 
         const dayOfWeek = requestedDate.getDay();
         const dayIndex = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
-        const dayConfig = restaurant.openingHours?.days?.[dayIndex];
+        const dayConfig = activeSchedule.openingHours?.days?.[dayIndex];
 
         if (!dayConfig || dayConfig.isClosed) {
             await session.abortTransaction();
@@ -112,7 +109,7 @@ export const BookingRestaurant = async (req, res, next) => {
 
         const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
         
-        // Check availability but ignore the user's own current hold so they don't block themselves
+        // Check availability but ignore the user's current hold
         const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime, userId);
 
         if (trueAvailability < guests) {
@@ -123,7 +120,7 @@ export const BookingRestaurant = async (req, res, next) => {
             });
         }
 
-        const pricePerPerson = restaurant.slotPrice || 0;
+        const pricePerPerson = activeSchedule.slotPrice || 0;
         const bookingFee = pricePerPerson * guests;
 
         let itemTotal = 0;
@@ -151,10 +148,10 @@ export const BookingRestaurant = async (req, res, next) => {
         const platformFee = subtotal * PLATFORM_FEE_RATE;
         const finalTotal = subtotal + tax + platformFee;
 
-        const duration = restaurant.slotConfig?.duration || 60;
+        const duration = activeSchedule.slotConfig?.duration || 60;
         const slotEndTime = slotTime + duration;
 
-        // --- Wallet Logic ---
+        // Wallet Logic
         let walletAmountUsed = 0;
 
         if (useWallet) {

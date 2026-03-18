@@ -1,5 +1,6 @@
 import ROLES from "../../constants/roles.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
+import { Schedule } from "../../models/Schedule.model.js";
 import redisClient from "../../config/redis.js";
 import { env } from "../../config/env.config.js";
 import { sendEmail } from "../../services/commonAuth.service.js";
@@ -195,41 +196,60 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
 export const RestaurantDetails = async (req, res, next) => {
   try {
     const { restaurantId } = req.params;
-    const restaurant = await Restaurant.findById(restaurantId, {
-      _id: 1,
-      fullName: 1,
-      restaurantName: 1,
-      restaurantPhone: 1,
-      phone: 1,
-      email: 1,
-      address: 1,
-      location: 1,
-      documents: 1,
-      createdAt: 1,
-      isEmailVerified: 1,
-      location: 1,
-      status: 1,
-      verificationStatus: 1,
-      isOnboardingCompleted: 1,
-      description: 1,
-      tags: 1,
-      openingHours: 1,
-      slotConfig: 1,
-      totalSeats: 1,
-      images: 1,
-      menuItems: 1,
-      slotPrice: 1,
-      verificationHistory: 1,
-      submissionAttempts: 1,
-    });
+
+    // Parallel fetch for restaurant profile and current schedule
+    const [restaurant, activeSchedule] = await Promise.all([
+      Restaurant.findById(restaurantId, {
+        _id: 1,
+        fullName: 1,
+        restaurantName: 1,
+        restaurantPhone: 1,
+        phone: 1,
+        email: 1,
+        address: 1,
+        location: 1,
+        documents: 1,
+        createdAt: 1,
+        isEmailVerified: 1,
+        status: 1,
+        verificationStatus: 1,
+        isOnboardingCompleted: 1,
+        description: 1,
+        tags: 1,
+        images: 1,
+        menuItems: 1,
+        verificationHistory: 1,
+        submissionAttempts: 1,
+      }).lean(),
+      Schedule.findOne({
+        restaurantId,
+        validFrom: { $lte: new Date() }
+      }).sort({ validFrom: -1 }).lean()
+    ]);
 
     if (!restaurant) {
       return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found." });
     }
 
+    // Combine data
+    const mergedData = {
+      ...restaurant,
+      ...(activeSchedule ? {
+        openingHours: activeSchedule.openingHours,
+        slotConfig: activeSchedule.slotConfig,
+        totalSeats: activeSchedule.totalSeats,
+        slotPrice: activeSchedule.slotPrice,
+      } : {
+        openingHours: null,
+        slotConfig: null,
+        totalSeats: 0,
+        slotPrice: 0,
+      })
+    };
+
     res.status(STATUS_CODES.OK).json({
       message: `Restaurant details fetched successfully`,
-      user: restaurant,
+      user: mergedData,
     });
   } catch (error) {
     next(error);
