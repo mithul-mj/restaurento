@@ -12,14 +12,9 @@ const couponSchema = new Schema(
     description: {
       type: String,
     },
-    discountType: {
-      type: String,
-      enum: ["percentage", "fixed"],
-      default: "percentage",
-    },
     discountValue: {
       type: Number,
-      required: true,
+      required: true, // Represents the percentage
     },
     maxDiscountCap: {
       type: Number,

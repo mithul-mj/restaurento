@@ -60,11 +60,10 @@ const RestaurantManagement = lazy(
   () => import("./pages/admin/RestaurantManagement"),
 );
 const RestaurantDetails = lazy(() => import("./pages/admin/RestaurantDetails"));
-const AdminReports = lazy(() => import("./pages/admin/Reports"));
-const AdminBookings = lazy(() => import("./pages/admin/Bookings"));
 const AdminFinance = lazy(() => import("./pages/admin/Finance"));
 const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
 const Coupons = lazy(() => import("./pages/admin/Coupons"));
+const CouponDetails = lazy(() => import("./pages/admin/CouponDetails"));
 const Banners = lazy(() => import("./pages/admin/Banners"));
 const UserRestaurantDetails = lazy(
   () => import("./pages/user/RestaurantDetails"),
@@ -204,10 +203,9 @@ function App() {
                 path="/admin/restaurants/:restaurantId"
                 element={<RestaurantDetails />}
               />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/bookings" element={<AdminBookings />} />
               <Route path="/admin/finance" element={<AdminFinance />} />
               <Route path="/admin/coupons" element={<Coupons />} />
+              <Route path="/admin/coupons/:id" element={<CouponDetails />} />
               <Route path="/admin/banners" element={<Banners />} />
               <Route path="/admin/profile" element={<AdminProfile />} />
             </Route>

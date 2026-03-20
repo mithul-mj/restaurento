@@ -73,6 +73,16 @@ const bookingSchema = new Schema(
             type: Number,
             default: 0,
         },
+        appliedCoupon: {
+            couponId: {
+                type: Schema.Types.ObjectId,
+                ref: "Coupon",
+                default: null,
+            },
+            code: { type: String },
+            discountValue: { type: Number }, // Represents the percentage
+            discountAmountApplied: { type: Number }, // Actual currency saved
+        },
         preOrderItems: [
             {
                 dishId: { type: Schema.Types.ObjectId },

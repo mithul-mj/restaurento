@@ -12,6 +12,7 @@ import restaurantRoutes from "./restaurant/restaurant.routes.js";
 import adminUserMangementRoutes from "../routes/admin/userManagement.routes.js";
 import adminRestaurantManagementRoutes from "../routes/admin/restaurantManagement.routes.js";
 import bannerRoutes from "../routes/admin/banner.routes.js";
+import couponRoutes from "../routes/admin/coupon.routes.js";
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.use("/api/v1/auth/", commonAuthRoutes);
 router.use("/api/v1/admin/users", adminUserMangementRoutes);
 router.use("/api/v1/admin/restaurants", adminRestaurantManagementRoutes);
 router.use("/api/v1/admin/banners", bannerRoutes);
+router.use("/api/v1/admin/coupons", couponRoutes);
 router.use("/api/v1/admin", adminAuthRoutes);
 router.use("/api/v1/restaurant", restaurantAuthRoutes);
 router.use("/api/v1/restaurant", onboardingRoutes);

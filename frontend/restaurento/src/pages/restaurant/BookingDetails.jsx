@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 import { useBookingDetails, useUpdateBookingStatus } from "../../hooks/useRestaurantBookings";
 import Loader from "../../components/Loader";
 import { formatDate, formatTime12Hour } from "../../utils/timeUtils";
-import { showToast } from "../../utils/alert";
+import { showToast, showConfirm } from "../../utils/alert";
 
 const BookingDetails = () => {
   const { id } = useParams();
@@ -25,7 +25,13 @@ const BookingDetails = () => {
   const updateStatus = useUpdateBookingStatus();
 
   const handleCancel = async () => {
-    if (window.confirm("Are you sure you want to cancel this booking?")) {
+    const result = await showConfirm(
+      "Cancel Booking?",
+      "Are you sure you want to cancel this booking? This action cannot be undone.",
+      "Yes, Cancel it"
+    );
+
+    if (result.isConfirmed) {
       try {
         await updateStatus.mutateAsync({ bookingId: id, status: "cancelled" });
         showToast("Booking cancelled successfully", "success");

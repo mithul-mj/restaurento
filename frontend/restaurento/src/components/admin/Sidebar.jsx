@@ -28,8 +28,6 @@ const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
     { icon: LayoutDashboard, label: "Dashboard", link: "/admin/dashboard" },
     { icon: Store, label: "Restaurants", link: "/admin/restaurants" },
     { icon: Users, label: "Users", link: "/admin/users" },
-    { icon: Flag, label: "Reports", link: "/admin/reports" },
-    { icon: Calendar, label: "Bookings", link: "/admin/bookings" },
     { icon: DollarSign, label: "Payments & Revenue", link: "/admin/finance" },
     { icon: Ticket, label: "Coupons", link: "/admin/coupons" },
     { icon: Image, label: "Banners", link: "/admin/banners" },

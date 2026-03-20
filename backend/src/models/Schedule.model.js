@@ -1,16 +1,16 @@
 import mongoose, { Schema } from "mongoose";
 
 const scheduleSchema = new Schema({
-    restaurantId: { 
-        type: Schema.Types.ObjectId, 
-        ref: "Restaurant", 
+    restaurantId: {
+        type: Schema.Types.ObjectId,
+        ref: "Restaurant",
         required: true,
-        index: true 
+        index: true
     },
-    validFrom: { 
-        type: Date, 
+    validFrom: {
+        type: Date,
         required: true,
-        default: Date.now 
+        default: Date.now
     },
     openingHours: {
         isSameEveryDay: { type: Boolean, default: false },

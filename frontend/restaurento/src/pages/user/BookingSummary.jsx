@@ -5,7 +5,8 @@ import { useSocket } from '../../context/SocketContext';
 import {
     ArrowLeft, Calendar, Clock, Users,
     Trash2, ChevronDown, Star, Copy,
-    CheckCircle, AlertCircle, Timer, Wallet
+    CheckCircle, AlertCircle, Timer, Wallet, X,
+    Ticket, Tag, Percent
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate } from '../../utils/timeUtils';
@@ -21,6 +22,11 @@ const BookingSummary = () => {
     const initialData = location.state || {};
     const [cart, setCart] = useState(initialData.cart || {});
     const [isPoliciesOpen, setIsPoliciesOpen] = useState(false);
+
+    // Coupon States
+    const [coupons, setCoupons] = useState([]);
+    const [selectedCoupon, setSelectedCoupon] = useState(null);
+    const [isCouponsModalOpen, setIsCouponsModalOpen] = useState(false);
 
     // Calculate remaining hold time (defaults to 5 minutes)
     const calculateTimeLeft = () => {
@@ -47,6 +53,8 @@ const BookingSummary = () => {
                 slotTime: Number(initialData.timeSlotMinutes ?? 0),
                 guests: Number(partySize),
                 useWallet,
+                appliedCouponId: selectedCoupon ? selectedCoupon._id : null,
+                discountAmount: amountSaved,
                 preOrderItems: cartItems.map(item => ({
                     dishId: item._id,
                     name: item.name,
@@ -164,12 +172,33 @@ const BookingSummary = () => {
     const subtotal = foodTotal + seatPrice;
     const tax = foodTotal * TAX_RATE;
     const platformFee = subtotal * PLATFORM_FEE_RATE;
-    const totalAmount = subtotal + tax + platformFee;
 
-    const amountSaved = 4.00;
+    // Live calculate discount
+    let amountSaved = 0;
+    if (selectedCoupon) {
+        const rawDiscount = subtotal * (selectedCoupon.discountValue / 100);
+        amountSaved = selectedCoupon.maxDiscountCap
+            ? Math.min(rawDiscount, selectedCoupon.maxDiscountCap)
+            : rawDiscount;
+    }
 
+    const totalAmount = subtotal + tax + platformFee - amountSaved;
     const walletAmountToUse = useWallet ? Math.min(walletBalance, totalAmount) : 0;
-    const finalPayable = totalAmount - walletAmountToUse;
+    const finalPayable = Math.max(0, totalAmount - walletAmountToUse);
+
+    useEffect(() => {
+        const loadCoupons = async () => {
+            try {
+                const response = await userService.getAvailableCoupons();
+                if (response?.success) {
+                    setCoupons(response.coupons || []);
+                }
+            } catch (error) {
+                console.error("Failed to load coupons", error);
+            }
+        };
+        loadCoupons();
+    }, []);
 
     useEffect(() => {
         const fetchWallet = async () => {
@@ -421,39 +450,78 @@ const BookingSummary = () => {
 
                                     {/* Coupons Section */}
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Coupons that can be applied</p>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Available Coupons</p>
+                                            {coupons.length > 2 && (
+                                                <button onClick={() => setIsCouponsModalOpen(true)} className="text-[10px] font-bold text-[#ff5e00] hover:underline">
+                                                    View All
+                                                </button>
+                                            )}
+                                        </div>
 
                                         <div className="space-y-3">
-                                            {[1, 2].map((i) => (
-                                                <div key={i} className="group relative flex bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-orange-100 transition-colors">
-                                                    <div className="p-4 flex-1">
-                                                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-600 rounded text-[8px] font-black uppercase mb-1">
-                                                            <CheckCircle size={8} /> BEST VALUE
+                                            {coupons.length === 0 ? (
+                                                <div className="p-4 text-center text-xs text-gray-400 font-medium">No active coupons right now</div>
+                                            ) : (
+                                                [...coupons].sort((a, b) => {
+                                                    if (selectedCoupon?._id === a._id) return -1;
+                                                    if (selectedCoupon?._id === b._id) return 1;
+                                                    return 0;
+                                                }).slice(0, 2).map((coupon) => {
+                                                    const isEligible = subtotal >= (coupon.minOrderValue || 0);
+                                                    const isSelected = selectedCoupon?._id === coupon._id;
+
+                                                    return (
+                                                        <div
+                                                            key={coupon._id}
+                                                            onClick={isEligible ? () => setSelectedCoupon(isSelected ? null : coupon) : undefined}
+                                                            className={`group relative flex flex-col border-2 border-dashed rounded-xl overflow-hidden transition-all duration-300 ${!isEligible ? 'bg-gray-50 border-gray-200 opacity-60 grayscale' : isSelected ? 'bg-[#fff5eb] border-[#ff5e00] shadow-md shadow-orange-100/50' : 'bg-white border-gray-200 hover:border-orange-200 hover:bg-orange-50/30 cursor-pointer'}`}
+                                                        >
+                                                            {/* Ticket Cutout Semi-circles overlays */}
+                                                            <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-r-2 border-dashed ${isSelected ? 'border-[#ff5e00] bg-white' : 'border-gray-200 bg-white'}`}></div>
+                                                            <div className={`absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-l-2 border-dashed ${isSelected ? 'border-[#ff5e00] bg-white' : 'border-gray-200 bg-white'}`}></div>
+
+                                                            <div className="p-4 pl-5">
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-[#ff5e00] text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-[#ff5e00] group-hover:text-white transition-colors'}`}>
+                                                                            <Ticket size={14} />
+                                                                        </div>
+                                                                        {isSelected && (
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase tracking-wider">
+                                                                                <CheckCircle size={8} /> Applied
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-[#ff5e00] bg-[#ff5e00]' : 'border-gray-300'}`}>
+                                                                        {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                                                                    </div>
+                                                                </div>
+
+                                                                <h4 className={`text-xl font-black tracking-tight ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>
+                                                                    {coupon.discountValue}% OFF
+                                                                </h4>
+                                                                <p className="text-[10px] text-gray-500 mt-1 leading-snug font-medium pr-2">
+                                                                    {coupon.description || `Save ${coupon.discountValue}% up to ₹${coupon.maxDiscountCap} on your entire bill.`}
+                                                                </p>
+
+                                                                {!isEligible && (
+                                                                    <div className="mt-3 inline-block px-2 py-1 bg-red-50 rounded text-[9px] text-red-600 font-bold border border-red-100">
+                                                                        Add ₹{(coupon.minOrderValue - subtotal).toFixed(2)} more to unlock!
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="mt-3 pt-3 border-t border-dashed border-gray-200/60 flex items-center justify-between">
+                                                                    <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
+                                                                        <Tag size={10} /> CODE:
+                                                                    </div>
+                                                                    <span className={`font-black text-xs tracking-widest ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>{coupon.code}</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <p className="text-lg font-black text-gray-900 leading-none">50% OFF</p>
-                                                        <p className="text-[8px] text-gray-400 mt-1 leading-tight font-medium max-w-[120px]">
-                                                            Get up to ₹15 off on your first order. Minimum order value ₹30.
-                                                        </p>
-                                                        <div className="flex items-center gap-1 text-[8px] text-gray-400 mt-2 font-bold">
-                                                            <Clock size={10} /> Expires in 2 days
-                                                        </div>
-                                                        <div className="mt-2 flex items-center bg-gray-50 rounded-lg p-1 pr-2 max-w-[140px] border border-gray-100 group-hover:bg-white transition-colors">
-                                                            <span className="flex-1 text-[10px] font-black text-gray-700 px-2 tracking-wider">WELCOME50</span>
-                                                            {i === 1 ? <div className="w-1.5 h-1.5 bg-gray-900 rounded-full"></div> : <Copy size={12} className="text-gray-300" />}
-                                                        </div>
-                                                    </div>
-                                                    <div className="w-[100px] shrink-0 bg-gray-200">
-                                                        <img
-                                                            src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=200&auto=format&fit=crop"
-                                                            className="w-full h-full object-cover grayscale-[0.2]"
-                                                            alt="Coupon"
-                                                        />
-                                                        <div className="absolute top-3 right-3 w-5 h-5 bg-white/20 backdrop-blur-md rounded-full border border-white/40 flex items-center justify-center">
-                                                            <div className={`w-2.5 h-2.5 rounded-full ${i === 1 ? 'bg-white' : 'bg-transparent'}`}></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                    );
+                                                })
+                                            )}
                                         </div>
                                     </div>
 
@@ -535,6 +603,94 @@ const BookingSummary = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Coupons View All Modal */}
+            <AnimatePresence>
+                {isCouponsModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsCouponsModalOpen(false)}
+                            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="relative bg-white rounded-[24px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]"
+                        >
+                            <div className="p-6 border-b border-gray-50 flex items-center justify-between sticky top-0 bg-white z-10">
+                                <div>
+                                    <h2 className="text-xl font-black text-gray-900">All Coupons</h2>
+                                    <p className="text-xs font-bold text-gray-400 mt-1">Available to apply</p>
+                                </div>
+                                <button onClick={() => setIsCouponsModalOpen(false)} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-600 transition-colors">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 overflow-y-auto space-y-4">
+                                {coupons.map((coupon) => {
+                                    const isEligible = subtotal >= (coupon.minOrderValue || 0);
+                                    const isSelected = selectedCoupon?._id === coupon._id;
+
+                                    return (
+                                        <div
+                                            key={coupon._id}
+                                            onClick={isEligible ? () => { setSelectedCoupon(isSelected ? null : coupon); setIsCouponsModalOpen(false); } : undefined}
+                                            className={`group relative flex flex-col border-2 border-dashed rounded-xl overflow-hidden transition-all duration-300 ${!isEligible ? 'bg-gray-50 border-gray-200 opacity-60 grayscale' : isSelected ? 'bg-[#fff5eb] border-[#ff5e00] shadow-md shadow-orange-100/50' : 'bg-white border-gray-200 hover:border-orange-200 hover:bg-orange-50/30 cursor-pointer'}`}
+                                        >
+                                            {/* Ticket Cutout Semi-circles overlays */}
+                                            <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-r-2 border-dashed border-gray-200"></div>
+                                            <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-l-2 border-dashed border-gray-200"></div>
+
+                                            <div className="p-5 pl-6">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-xl ${isSelected ? 'bg-[#ff5e00] text-white' : 'bg-orange-50 text-[#ff5e00] group-hover:bg-[#ff5e00] group-hover:text-white transition-colors'}`}>
+                                                            <Percent size={18} />
+                                                        </div>
+                                                        {isSelected && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                                <CheckCircle size={10} /> Applied
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-[#ff5e00] bg-[#ff5e00]' : 'border-gray-300'}`}>
+                                                        {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                                                    </div>
+                                                </div>
+
+                                                <h4 className={`text-2xl font-black tracking-tight ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>
+                                                    {coupon.discountValue}% OFF
+                                                </h4>
+                                                <p className="text-xs text-gray-500 mt-1 leading-relaxed font-medium">
+                                                    {coupon.description || `Save ${coupon.discountValue}% up to ₹${coupon.maxDiscountCap} on your entire bill.`}
+                                                </p>
+
+                                                {!isEligible && (
+                                                    <div className="mt-3 inline-block px-2.5 py-1 bg-red-50 rounded-md text-[10px] text-red-600 font-bold border border-red-100">
+                                                        Add ₹{(coupon.minOrderValue - subtotal).toFixed(2)} more to cart to unlock this deal!
+                                                    </div>
+                                                )}
+
+                                                <div className="mt-4 pt-3 border-t border-dashed border-gray-200 flex items-center justify-between">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400">
+                                                        <Tag size={12} /> PROMO CODE:
+                                                    </div>
+                                                    <span className={`font-black tracking-widest ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>{coupon.code}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -93,6 +93,10 @@ const userService = {
   getWalletBalance: async () => {
     const response = await api.get('/wallet/balance');
     return response.data;
+  },
+  getAvailableCoupons: async () => {
+    const response = await api.get('/coupons');
+    return response.data;
   }
 };
 

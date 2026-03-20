@@ -17,6 +17,7 @@ import {
     verifyEmailChange,
 } from "../../controllers/user/userProfile.controller.js";
 import { getUserDashboard, getRestaurantDetails, getRestaurantMenu } from "../../controllers/user/userDashboardController.js";
+import { getAvailableCoupons } from "../../controllers/userCoupon.controller.js";
 import multer from "multer";
 import { storage } from "../../config/cloudinary.config.js";
 import ROLES from "../../constants/roles.js";
@@ -53,5 +54,7 @@ router.get("/bookings/:id", getBookingDetails);
 router.patch("/bookings/:id/cancel", cancelBooking);
 router.get('/wallet/balance', getWalletBalance)
 router.get('/wallet', getMyWalletHistory)
+
+router.get("/coupons", getAvailableCoupons);
 
 export default router;

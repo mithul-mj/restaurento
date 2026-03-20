@@ -4,6 +4,7 @@ import { WalletTransaction } from '../../models/WalletTransaction.model.js'
 import { User } from '../../models/User.model.js'
 import { Restaurant } from '../../models/Restaurant.model.js';
 import { Schedule } from '../../models/Schedule.model.js';
+import { Coupon } from '../../models/Coupon.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import redisClient from '../../config/redis.js';
@@ -24,7 +25,7 @@ export const BookingRestaurant = async (req, res, next) => {
     try {
         session.startTransaction();
 
-        const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet } = req.body;
+        const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet, appliedCouponId } = req.body;
         const userId = req.user._id;
 
         const requestedDishIds = (preOrderItems || []).map(
@@ -32,8 +33,8 @@ export const BookingRestaurant = async (req, res, next) => {
         );
 
         const [restaurant, activeSchedule] = await Promise.all([
-            Restaurant.findOne({ 
-                _id: new mongoose.Types.ObjectId(restaurantId) 
+            Restaurant.findOne({
+                _id: new mongoose.Types.ObjectId(restaurantId)
             }, {
                 restaurantName: 1,
                 menuItems: {
@@ -108,7 +109,7 @@ export const BookingRestaurant = async (req, res, next) => {
         }
 
         const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
-        
+
         // Check availability but ignore the user's current hold
         const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime, userId);
 
@@ -146,7 +147,48 @@ export const BookingRestaurant = async (req, res, next) => {
         const subtotal = bookingFee + itemTotal;
         const tax = itemTotal * TAX_RATE;
         const platformFee = subtotal * PLATFORM_FEE_RATE;
-        const finalTotal = subtotal + tax + platformFee;
+
+        // --- COUPON VERIFICATION ---
+        let discountAmount = 0;
+        let couponDetails = null;
+
+        if (appliedCouponId) {
+            const coupon = await Coupon.findById(appliedCouponId).lean();
+            if (coupon && coupon.isActive) {
+                // Verify expiry
+                const now = new Date();
+                if (!coupon.expiryDate || new Date(coupon.expiryDate) > now) {
+                    // Check usage limit
+                    let isLimitReached = false;
+                    if (coupon.usageLimit) {
+                        const usageCount = await Booking.countDocuments({
+                            "appliedCoupon.couponId": coupon._id,
+                            status: { $ne: 'canceled' }
+                        });
+                        if (usageCount >= coupon.usageLimit) {
+                            isLimitReached = true;
+                        }
+                    }
+
+                    // Verify minimum order value (against subtotal)
+                    if (!isLimitReached && subtotal >= (coupon.minOrderValue || 0)) {
+                        const rawDiscount = subtotal * (coupon.discountValue / 100);
+                        discountAmount = coupon.maxDiscountCap
+                            ? Math.min(rawDiscount, coupon.maxDiscountCap)
+                            : rawDiscount;
+
+                        couponDetails = {
+                            couponId: coupon._id,
+                            code: coupon.code,
+                            discountValue: coupon.discountValue,
+                            discountAmountApplied: discountAmount
+                        };
+                    }
+                }
+            }
+        }
+
+        const finalTotal = subtotal + tax + platformFee - discountAmount;
 
         const duration = activeSchedule.slotConfig?.duration || 60;
         const slotEndTime = slotTime + duration;
@@ -180,6 +222,7 @@ export const BookingRestaurant = async (req, res, next) => {
             tax,
             platformFee,
             preOrderItems: verifiedPreOrderItems,
+            appliedCoupon: couponDetails,
             status: 'approved',
             walletAmountUsed: walletAmountUsed,
             holdKey: holdKey // Pass this so we can delete it after payment
@@ -287,7 +330,7 @@ export const getMyBookings = async (req, res, next) => {
             // Past
             matchQuery.$or = [
                 { status: 'checked-in' },
-                { 
+                {
                     status: 'approved',
                     $or: [
                         { bookingDate: { $lt: today } },
