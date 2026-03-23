@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "69be2965bd5a2a226d801e2d",
+    "restaurantId": "69ba7f4399a0536da18fae8a",
+    "discountValue": 20,
+    "minOrderValue": 200,
+    "usageLimit": 5,
+    "isActive": true,
+    "validFrom": "2026-03-21T00:00:00.000Z",
+    "validUntil": "2026-03-02T00:00:00.000Z",
+    "createdAt": "2026-03-21T05:15:17.535Z",
+    "updatedAt": "2026-03-21T05:28:03.598Z",
+    "__v": 0
+  },
+  {
+    "_id": "69be2c9bdb58c20ec7d78a90",
+    "restaurantId": "69ba7f4399a0536da18fae8a",
+    "discountValue": 300,
+    "minOrderValue": 10000,
+    "usageLimit": 7,
+    "isActive": true,
+    "validFrom": "2026-03-20T00:00:00.000Z",
+    "validUntil": "2026-03-21T00:00:00.000Z",
+    "createdAt": "2026-03-21T05:28:59.168Z",
+    "updatedAt": "2026-03-21T11:03:06.677Z",
+    "__v": 0
+  },
+  {
+    "_id": "69be7b1075ec6d5796be3b9d",
+    "restaurantId": "69ba7f4399a0536da18fae8a",
+    "discountValue": 50,
+    "minOrderValue": 250,
+    "usageLimit": 8,
+    "isActive": true,
+    "validFrom": "2026-03-21T00:00:00.000Z",
+    "validUntil": "2026-03-30T00:00:00.000Z",
+    "createdAt": "2026-03-21T11:03:44.536Z",
+    "updatedAt": "2026-03-21T11:03:44.536Z",
+    "__v": 0
+  },
+  {
+    "_id": "69be7d5c75ec6d5796be3e4a",
+    "restaurantId": "69be7bb875ec6d5796be3db3",
+    "discountValue": 100,
+    "minOrderValue": 700,
+    "usageLimit": 10,
+    "isActive": true,
+    "validFrom": "2026-03-21T00:00:00.000Z",
+    "validUntil": "2026-03-30T00:00:00.000Z",
+    "createdAt": "2026-03-21T11:13:32.553Z",
+    "updatedAt": "2026-03-21T11:13:32.553Z",
+    "__v": 0
+  }
+]

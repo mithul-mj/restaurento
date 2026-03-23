@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Star, MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check, AlertTriangle, Armchair
+    Star, MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check, AlertTriangle, Armchair, Tag, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import userService from "../../services/user.service";
@@ -29,6 +29,7 @@ const RestaurantDetails = () => {
     const [isDateOpen, setIsDateOpen] = useState(false);
     const [liveSlotAvailability, setLiveSlotAvailability] = useState({});
     const [isBooking, setIsBooking] = useState(false);
+    const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
 
     useEffect(() => {
         if (location.state?.prefilledCart || location.state?.prefilledGuests) {
@@ -475,6 +476,49 @@ const RestaurantDetails = () => {
                     </div>
 
                     <div className="lg:col-span-1">
+                        {/* Highlights/Offers Section */}
+                        {restaurant.offers && restaurant.offers.length > 0 && (
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Available Offers</h3>
+                                    {restaurant.offers.length > 1 && (
+                                        <button
+                                            onClick={() => setIsOffersModalOpen(true)}
+                                            className="text-xs font-bold text-[#ff5e00] hover:underline"
+                                        >
+                                            View all ({restaurant.offers.length})
+                                        </button>
+                                    )}
+                                </div>
+
+                                <motion.div
+                                    whileHover={{ y: -2 }}
+                                    className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl p-4 shadow-sm relative overflow-hidden group"
+                                >
+                                    <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff5e00]/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                                    <div className="flex items-start gap-3 relative z-10">
+                                        <div className="bg-[#ff5e00] text-white p-2 rounded-xl shadow-md shadow-orange-200">
+                                            <Tag size={18} />
+                                        </div>
+                                        <div>
+                                            <p className="text-lg font-black text-gray-900">
+                                                ₹{restaurant.offers[0].discountValue} OFF
+                                            </p>
+                                            <p className="text-xs text-gray-500 font-medium">
+                                                {restaurant.offers[0].minOrderValue > 0
+                                                    ? `On orders above ₹${restaurant.offers[0].minOrderValue}`
+                                                    : 'No minimum order value'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 pt-3 border-t border-orange-100/50 flex items-center justify-between">
+                                        <span className="text-[10px] bg-[#ff5e00] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Best Deal</span>
+                                        <span className="text-[10px] text-gray-400 font-medium italic">Applied at checkout</span>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+
                         <div className="sticky top-24 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-6">Pre-Order Summary</h3>
 
@@ -808,6 +852,71 @@ const RestaurantDetails = () => {
                 </div>
 
             </main >
+
+            {/* Offers Modal */}
+            <AnimatePresence>
+                {isOffersModalOpen && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsOffersModalOpen(false)}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-orange-50/50 to-white">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-[#ff5e00] p-2 rounded-xl text-white">
+                                        <Tag size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-gray-900">Available Offers</h3>
+                                </div>
+                                <button
+                                    onClick={() => setIsOffersModalOpen(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    <X size={20} className="text-gray-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4 custom-scrollbar">
+                                {restaurant.offers?.map((offer, idx) => (
+                                    <div key={offer._id} className="group border border-gray-100 rounded-2xl p-4 hover:border-[#ff5e00]/30 hover:bg-orange-50/10 transition-all">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-2xl font-black text-[#ff5e00]">₹{offer.discountValue} OFF</p>
+                                            <div className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase">Code Auto-Applied</div>
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-800 mb-1">Exclusive Restaurant Offer</p>
+                                        <p className="text-xs text-gray-500">
+                                            {offer.minOrderValue > 0
+                                                ? `Valid on bookings above ₹${offer.minOrderValue}`
+                                                : 'No minimum booking value required'}
+                                        </p>
+                                        {idx === 0 && (
+                                            <div className="mt-3 inline-block bg-[#ff5e00]/10 text-[#ff5e00] text-[10px] font-black px-2 py-1 rounded shadow-sm">MOST POPULAR</div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="p-6 bg-gray-50 text-center">
+                                <button
+                                    onClick={() => setIsOffersModalOpen(false)}
+                                    className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors"
+                                >
+                                    Got it
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div >
     );
 };

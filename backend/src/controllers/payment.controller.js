@@ -8,8 +8,12 @@ import { User } from '../models/User.model.js';
 import STATUS_CODES from '../constants/statusCodes.js';
 import { sendEmail } from '../services/commonAuth.service.js';
 import { getBookingConfirmationEmailTemplate } from '../utils/emailTemplates.js';
+import { sendNotification } from '../utils/notification.util.js';
+import { format12hr } from '../utils/timeUtils.js';
 
 import redisClient from '../config/redis.js';
+
+
 
 const razorpayInstance = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -68,13 +72,24 @@ export const verifyRazorpayPayment = async (req, res) => {
             await booking.save({ session });
             await session.commitTransaction();
             await redisClient.del(redisKey);
-            
+
             // Release the seat hold since the booking is now confirmed in the database
             if (data.holdKey) {
                 await redisClient.del(data.holdKey);
             }
 
+            // Send notification
+            await sendNotification(req, {
+                recipientId: data.userId,
+                title: "Payment Successful! 💳",
+                message: `Your booking at ${data.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}.`
+            });
+
+
+
+
             // Send Confirmation Email using in-memory data
+
             try {
                 const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: data.restaurantName }, req.user.fullName);
                 const subject = `Booking Confirmed: ${data.restaurantName}`;
@@ -98,9 +113,9 @@ export const verifyRazorpayPayment = async (req, res) => {
             await session.abortTransaction();
         }
         console.error("Verification Error:", error);
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
-            success: false, 
-            message: error.message || "Verification failed" 
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: error.message || "Verification failed"
         });
     } finally {
         session.endSession();

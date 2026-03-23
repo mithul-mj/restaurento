@@ -83,6 +83,14 @@ const bookingSchema = new Schema(
             discountValue: { type: Number }, // Represents the percentage
             discountAmountApplied: { type: Number }, // Actual currency saved
         },
+        appliedOffer: {
+            offerId: {
+                type: Schema.Types.ObjectId,
+                ref: "Offer",
+                default: null,
+            },
+            discountValue: { type: Number }, // The flat amount saved
+        },
         preOrderItems: [
             {
                 dishId: { type: Schema.Types.ObjectId },

@@ -24,6 +24,8 @@ import ROLES from "../../constants/roles.js";
 import { getActiveBanners } from "../../controllers/userDashboardController.js";
 
 import { addToWishlist, getWishlists, removeFromWishlist } from "../../controllers/user/userWishlist.controller.js";
+import { getNotifications, getUnreadCount, markAllAsRead, markOneAsRead } from "../../controllers/user/notification.controller.js";
+
 
 const upload = multer({ storage });
 
@@ -57,4 +59,12 @@ router.get('/wallet', getMyWalletHistory)
 
 router.get("/coupons", getAvailableCoupons);
 
+router.get("/notifications", getNotifications);
+router.get("/notifications/unread-count", getUnreadCount);
+router.patch("/notifications/mark-all-read", markAllAsRead);
+router.patch("/notifications/:id/mark-read", markOneAsRead);
+
+
 export default router;
+
+

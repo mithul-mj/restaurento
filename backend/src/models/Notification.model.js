@@ -10,21 +10,20 @@ const notificationSchema = new Schema(
         recipientModel: {
             type: String,
             required: true,
-            enum: ["User", "Restaurant"],
+            enum: ["USER", "RESTAURANT"],
         },
+
         title: {
             type: String,
         },
         message: {
             type: String,
         },
-        type: {
-            type: String, // e.g. 'booking_alert', 'promo'
-        },
         isRead: {
             type: Boolean,
             default: false,
         },
+
     },
     { timestamps: true }
 );

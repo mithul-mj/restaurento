@@ -6,6 +6,14 @@ import STATUS_CODES from "../../constants/statusCodes.js";
 import jwt from 'jsonwebtoken';
 import { env } from "../../config/env.config.js";
 import { Booking } from "../../models/Booking.model.js";
+import { User } from "../../models/User.model.js";
+import { WalletTransaction } from "../../models/WalletTransaction.model.js";
+import { Offer } from "../../models/Offer.model.js";
+import { sendNotification } from "../../utils/notification.util.js";
+import { format12hr } from "../../utils/timeUtils.js";
+
+
+
 
 export const preApprovalRestaurant = async (req, res, next) => {
     try {
@@ -617,13 +625,76 @@ export const updateBookingStatus = async (req, res, next) => {
         }
 
         if (status === 'canceled' || status === 'cancelled') {
-            booking.status = 'canceled';
-            booking.canceledBy = ROLES.RESTAURANT;
+            const session = await mongoose.startSession();
+            try {
+                session.startTransaction();
+
+                // Re-fetch inside session
+                const sessionBooking = await Booking.findOne({ _id: bookingId, restaurantId }).session(session);
+
+                if (!sessionBooking || sessionBooking.status === 'canceled') {
+                    await session.abortTransaction();
+                    return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Booking already canceled or not found" });
+                }
+
+                // 1. Mark as canceled
+                sessionBooking.status = 'canceled';
+                sessionBooking.canceledBy = ROLES.RESTAURANT;
+                await sessionBooking.save({ session });
+
+                // 2. Restore Offer Limit if applicable
+                if (sessionBooking.appliedOffer?.offerId) {
+                    await Offer.findByIdAndUpdate(
+                        sessionBooking.appliedOffer.offerId,
+                        { $inc: { usageLimit: 1 } },
+                        { session }
+                    );
+                }
+
+                // 3. Refund to User Wallet
+                await User.findByIdAndUpdate(
+                    sessionBooking.userId,
+                    { $inc: { walletBalance: sessionBooking.totalAmount } },
+                    { session }
+                );
+
+                // 4. Create Wallet Transaction
+                await WalletTransaction.create([{
+                    userId: sessionBooking.userId,
+                    bookingId: sessionBooking._id,
+                    amount: sessionBooking.totalAmount,
+                    description: `Refund (Restaurant Cancellation): Booking at ${restaurantId}` // Ideally should use restaurantName from booking
+                }], { session });
+
+                await session.commitTransaction();
+
+                // Send live notification to the user
+                const restaurant = await Restaurant.findById(restaurantId).select("restaurantName").lean();
+                await sendNotification(req, {
+                    recipientId: sessionBooking.userId,
+                    title: "Booking Cancelled by Restaurant",
+                    message: `Your booking at ${restaurant?.restaurantName || "the restaurant"} on ${new Date(sessionBooking.bookingDate).toLocaleDateString()} at ${format12hr(sessionBooking.slotTime)} was cancelled by the merchant. ₹${sessionBooking.totalAmount} refunded to wallet.`
+                });
+
+
+
+
+                return res.status(STATUS_CODES.OK).json({
+
+                    success: true,
+                    message: "Booking canceled by restaurant. Amount refunded to user.",
+                    data: sessionBooking
+                });
+            } catch (error) {
+                await session.abortTransaction();
+                throw error;
+            } finally {
+                session.endSession();
+            }
         } else {
             booking.status = status;
+            await booking.save();
         }
-
-        await booking.save();
 
         res.status(STATUS_CODES.OK).json({
             success: true,

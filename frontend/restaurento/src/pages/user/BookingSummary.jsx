@@ -54,6 +54,7 @@ const BookingSummary = () => {
                 guests: Number(partySize),
                 useWallet,
                 appliedCouponId: selectedCoupon ? selectedCoupon._id : null,
+                appliedOfferId: qualifyingOffer ? qualifyingOffer._id : null,
                 discountAmount: amountSaved,
                 preOrderItems: cartItems.map(item => ({
                     dishId: item._id,
@@ -173,7 +174,7 @@ const BookingSummary = () => {
     const tax = foodTotal * TAX_RATE;
     const platformFee = subtotal * PLATFORM_FEE_RATE;
 
-    // Live calculate discount
+    // Calculate discounts
     let amountSaved = 0;
     if (selectedCoupon) {
         const rawDiscount = subtotal * (selectedCoupon.discountValue / 100);
@@ -182,7 +183,15 @@ const BookingSummary = () => {
             : rawDiscount;
     }
 
-    const totalAmount = subtotal + tax + platformFee - amountSaved;
+    // Live calculate best available offer (Auto-applied)
+    const availableOffers = restaurant?.offers || [];
+    const qualifyingOffer = availableOffers
+        .filter(offer => subtotal >= (offer.minOrderValue || 0))
+        .sort((a, b) => b.discountValue - a.discountValue)[0];
+
+    const offerDiscount = qualifyingOffer ? qualifyingOffer.discountValue : 0;
+
+    const totalAmount = subtotal + tax + platformFee - amountSaved - offerDiscount;
     const walletAmountToUse = useWallet ? Math.min(walletBalance, totalAmount) : 0;
     const finalPayable = Math.max(0, totalAmount - walletAmountToUse);
 
@@ -385,6 +394,12 @@ const BookingSummary = () => {
                                         <span>Food Total</span>
                                         <span>₹{foodTotal.toFixed(2)}</span>
                                     </div>
+                                    {offerDiscount > 0 && (
+                                        <div className="flex justify-between text-xs text-green-600 font-bold">
+                                            <span>Restaurant Offer</span>
+                                            <span>-₹{offerDiscount.toFixed(2)}</span>
+                                        </div>
+                                    )}
                                     {tax > 0 && (
                                         <div className="flex justify-between text-xs text-gray-500">
                                             <span>Tax ({(TAX_RATE * 100).toFixed(0)}%)</span>
@@ -532,6 +547,12 @@ const BookingSummary = () => {
                                                 <span>Amount saved (Using coupons)</span>
                                                 <span className="text-green-600 font-black">₹{amountSaved.toFixed(2)}</span>
                                             </div>
+                                            {offerDiscount > 0 && (
+                                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-500">
+                                                    <span>Restaurant Offer Applied</span>
+                                                    <span className="text-green-600 font-black">₹{offerDiscount.toFixed(2)}</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="pt-4 flex justify-between items-end border-t border-gray-100">

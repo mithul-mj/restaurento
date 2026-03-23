@@ -1,5 +1,6 @@
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { Schedule } from "../../models/Schedule.model.js";
+import { Offer } from "../../models/Offer.model.js";
 import mongoose from "mongoose";
 import STATUS_CODES from "../../constants/statusCodes.js";
 
@@ -77,6 +78,41 @@ export const getUserDashboard = async (req, res, next) => {
 
     pipeline.push(...lookupScheduleStage);
 
+    // Get the best active offer for each restaurant
+    const lookupOfferStage = [
+      {
+        $lookup: {
+          from: "offers",
+          let: { rid: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$restaurantId", "$$rid"] },
+                isActive: true,
+                usageLimit: { $gt: 0 },
+                validFrom: { $lte: new Date() },
+                $or: [
+                  { validUntil: { $exists: false } },
+                  { validUntil: null },
+                  { validUntil: { $gt: new Date() } }
+                ]
+              }
+            },
+            { $sort: { discountValue: -1 } },
+            { $limit: 1 }
+          ],
+          as: "bestOffer"
+        }
+      },
+      {
+        $addFields: {
+          bestOffer: { $arrayElemAt: ["$bestOffer", 0] }
+        }
+      }
+    ];
+
+    pipeline.push(...lookupOfferStage);
+
     // Filter by Search, Rating, and Cost
     const matchConditions = [];
     if (search) {
@@ -136,6 +172,7 @@ export const getUserDashboard = async (req, res, next) => {
         slotPrice: 1,
         isCurrentlyOpen: 1,
         distanceFromUser: 1,
+        bestOffer: 1,
       }
     };
 
@@ -222,8 +259,8 @@ export const getRestaurantDetails = async (req, res, next) => {
       return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
     }
 
-    // Get restaurant info and current schedule in parallel
-    const [restaurant, activeSchedule] = await Promise.all([
+    // Get restaurant info, current schedule, and all active offers in parallel
+    const [restaurant, activeSchedule, availableOffers] = await Promise.all([
       Restaurant.findOne({ _id: id, status: "active" })
         .select("-documents -onboardingStep -submissionAttempts -verificationStatus -isOnboardingCompleted -ownerId -menuItems -__v")
         .lean(),
@@ -232,7 +269,18 @@ export const getRestaurantDetails = async (req, res, next) => {
         validFrom: { $lte: new Date() }
       })
         .sort({ validFrom: -1 })
-        .lean()
+        .lean(),
+      Offer.find({
+        restaurantId: new mongoose.Types.ObjectId(id),
+        isActive: true,
+        usageLimit: { $gt: 0 },
+        validFrom: { $lte: new Date() },
+        $or: [
+          { validUntil: { $exists: false } },
+          { validUntil: null },
+          { validUntil: { $gt: new Date() } }
+        ]
+      }).sort({ discountValue: -1 }).lean()
     ]);
 
     if (!restaurant) {
@@ -264,7 +312,8 @@ export const getRestaurantDetails = async (req, res, next) => {
       slotConfig: activeSchedule.slotConfig,
       totalSeats: activeSchedule.totalSeats,
       slotPrice: activeSchedule.slotPrice,
-      isCurrentlyOpen: isCurrentlyOpen
+      isCurrentlyOpen: isCurrentlyOpen,
+      offers: availableOffers || []
     };
 
     res.status(STATUS_CODES.OK).json({ success: true, restaurant: finalRestaurantData });

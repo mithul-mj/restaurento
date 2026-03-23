@@ -9,6 +9,7 @@ import errorHandler from "../middlewares/errorHandler.middleware.js";
 import commonAuthRoutes from "./common/auth.routes.js";
 import onboardingRoutes from "./restaurant/onboarding.routes.js";
 import restaurantRoutes from "./restaurant/restaurant.routes.js";
+import restaurantOfferRoutes from "./restaurant/offer.routes.js";
 import adminUserMangementRoutes from "../routes/admin/userManagement.routes.js";
 import adminRestaurantManagementRoutes from "../routes/admin/restaurantManagement.routes.js";
 import bannerRoutes from "../routes/admin/banner.routes.js";
@@ -25,6 +26,7 @@ router.use("/api/v1/admin/coupons", couponRoutes);
 router.use("/api/v1/admin", adminAuthRoutes);
 router.use("/api/v1/restaurant", restaurantAuthRoutes);
 router.use("/api/v1/restaurant", onboardingRoutes);
+router.use("/api/v1/restaurant/offers", restaurantOfferRoutes);
 router.use("/api/v1/restaurant", restaurantRoutes);
 
 router.use("/api/v1/", userAuthRoutes);

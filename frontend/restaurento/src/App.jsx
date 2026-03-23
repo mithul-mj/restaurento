@@ -52,6 +52,7 @@ import RestaurantStatusGuard from "./components/routes/RestaurantStatusGuard";
 import RestaurantLayout from "./components/layouts/RestaurantLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 const Bookings = lazy(() => import("./pages/restaurant/Bookings"));
+const OffersPage = lazy(() => import("./pages/restaurant/Offers"));
 const MenuPage = lazy(() => import("./pages/restaurant/Menu"));
 const Earnings = lazy(() => import("./pages/restaurant/Earnings"));
 const WalletPage = lazy(() => import("./pages/restaurant/Wallet"));
@@ -167,6 +168,7 @@ function App() {
                   element={<RestaurantDashboard />}
                 />
                 <Route path="/restaurant/bookings" element={<Bookings />} />
+                <Route path="/restaurant/offers" element={<OffersPage />} />
                 <Route
                   path="/restaurant/bookings/:id"
                   element={<RestaurantBookingDetails />}

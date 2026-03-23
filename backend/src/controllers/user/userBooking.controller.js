@@ -5,6 +5,7 @@ import { User } from '../../models/User.model.js'
 import { Restaurant } from '../../models/Restaurant.model.js';
 import { Schedule } from '../../models/Schedule.model.js';
 import { Coupon } from '../../models/Coupon.model.js';
+import { Offer } from '../../models/Offer.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import redisClient from '../../config/redis.js';
@@ -14,6 +15,11 @@ import Razorpay from 'razorpay';
 import { env } from '../../config/env.config.js';
 import { sendEmail } from '../../services/commonAuth.service.js';
 import { getBookingConfirmationEmailTemplate } from '../../utils/emailTemplates.js';
+import { sendNotification } from '../../utils/notification.util.js';
+import { format12hr } from '../../utils/timeUtils.js';
+
+
+
 
 const razorpayInstance = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -25,7 +31,7 @@ export const BookingRestaurant = async (req, res, next) => {
     try {
         session.startTransaction();
 
-        const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet, appliedCouponId } = req.body;
+        const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet, appliedCouponId, appliedOfferId } = req.body;
         const userId = req.user._id;
 
         const requestedDishIds = (preOrderItems || []).map(
@@ -147,7 +153,7 @@ export const BookingRestaurant = async (req, res, next) => {
         const subtotal = bookingFee + itemTotal;
         const tax = itemTotal * TAX_RATE;
         const platformFee = subtotal * PLATFORM_FEE_RATE;
-
+        
         // --- COUPON VERIFICATION ---
         let discountAmount = 0;
         let couponDetails = null;
@@ -187,8 +193,46 @@ export const BookingRestaurant = async (req, res, next) => {
                 }
             }
         }
+        // --- OFFER VERIFICATION ---
+        let offerDiscount = 0;
+        let offerDetails = null;
 
-        const finalTotal = subtotal + tax + platformFee - discountAmount;
+        if (appliedOfferId) {
+            // Atomic check and decrement for the offer
+            const offer = await Offer.findOneAndUpdate(
+                {
+                    _id: appliedOfferId,
+                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                    isActive: true,
+                    usageLimit: { $gt: 0 },
+                    validFrom: { $lte: new Date() },
+                    $or: [
+                        { validUntil: { $exists: false } },
+                        { validUntil: null },
+                        { validUntil: { $gt: new Date() } }
+                    ],
+                    minOrderValue: { $lte: subtotal }
+                },
+                { $inc: { usageLimit: -1 } },
+                { session, new: true }
+            );
+
+            if (!offer) {
+                await session.abortTransaction();
+                return res.status(STATUS_CODES.BAD_REQUEST).json({
+                    success: false,
+                    message: "The selected offer is no longer valid, has expired, or the minimum order value was not met."
+                });
+            }
+
+            offerDiscount = offer.discountValue;
+            offerDetails = {
+                offerId: offer._id,
+                discountValue: offerDiscount
+            };
+        }
+
+        const finalTotal = subtotal + tax + platformFee - discountAmount - offerDiscount;
 
         const duration = activeSchedule.slotConfig?.duration || 60;
         const slotEndTime = slotTime + duration;
@@ -223,6 +267,7 @@ export const BookingRestaurant = async (req, res, next) => {
             platformFee,
             preOrderItems: verifiedPreOrderItems,
             appliedCoupon: couponDetails,
+            appliedOffer: offerDetails, // Add this
             status: 'approved',
             walletAmountUsed: walletAmountUsed,
             holdKey: holdKey // Pass this so we can delete it after payment
@@ -244,7 +289,18 @@ export const BookingRestaurant = async (req, res, next) => {
             await booking.save({ session });
             await session.commitTransaction();
 
+            // Send notification
+            await sendNotification(req, {
+                recipientId: userId,
+                title: "Booking Confirmed! 🎉",
+                message: `Your reservation at ${restaurant.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}.`
+            });
+
+
+
+
             // Delete the hold now that booking is confirmed
+
             await redisClient.del(holdKey);
 
             // Send Confirmation Email for Wallet Payment
@@ -264,6 +320,7 @@ export const BookingRestaurant = async (req, res, next) => {
                 remainingAmount: 0
             });
         }
+
 
         // --- CASE 2: ONLINE PAYMENT (Store in Redis) ---
         // End current DB session as we don't save to MongoDB yet
@@ -514,7 +571,16 @@ export const cancelBooking = async (req, res, next) => {
         booking.canceledBy = ROLES.USER;
         await booking.save({ session });
 
-        // 2. Refund to wallet
+        // 2. If it had an offer, increment the limit back
+        if (booking.appliedOffer?.offerId) {
+            await Offer.findByIdAndUpdate(
+                booking.appliedOffer.offerId,
+                { $inc: { usageLimit: 1 } },
+                { session }
+            );
+        }
+
+        // 3. Refund to wallet
         await User.findByIdAndUpdate(
             userId,
             { $inc: { walletBalance: booking.totalAmount } },
@@ -532,11 +598,22 @@ export const cancelBooking = async (req, res, next) => {
         // Commit all changes
         await session.commitTransaction();
 
+        // Send cancellation notification
+        await sendNotification(req, {
+            recipientId: userId,
+            title: "Booking Cancelled by You",
+            message: `You cancelled your booking at ${booking.restaurantId.restaurantName} for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}. ₹${booking.totalAmount} refunded to wallet.`
+        });
+
+
+
+
         res.status(STATUS_CODES.OK).json({
             success: true,
             message: "Booking canceled successfully and amount refunded to wallet.",
             booking
         });
+
 
     } catch (error) {
         // Only abort if the transaction hasn't been committed/aborted already

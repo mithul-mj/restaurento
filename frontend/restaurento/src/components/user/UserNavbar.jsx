@@ -1,14 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Bell, Heart, Menu, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { useSocket } from "../../context/SocketContext";
+import notificationService from "../../services/notification.service";
+import NotificationModal from "../../pages/user/NotificationModal";
+
 
 const UserNavbar = () => {
     const { user } = useSelector((state) => state.auth);
     const avatar = user?.avatar;
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isJumping, setIsJumping] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notifications, setNotifications] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const socket = useSocket();
+
+
 
     const logoLetters = "Restauranto".split("");
 
@@ -30,6 +42,70 @@ const UserNavbar = () => {
         }),
         initial: { y: 0 }
     };
+
+    useEffect(() => {
+        if (user?._id) {
+            notificationService.getUnreadCount().then(res => {
+                if (res.success) setUnreadCount(res.count);
+            });
+        }
+    }, [user?._id]);
+
+    useEffect(() => {
+        if (socket && user?._id) {
+            socket.emit("join_private_room", user._id);
+
+            socket.on("new_notification", (newNotif) => {
+                setNotifications(prev => [newNotif, ...prev]);
+                setUnreadCount(prev => prev + 1);
+            });
+
+            return () => {
+                socket.off("new_notification");
+            };
+        }
+    }, [socket, user?._id]);
+
+
+    const handleBellClick = async () => {
+        if (!isModalOpen) {
+            const res = await notificationService.getNotifications(1);
+            if (res.success) {
+                setNotifications(res.notifications);
+                setHasNextPage(res.meta.hasNextPage);
+                setCurrentPage(1);
+            }
+        }
+        setIsModalOpen(!isModalOpen);
+    };
+
+    const handleLoadMore = async () => {
+        const nextPage = currentPage + 1;
+        const res = await notificationService.getNotifications(nextPage);
+        if (res.success) {
+            setNotifications(prev => [...prev, ...res.notifications]);
+            setHasNextPage(res.meta.hasNextPage);
+            setCurrentPage(nextPage);
+        }
+    };
+
+
+    const handleMarkAllAsRead = async () => {
+        const res = await notificationService.markAllAsRead();
+        if (res.success) {
+            setUnreadCount(0);
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        }
+    };
+
+    const handleMarkAsRead = async (id) => {
+        const res = await notificationService.markOneAsRead(id);
+        if (res.success) {
+            setUnreadCount(prev => Math.max(0, prev - 1));
+            setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+        }
+    };
+
 
     return (
         <nav className="sticky top-0 z-[100] bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3">
@@ -74,7 +150,6 @@ const UserNavbar = () => {
                                 { to: "/", label: "Explore" },
                                 { to: "/my-bookings", label: "My Bookings" },
                                 { to: "/my-wallet", label: "My Wallet" },
-                                { to: "/offers", label: "Offers" }
                             ].map((link) => (
                                 <NavLink
                                     key={link.to}
@@ -91,11 +166,31 @@ const UserNavbar = () => {
                             ))}
                         </div>
 
-                        <div className="hidden md:flex items-center gap-4">
-                            <button className="relative text-gray-500 hover:text-gray-700">
+                        <div className="hidden md:flex items-center gap-4 relative">
+                            <button
+                                onClick={handleBellClick}
+                                className="relative text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
                                 <Bell size={20} />
-                                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
                             </button>
+
+                            <NotificationModal
+                                isOpen={isModalOpen}
+                                onClose={() => setIsModalOpen(false)}
+                                notifications={notifications}
+                                unreadCount={unreadCount}
+                                onMarkAsRead={handleMarkAsRead}
+                                onMarkAllAsRead={handleMarkAllAsRead}
+                                hasNextPage={hasNextPage}
+                                onLoadMore={handleLoadMore}
+                            />
+
+
 
                             <Link to="/wishlist" className="text-gray-500 hover:text-[#ff5e00] transition-colors">
                                 <Heart size={20} />
@@ -143,7 +238,6 @@ const UserNavbar = () => {
                                 { to: "/", label: "Explore" },
                                 { to: "/my-bookings", label: "My Bookings" },
                                 { to: "/my-wallet", label: "My Wallet" },
-                                { to: "/offers", label: "Offers" },
                                 { to: "/wishlist", label: "Wishlist" }
                             ].map((link) => (
                                 <NavLink

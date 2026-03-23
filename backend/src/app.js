@@ -10,6 +10,7 @@ import { setupReservation } from "./socket/reservationSocket.js";
 import { initExpiryListener } from "./services/expiryListener.js";
 import { seedAdmin } from "./utils/seedAdmin.js";
 import { env } from "./config/env.config.js";
+import { setupNotifications } from "./socket/notificationSocket.js";
 
 connectDB();
 seedAdmin();
@@ -40,6 +41,8 @@ app.use(allRoutes);
 
 setupReservation(io);
 initExpiryListener(io);
+setupNotifications(io);
+app.set("io", io)
 
 server.listen(env.PORT, () => {
   console.log("Server & Sockets running on ", env.PORT);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, MapPin } from "lucide-react";
+import { Star, MapPin, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop";
@@ -28,10 +28,17 @@ const RestaurantCard = React.memo(({ item }) => {
                 />
                 <div
                     className={`absolute top-4 right-4 ${item.isCurrentlyOpen ? "bg-green-500" : "bg-red-500"
-                        } text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide`}
+                        } text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide z-10`}
                 >
                     {item.isCurrentlyOpen ? "OPEN" : "CLOSED"}
                 </div>
+
+                {item.bestOffer && (
+                    <div className="absolute bottom-3 left-3 bg-gradient-to-r from-orange-500 to-[#ff5e00] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-lg shadow-orange-500/40 z-10 border border-white/20 backdrop-blur-md uppercase tracking-wider">
+                        <Tag size={12} className="text-orange-50 mt-[1px]" />
+                        <span>Up to ₹{item.bestOffer.discountValue} Off</span>
+                    </div>
+                )}
 
                 {item.distanceFromUser !== undefined && item.distanceFromUser !== null && (
                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">

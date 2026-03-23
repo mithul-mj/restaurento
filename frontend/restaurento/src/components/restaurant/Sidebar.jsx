@@ -9,7 +9,8 @@ import {
     Settings,
     X,
     LogOut,
-    Maximize
+    Maximize,
+    Gift
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +24,7 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
         { id: 'bookings', icon: CalendarDays, label: 'Bookings', path: '/restaurant/bookings' },
         { id: 'check-in', icon: Maximize, label: 'Scan & Check-in', path: '/restaurant/check-in' },
         { id: 'menu', icon: UtensilsCrossed, label: 'Menu', path: '/restaurant/menu' },
+        { id: 'offers', icon: Gift, label: 'My Offers', path: '/restaurant/offers' },
         { id: 'earnings', icon: TrendingUp, label: 'Earnings', path: '/restaurant/earnings' },
         { id: 'wallet', icon: Wallet, label: 'Wallet & Payout', path: '/restaurant/wallet' },
         { id: 'notifications', icon: Bell, label: 'Notifications', path: '/restaurant/notifications' },
