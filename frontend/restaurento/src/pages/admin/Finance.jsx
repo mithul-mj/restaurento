@@ -40,17 +40,17 @@ const AdminFinance = () => {
 
     const handleExportPDF = () => {
         const doc = new jsPDF();
-        
+
         // Add Title
         doc.setFontSize(22);
         doc.setTextColor(255, 94, 0); // Primary Brand Color
         doc.text("Financial Report - Restaurento", 14, 22);
-        
+
         // Add Executive Summary Section
         doc.setFontSize(14);
         doc.setTextColor(40, 40, 40);
         doc.text("Executive Summary", 14, 35);
-        
+
         autoTable(doc, {
             startY: 40,
             body: [
@@ -59,12 +59,12 @@ const AdminFinance = () => {
                 ["Total Transactions:", stats.totalTransactions?.toString() || "0"]
             ],
             theme: 'plain',
-            styles: { fontSize: 10, cellPadding: 2, textColor: [60,60,60] },
+            styles: { fontSize: 10, cellPadding: 2, textColor: [60, 60, 60] },
             columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
         });
 
         const finalY = doc.lastAutoTable.finalY || 60;
-        
+
         // Add Date & Filter details
         doc.setFontSize(9);
         doc.setTextColor(100, 100, 100);
@@ -119,7 +119,7 @@ const AdminFinance = () => {
         }));
 
         const wb = XLSX.utils.book_new();
-        
+
         // Add Summary Sheet
         const wsSummary = XLSX.utils.json_to_sheet(summaryData);
         XLSX.utils.book_append_sheet(wb, wsSummary, "Financial Summary");
@@ -127,7 +127,7 @@ const AdminFinance = () => {
         // Add Transaction Sheet
         const wsTransactions = XLSX.utils.json_to_sheet(txData);
         XLSX.utils.book_append_sheet(wb, wsTransactions, "Transaction Details");
-        
+
         // Set column widths for better readability
         wsTransactions['!cols'] = [
             { wch: 25 }, // Date
@@ -137,7 +137,7 @@ const AdminFinance = () => {
             { wch: 18 }, // Commission
             { wch: 15 }  // Status
         ];
-        
+
         wsSummary['!cols'] = [
             { wch: 25 }, // Metric
             { wch: 25 }, // Value
@@ -346,7 +346,7 @@ const AdminFinance = () => {
                                 <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md border ${tx.paymentStatus === 'paid' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
                                     {tx.paymentStatus}
                                 </span>
-                                <button 
+                                <button
                                     onClick={() => { setSelectedTxId(tx.id); setIsModalOpen(true); }}
                                     className="p-2 bg-gray-50 text-blue-600 hover:bg-blue-50 rounded-lg transition-all active:scale-95">
                                     <ArrowUpRight size={18} />
@@ -387,7 +387,7 @@ const AdminFinance = () => {
                 </div>
             </div>
 
-            <TransactionDetailsModal 
+            <TransactionDetailsModal
                 isOpen={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setSelectedTxId(null); }}
                 transactionId={selectedTxId}

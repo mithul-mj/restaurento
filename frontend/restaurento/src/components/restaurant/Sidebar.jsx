@@ -4,8 +4,6 @@ import {
     CalendarDays,
     UtensilsCrossed,
     TrendingUp,
-    Wallet,
-    Bell,
     Settings,
     X,
     LogOut,
@@ -26,8 +24,6 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
         { id: 'menu', icon: UtensilsCrossed, label: 'Menu', path: '/restaurant/menu' },
         { id: 'offers', icon: Gift, label: 'My Offers', path: '/restaurant/offers' },
         { id: 'earnings', icon: TrendingUp, label: 'Earnings', path: '/restaurant/earnings' },
-        { id: 'wallet', icon: Wallet, label: 'Wallet & Payout', path: '/restaurant/wallet' },
-        { id: 'notifications', icon: Bell, label: 'Notifications', path: '/restaurant/notifications' },
         { id: 'settings', icon: Settings, label: 'Settings', path: '/restaurant/settings' },
     ];
 

@@ -55,8 +55,6 @@ const Bookings = lazy(() => import("./pages/restaurant/Bookings"));
 const OffersPage = lazy(() => import("./pages/restaurant/Offers"));
 const MenuPage = lazy(() => import("./pages/restaurant/Menu"));
 const Earnings = lazy(() => import("./pages/restaurant/Earnings"));
-const WalletPage = lazy(() => import("./pages/restaurant/Wallet"));
-const Notifications = lazy(() => import("./pages/restaurant/Notifications"));
 const RestaurantManagement = lazy(
   () => import("./pages/admin/RestaurantManagement"),
 );
@@ -176,11 +174,6 @@ function App() {
                 <Route path="/restaurant/check-in" element={<Scanner />} />
                 <Route path="/restaurant/menu" element={<MenuPage />} />
                 <Route path="/restaurant/earnings" element={<Earnings />} />
-                <Route path="/restaurant/wallet" element={<WalletPage />} />
-                <Route
-                  path="/restaurant/notifications"
-                  element={<Notifications />}
-                />
                 <Route
                   path="/restaurant/settings"
                   element={<RestaurantSettings />}

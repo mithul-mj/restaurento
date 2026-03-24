@@ -12,7 +12,8 @@ import {
     getRestaurantBookings,
     getBookingById,
     updateBookingStatus,
-    getRestaurantStats
+    getRestaurantStats,
+    getRestaurantEarnings
 } from "../../controllers/restaurant/restaurant.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
@@ -32,6 +33,7 @@ router.get("/profile", getRestaurantProfile);
 router.patch("/profile", upload.array("images", 5), updateRestaurantProfile);
 router.patch("/settings", updateRestaurantSettings);
 router.get("/stats", getRestaurantStats);
+router.get("/earnings", getRestaurantEarnings);
 
 router.get("/menu", getMenu);
 router.post("/menu", upload.single("image"), validate(menuItemSchema), addMenuItem);

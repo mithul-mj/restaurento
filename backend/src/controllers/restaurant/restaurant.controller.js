@@ -759,3 +759,172 @@ export const getRestaurantStats = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getRestaurantEarnings = async (req, res, next) => {
+    try {
+        const restaurantId = req.user._id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const statusFilter = req.query.status || "all";
+        const dateFilter = req.query.date || "all";
+        const search = req.query.search || "";
+        const startDate = req.query.startDate;
+        const endDate = req.query.endDate;
+
+        const skip = (page - 1) * limit;
+        const now = new Date();
+
+        // Calculate overarching business metrics (Total Sales, Total Bookings, and Payout)
+        // Note: These ignore UI filters (search/date) to provide a persistent overview of lifetime/year progress.
+        const stats = await Booking.aggregate([
+            {
+                $match: {
+                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                    status: { $in: ["approved", "checked-in"] }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalEarnings: { $sum: "$totalAmount" },
+                    totalPlatformFees: { $sum: "$platformFee" },
+                    successfulBookings: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const result = stats[0] || { totalEarnings: 0, totalPlatformFees: 0, successfulBookings: 0 };
+        const netPayout = result.totalEarnings - result.totalPlatformFees;
+
+        // Generate monthly revenue distribution for the current year trend graph
+        const trendData = await Booking.aggregate([
+            {
+                $match: {
+                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                    status: { $in: ["approved", "checked-in"] },
+                    bookingDate: { $gte: new Date(now.getFullYear(), 0, 1) }
+                }
+            },
+            {
+                $group: {
+                    _id: { $month: "$bookingDate" },
+                    earnings: { $sum: "$totalAmount" }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        // Build the dynamic filter object for the searchable transaction history
+        let transactionFilter = {
+            restaurantId: new mongoose.Types.ObjectId(restaurantId)
+        };
+
+        // Filter by payment/fulfillment status
+        if (statusFilter === "paid") {
+            transactionFilter.status = { $in: ["approved", "checked-in"] };
+        } else if (statusFilter === "canceled") {
+            transactionFilter.status = "canceled";
+        } else {
+            transactionFilter.status = { $in: ["approved", "checked-in", "canceled"] };
+        }
+
+        // Apply time-based boundaries to the listing
+        if (dateFilter === "today") {
+            const startOfToday = new Date(now);
+            startOfToday.setUTCHours(0, 0, 0, 0);
+            transactionFilter.bookingDate = { $gte: startOfToday };
+        } else if (dateFilter === "thisMonth") {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            transactionFilter.bookingDate = { $gte: startOfMonth };
+        } else if (dateFilter === "thisYear") {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            transactionFilter.bookingDate = { $gte: startOfYear };
+        } else if (dateFilter === "custom" && startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setUTCHours(23, 59, 59, 999);
+            transactionFilter.bookingDate = { $gte: start, $lte: end };
+        }
+
+        const transactionAggregate = [
+            { $match: transactionFilter },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "customer"
+                }
+            },
+            { $unwind: "$customer" }
+        ];
+
+        if (search) {
+            transactionAggregate.push({
+                $addFields: {
+                    tempIdString: { $toString: "$_id" }
+                }
+            });
+            transactionAggregate.push({
+                $match: {
+                    $or: [
+                        { "customer.fullName": { $regex: search, $options: "i" } },
+                        { "tempIdString": { $regex: search, $options: "i" } }
+                    ]
+                }
+            });
+        }
+
+        const transactionsResult = await Booking.aggregate([
+            ...transactionAggregate,
+            { $sort: { bookingDate: -1 } },
+            {
+                $facet: {
+                    metadata: [{ $count: "total" }],
+                    data: [{ $skip: skip }, { $limit: limit }]
+                }
+            }
+        ]);
+
+        const totalTransactions = transactionsResult[0].metadata[0]?.total || 0;
+        const rawTransactions = transactionsResult[0].data || [];
+
+        res.status(STATUS_CODES.OK).json({
+            success: true,
+            data: {
+                stats: {
+                    totalEarnings: result.totalEarnings,
+                    successfulBookings: result.successfulBookings,
+                    netPayout: netPayout
+                },
+                trend: Array.from({ length: 12 }, (_, i) => {
+                    const monthIndex = i + 1;
+                    const mData = trendData.find(t => t._id === monthIndex);
+                    return {
+                        month: new Date(new Date().getFullYear(), i).toLocaleString('default', { month: 'short' }),
+                        earnings: mData ? mData.earnings : 0
+                    };
+                }),
+                transactions: rawTransactions.map(t => ({
+                    id: t._id,
+                    orderId: `#ORD-${t._id.toString().slice(-5).toUpperCase()}`,
+                    date: t.bookingDate,
+                    customer: t.customer.fullName,
+                    amount: t.totalAmount,
+                    fees: t.platformFee,
+                    netEarning: t.totalAmount - t.platformFee,
+                    status: t.status === 'canceled' ? 'Canceled' : 'Paid'
+                })),
+                pagination: {
+                    total: totalTransactions,
+                    page,
+                    limit,
+                    pages: Math.ceil(totalTransactions / limit)
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
