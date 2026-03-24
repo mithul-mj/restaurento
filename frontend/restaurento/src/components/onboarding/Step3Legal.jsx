@@ -7,7 +7,7 @@ const Step3Legal = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
             <div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Legal & Verification Documents</h2>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Legal & Verification Documents</h2>
                 <p className="text-gray-500 mt-2">Please upload the following documents to verify your business.</p>
             </div>
 

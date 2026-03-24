@@ -95,7 +95,7 @@ const Step1BasicInfo = ({ isEditing = false }) => {
         <div className="space-y-8 animate-in fade-in duration-500">
             {!isEditing && (
                 <div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Tell us about your restaurant</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Tell us about your restaurant</h2>
                     <p className="text-gray-500 mt-2">Let's start with the basics to get your page set up.</p>
                 </div>
             )}

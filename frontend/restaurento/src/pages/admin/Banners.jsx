@@ -72,15 +72,17 @@ const Banners = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-10">
+        <>
+
 
             <div className="mb-8">
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Website Banners</h1>
-                        <p className="text-sm text-gray-500 mt-1">Manage promotional banners visible on your website</p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">Website Banners</h1>
+                        <p className="text-gray-500 font-medium md:text-lg opacity-80">Manage promotional banners visible on your home screen.</p>
                     </div>
+
                     <button
                         onClick={() => setIsCreateOpen(true)}
                         className="flex items-center justify-center gap-2 bg-[#ff5e00] hover:bg-[#e05200] text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
@@ -142,7 +144,8 @@ const Banners = () => {
 
                             <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium text-gray-700 capitalize">visibility</span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visibility</span>
+
                                     <button
                                         onClick={() => handleToggle(banner)}
                                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff5e00] focus:ring-offset-2 ${banner.isActive ? 'bg-[#ff5e00]' : 'bg-gray-200'
@@ -208,8 +211,9 @@ const Banners = () => {
                     </button>
                 </div>
             )}
-        </div>
+        </>
     );
 };
+
 
 export default Banners;

@@ -44,7 +44,7 @@ const ForgotPasswordModal = ({ onClose }) => {
       <div
         className="bg-white p-10 rounded-3xl shadow-2xl border border-[#F2EAE5] max-w-md w-full text-center relative duration-200"
         onClick={(e) => e.stopPropagation()}>
-        <h1 className="text-3xl font-extrabold text-[#1A1A1A] mb-3">
+        <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
           Forgot Your Password?
         </h1>
 

@@ -43,7 +43,7 @@ const AuthLayout = ({
                         <span className="font-bold text-xl text-white md:text-gray-900">Restauranto</span>
                     </div>
 
-                    <h1 className="text-3xl font-extrabold text-white md:text-gray-900 mb-2 text-center md:text-left">
+                    <h1 className="text-3xl font-bold text-white md:text-gray-900 mb-2 text-center md:text-left">
                         {title}
                     </h1>
 

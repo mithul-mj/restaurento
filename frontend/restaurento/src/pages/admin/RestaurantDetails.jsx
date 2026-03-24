@@ -233,7 +233,7 @@ const RestaurantDetails = () => {
       </div>
 
       <div className="flex items-center space-x-3 mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900">
           {data.restaurantName}
         </h1>
         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">

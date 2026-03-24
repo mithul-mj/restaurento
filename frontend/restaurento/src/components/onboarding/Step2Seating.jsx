@@ -8,7 +8,7 @@ const Step2Seating = ({ isEditing = false }) => {
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
             {!isEditing && (
                 <div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Restaurant Details</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Restaurant Details</h2>
                     <p className="text-gray-500 mt-2">Step 2: Seating & Photos & Rates</p>
                 </div>
             )}

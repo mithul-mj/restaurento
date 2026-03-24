@@ -116,7 +116,7 @@ const EditRestaurant = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-6 md:p-12">
             <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-black text-gray-900 mb-8">Edit Restaurant</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit Restaurant</h1>
                 <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
                     <FormProvider {...methods}>
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">

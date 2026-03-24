@@ -36,7 +36,7 @@ const Step4Menu = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
             <div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Menu & Slot Rates</h2>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Menu & Slot Rates</h2>
                 <p className="text-gray-500 mt-2">Manage your menu items for different times of the day and set your booking prices.</p>
             </div>
 

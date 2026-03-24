@@ -46,12 +46,13 @@ const UserManagement = () => {
 
   return (
     <>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900">All Users</h2>
-        <p className="text-gray-500 text-sm">
-          Manage all active and inactive users on the platform.
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">Platform Users</h1>
+        <p className="text-gray-500 font-medium md:text-lg opacity-80">
+          Manage and monitor all active and inactive users.
         </p>
       </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-start justify-between">
@@ -59,12 +60,14 @@ const UserManagement = () => {
             <div className="bg-[#fff5eb] text-[#ff5e00] w-10 h-10 rounded-lg flex items-center justify-center mb-4">
               <Users size={20} />
             </div>
-            <p className="text-sm font-bold text-gray-900 mb-1">
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
+
               All Users
             </p>
-            <h3 className="text-3xl font-bold text-gray-900">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
               {meta.totalCount}
             </h3>
+
             <p className="text-gray-400 text-xs mt-1">
               Total registered users
             </p>
@@ -75,12 +78,14 @@ const UserManagement = () => {
             <div className="bg-[#fff5f5] text-red-500 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
               <UserX size={20} />
             </div>
-            <p className="text-sm font-bold text-gray-900 mb-1">
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
+
               Suspended Users
             </p>
-            <h3 className="text-3xl font-bold text-gray-900">
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
               {meta.suspendedCount}
             </h3>
+
             <p className="text-gray-400 text-xs mt-1">
               Accounts with temporary restrictions
             </p>
@@ -91,16 +96,16 @@ const UserManagement = () => {
 
 
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
-        <div
-          className="w-full md:w-96 relative">
+        <div className="relative w-full md:w-96 group">
           <input
             type="text"
             placeholder="Search by username, email"
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-[#ff5e00]"
+            className="w-full pl-11 pr-12 py-3 bg-gray-50 border border-transparent rounded-xl text-sm text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-[#ff5e00] focus:bg-white transition-all outline-none"
+
             {...register("search")}
           />
           <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#ff5e00] transition-colors"
             size={18}
           />
           {searchValue && (
@@ -110,11 +115,12 @@ const UserManagement = () => {
                 setValue("search", "");
                 setPage(1);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <X size={16} />
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all">
+              <X size={14} />
             </button>
           )}
         </div>
+
 
         <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 items-center">
           <div className="relative">

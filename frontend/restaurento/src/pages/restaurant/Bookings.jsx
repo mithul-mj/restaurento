@@ -93,11 +93,11 @@ const Bookings = () => {
 
 
         <div className="hidden md:grid grid-cols-12 px-10 py-5 bg-gray-50/50 border-b border-gray-50">
-          <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</div>
-          <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule</div>
-          <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Guests</div>
-          <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Summary</div>
-          <div className="col-span-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</div>
+          <div className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer</div>
+          <div className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Schedule</div>
+          <div className="col-span-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Guests</div>
+          <div className="col-span-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Summary</div>
+          <div className="col-span-2 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</div>
         </div>
 
         <div className="divide-y divide-gray-50">
@@ -157,7 +157,7 @@ const Bookings = () => {
                     </div>
 
                     <div className="md:col-span-3 flex items-center justify-between md:block">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest md:hidden">Schedule</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:hidden">Schedule</span>
                       <div className="flex flex-col text-right md:text-left">
                         <span className="text-sm font-bold text-gray-900">{formatDate(booking.bookingDate, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         <span className="text-xs font-medium text-gray-400">{formatTime12Hour(booking.slotTime)}</span>
@@ -165,7 +165,7 @@ const Bookings = () => {
                     </div>
 
                     <div className="md:col-span-2 flex items-center justify-between md:block">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest md:hidden">Guests</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:hidden">Guests</span>
                       <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-gray-100 rounded-lg shadow-sm">
                         <Users size={12} className="text-gray-400" />
                         <span className="text-xs font-bold text-gray-900">{booking.guests} People</span>
@@ -173,9 +173,9 @@ const Bookings = () => {
                     </div>
 
                     <div className="md:col-span-2 flex items-center justify-between md:block">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest md:hidden">Order</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:hidden">Order</span>
                       <div className="flex flex-col text-right md:text-left">
-                        <span className="text-sm font-black text-gray-900">₹{booking.totalAmount?.toFixed(2)}</span>
+                        <span className="text-sm font-bold text-gray-900">₹{booking.totalAmount?.toFixed(2)}</span>
                         <span className="text-[10px] font-bold text-orange-500/80 uppercase tracking-tight">
                           {booking.preOrderItems?.length || 0} items
                         </span>
@@ -185,7 +185,7 @@ const Bookings = () => {
                     <div className="md:col-span-2 flex justify-end mt-2 md:mt-0">
                       <button
                         onClick={() => navigate(`/restaurant/bookings/${booking._id}`)}
-                        className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-900 text-white rounded-xl text-xs font-black hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-gray-200"
+                        className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-gray-200"
                       >
                         View Details
                       </button>

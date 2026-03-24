@@ -42,7 +42,7 @@ const RestaurantDashboard = () => {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div>
-                <h2 className="text-3xl font-extrabold text-gray-900">Welcome back, Chef!</h2>
+                <h2 className="text-3xl font-bold text-gray-900">Welcome back, Chef!</h2>
                 <p className="text-gray-500 mt-1">Here's a summary of your restaurant's activity today.</p>
             </div>
 

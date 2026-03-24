@@ -78,7 +78,7 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl p-8 w-full max-w-[450px] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Verify Your Email
           </h2>
           <p className="text-gray-500 text-sm">

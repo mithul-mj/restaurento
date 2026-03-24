@@ -123,7 +123,7 @@ const PreApproval = () => {
         <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Restaurant Pre-Approval</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Restaurant Pre-Approval</h1>
                     <p className="text-gray-500 mt-2 text-lg">Submit your basic details and documents to get started.</p>
                 </div>
 

@@ -134,7 +134,7 @@ const Profile = () => {
             </div>
             <div className="text-center sm:text-right">
               <div className="text-3xl font-extrabold text-gray-900">
-                ₹{user?.walletBalance ?? 0}
+                ₹{(user?.walletBalance ?? 0).toFixed(2)}
               </div>
               <Link to="/my-wallet">
                 <button className="text-[#ff5e00] text-xs font-bold hover:underline">

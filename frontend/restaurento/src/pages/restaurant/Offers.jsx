@@ -1,15 +1,18 @@
-import React, { useState } from "react";
-import { Plus, Search, Calendar, ChevronDown, Ticket, Gift, Timer, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Search, Calendar, ChevronDown, Ticket, Gift, Timer, Pencil, Trash2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useOffers } from "../../hooks/useOffers";
+import useDebounce from "../../hooks/useDebounce";
 import PageLoader from "../../components/PageLoader";
 import CreateOfferModal from "../../components/restaurant/modals/CreateOfferModal";
 import { showConfirm } from "../../utils/alert";
+
 
 const PAGE_LIMIT = 2; // Matches Admin side exactly
 
 const Offers = () => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
     const [statusFilter, setStatusFilter] = useState("All Status");
     const [sortBy, setSortBy] = useState("Sort By");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -18,10 +21,14 @@ const Offers = () => {
     const { data, isLoading, createOffer, isCreating, updateOffer, isUpdating, toggleOffer, deleteOffer } = useOffers({
         page, 
         limit: PAGE_LIMIT,
-        search,
+        search: debouncedSearch,
         status: statusFilter,
         sortBy
     });
+
+    React.useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, statusFilter, sortBy]);
 
     const handleDelete = async (id) => {
         const result = await showConfirm(
@@ -31,6 +38,7 @@ const Offers = () => {
         );
         if (result.isConfirmed) deleteOffer(id);
     };
+
 
     const handleCreateOrUpdate = (formData) => {
         if (editingOffer) {
@@ -64,9 +72,10 @@ const Offers = () => {
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 leading-tight">Manage Promotions</h1>
-                    <p className="text-gray-500 mt-1 font-medium">Create and track automatic discounts for your restaurant.</p>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-tight">Manage Promotions</h1>
+                    <p className="text-gray-500 mt-1 font-medium opacity-80">Create and track automatic discounts for your restaurant.</p>
                 </div>
+
                 <button
                     onClick={() => { setEditingOffer(null); setIsCreateOpen(true); }}
                     className="flex items-center justify-center gap-2 bg-[#ff5e00] hover:bg-[#e05200] text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap">
@@ -83,9 +92,10 @@ const Offers = () => {
                             <Ticket size={24} />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Campaigns</p>
-                            <h3 className="text-3xl font-bold text-gray-900 mt-0.5">{stats.activeCampaigns}</h3>
+                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Active Campaigns</p>
+                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mt-0.5">{stats.activeCampaigns}</h3>
                         </div>
+
                     </div>
                 </div>
 
@@ -95,27 +105,36 @@ const Offers = () => {
                             <Timer size={24} />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Claims</p>
-                            <h3 className="text-3xl font-bold text-gray-900 mt-0.5">
+                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Claims</p>
+                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mt-0.5">
                                 {stats.totalClaims}
                             </h3>
                         </div>
+
                     </div>
                 </div>
             </div>
 
-            {/* Search & Filters */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center">
-                <div className="relative w-full lg:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <div className="relative w-full lg:max-w-md group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#ff5e00] transition-colors" size={18} />
                     <input
                         type="text"
                         placeholder="Search offers..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                        className="w-full pl-10 pr-12 py-2 bg-gray-50 border border-transparent rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all outline-none"
                     />
+                    {search && (
+                        <button
+                            onClick={() => setSearch('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-all font-bold"
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
                 </div>
+
                 <div className="flex items-center gap-3 w-full lg:w-auto">
                     <div className="relative flex-1 lg:w-40">
                         <select 

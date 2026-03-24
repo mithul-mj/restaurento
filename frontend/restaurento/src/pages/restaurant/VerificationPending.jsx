@@ -64,7 +64,7 @@ const VerificationPending = () => {
                         </div>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                         Account Suspended
                     </h1>
 
@@ -100,7 +100,7 @@ const VerificationPending = () => {
                         </div>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                         Application Action Required
                     </h1>
 
@@ -124,7 +124,7 @@ const VerificationPending = () => {
                 </div>
             ) : (
                 <div className="max-w-2xl animate-fade-in-up">
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                         Your Restaurant details are being<br className="hidden md:block" /> verified by Admin!
                     </h1>
 

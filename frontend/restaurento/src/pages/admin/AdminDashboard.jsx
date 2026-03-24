@@ -4,10 +4,15 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
 import authService from '../../services/auth.service';
 import { showConfirm, showToast } from '../../utils/alert';
-
+import { useAdminDashboard } from '../../hooks/useAdminDashboard';
+import PageLoader from '../../components/PageLoader';
+import { useState } from 'react';
 const AdminDashboard = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [timeframe, setTimeframe] = useState("month");
+    const [hoveredPoint, setHoveredPoint] = useState(null);
+    const { data: dashboardData, isLoading } = useAdminDashboard(timeframe);
 
     const handleLogout = async () => {
         const result = await showConfirm(
@@ -28,104 +33,125 @@ const AdminDashboard = () => {
         }
     };
 
-    const stats = [
-        { label: "Total Restaurants", value: "1,245", badge: null },
-        { label: "Pending Approvals", value: "12", badge: "12" },
-        { label: "Total Earnings", value: "₹1.45M", badge: null },
-        { label: "Pending Reports", value: "8", badge: "8" },
-    ];
+    if (isLoading) return <PageLoader />;
 
+    const { stats = [], trends = [], growth = [] } = dashboardData?.data || {};
 
-    const revenuePath = "M0,100 C20,100 20,40 40,40 C60,40 60,60 80,60 C100,60 100,20 120,20 C140,20 140,80 160,80 C180,80 180,50 200,50 C240,50 240,120 280,120 C300,120 300,20 320,20 C340,20 340,80 360,80 C380,80 380,110 400,110 C420,110 420,40 440,40";
+    // Setup chart dimensions and scale
+    const chartWidth = 440;
+    const chartHeight = 150;
+    const maxVal = Math.max(...growth.map(g => g.total), 1);
+    
+    // Map data points to SVG coordinates for the line chart
+    const points = growth.map((g, i) => ({
+        x: (i / 5) * chartWidth,
+        y: chartHeight - ((g.total / (maxVal * 1.5)) * chartHeight) - 20,
+        month: g.month,
+        total: g.total
+    }));
 
+    // Build a smooth cubic bezier path through the data points
+    let pathAcc = "";
+    points.forEach((p, i) => {
+        if (i === 0) pathAcc += `M${p.x},${p.y}`;
+        else {
+            const cpX = (points[i-1].x + p.x) / 2;
+            pathAcc += ` C${cpX},${points[i-1].y} ${cpX},${p.y} ${p.x},${p.y}`;
+        }
+    });
 
-    const revenueFillPath = `${revenuePath} L440,150 L0,150 Z`;
+    const revenuePath = pathAcc || "M0,100 L440,100";
+    const revenueFillPath = `${revenuePath} L${chartWidth},${chartHeight} L0,${chartHeight} Z`;
 
-    const rankingData = [
-        { name: "The Gourmet Kitchen", value: "8.5k", width: "90%" },
-        { name: "Bistro Verde", value: "7.0k", width: "75%" },
-        { name: "Sushi House", value: "6.0k", width: "65%" },
-        { name: "Taco Town", value: "3.0k", width: "35%" },
-        { name: "The Golden Spoon", value: "4.5k", width: "50%" },
-    ];
+    const lastEarningsMonth = growth[growth.length - 1]?.total || 0;
+    const timeframeLabel = timeframe === "day" ? "today" : timeframe === "month" ? "this month" : "this year";
 
     return (
         <>
             <div className="mb-10">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-gray-500 text-sm mt-1">High-level overview of platform activity.</p>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">Admin Dashboard</h1>
+                <p className="text-gray-500 font-medium md:text-lg opacity-80 italic">Overview of your platform operations.</p>
             </div>
 
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 {stats.map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-                        <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1 flex justify-between items-center">
+                    <div key={index} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 flex justify-between items-center">
                             {stat.label}
                             {stat.badge && (
-                                <span className="bg-[#ff5e00] text-white text-[10px] px-1.5 py-0.5 rounded-full">{stat.badge}</span>
+                                <span className="bg-[#ff5e00] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">{stat.badge}</span>
                             )}
                         </p>
-                        <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+                        <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{stat.value}</h3>
                     </div>
                 ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-
                 <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="font-bold text-lg text-gray-900">Booking Trends by Restaurent</h3>
-                            <p className="text-gray-400 text-xs">Most popular restaurants this month based on completed orders</p>
+                            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Booking Trends</h3>
+                            <p className="text-gray-400 text-xs font-medium">Top performing restaurants {timeframeLabel}</p>
                         </div>
                         <div className="flex bg-gray-50 rounded-lg p-1 text-xs font-medium">
-                            <button className="px-3 py-1 rounded-md text-gray-500 hover:text-gray-900">Day</button>
-                            <button className="px-3 py-1 rounded-md bg-white text-[#ff5e00] shadow-sm">Month</button>
-                            <button className="px-3 py-1 rounded-md text-gray-500 hover:text-gray-900">Year</button>
+                            {["day", "month", "year"].map((t) => (
+                                <button
+                                    key={t}
+                                    onClick={() => setTimeframe(t)}
+                                    className={`px-3 py-1 rounded-md transition-all ${timeframe === t ? "bg-white text-[#ff5e00] shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+                                >
+                                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
                     <div className="space-y-6">
-                        {rankingData.map((item, i) => (
+                        {trends.length > 0 ? trends.map((item, i) => (
                             <div key={i} className="group">
                                 <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-1.5">
                                     <span className="w-32 text-right shrink-0 truncate">{item.name}</span>
                                     <div className="flex-1 h-3 bg-gray-50 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-[#ff5e00] rounded-full group-hover:bg-[#e05200] transition-all duration-500"
+                                            className="h-full bg-[#ff5e00] rounded-full transition-all duration-500"
                                             style={{ width: item.width }}
                                         ></div>
                                     </div>
                                     <span className="w-8 font-bold text-gray-900">{item.value}</span>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="py-20 text-center text-gray-400 font-medium italic">No booking data found for this period</div>
+                        )}
                     </div>
                 </div>
 
-
                 <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
                     <div className="mb-6">
-                        <h3 className="font-bold text-lg text-gray-900">Revenue Trends</h3>
-                        <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-3xl font-bold text-[#ff5e00]">₹250,840</span>
-                            <span className="text-xs text-gray-400">Last 6 months</span>
+                        <div className="mb-8">
+                            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Financial Growth</h3>
+                            <div className="flex items-baseline gap-2 mt-2">
+                                <span className="text-3xl md:text-4xl font-bold text-[#ff5e00] tracking-tight">₹{lastEarningsMonth.toLocaleString()}</span>
+                                <span className="text-xs text-gray-400 font-semibold uppercase tracking-widest">Growth this Month</span>
+                            </div>
                         </div>
                     </div>
 
                     <div className="relative h-48 w-full mt-8">
-                        <svg viewBox="0 0 440 150" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                        <svg 
+                            viewBox="0 0 440 150" 
+                            className="w-full h-full overflow-visible" 
+                            preserveAspectRatio="none"
+                            onMouseLeave={() => setHoveredPoint(null)}
+                        >
                             <defs>
                                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#ff5e00" stopOpacity="0.2" />
                                     <stop offset="100%" stopColor="#ff5e00" stopOpacity="0" />
                                 </linearGradient>
                             </defs>
-
                             <path d={revenueFillPath} fill="url(#revenueGradient)" />
-
                             <path
                                 d={revenuePath}
                                 fill="none"
@@ -135,20 +161,51 @@ const AdminDashboard = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             />
+
+                            {/* Vertical focus line and active marker shown during hover */}
+                            {hoveredPoint && (
+                                <>
+                                    <line x1={hoveredPoint.x} y1="0" x2={hoveredPoint.x} y2={chartHeight} stroke="#ff5e00" strokeWidth="1" strokeDasharray="4" opacity="0.4" />
+                                    <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="6" fill="#ff5e00" stroke="white" strokeWidth="2" />
+                                </>
+                            )}
+
+                            {/* Transparent interaction zones to capture mouse movements easily */}
+                            {points.map((p, i) => (
+                                <circle 
+                                    key={i} 
+                                    cx={p.x} 
+                                    cy={p.y} 
+                                    r="20" 
+                                    fill="transparent" 
+                                    onMouseEnter={() => setHoveredPoint(p)}
+                                    className="cursor-pointer"
+                                />
+                            ))}
                         </svg>
 
+                        {/* Floating Tooltip */}
+                        {hoveredPoint && (
+                            <div 
+                                className="absolute bg-white/90 backdrop-blur-md border border-gray-100 p-2 shadow-xl rounded-lg pointer-events-none transition-all duration-200 z-50 text-center"
+                                style={{ 
+                                    left: hoveredPoint.x, 
+                                    top: hoveredPoint.y - 60,
+                                    transform: 'translateX(-50%)' 
+                                }}
+                            >
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-1">{hoveredPoint.month}</p>
+                                <p className="text-sm font-bold text-[#ff5e00] leading-none">₹{hoveredPoint.total.toLocaleString()}</p>
+                            </div>
+                        )}
 
                         <div className="absolute top-full left-0 w-full flex justify-between px-2 pt-2 text-[10px] text-gray-400 uppercase font-medium">
-                            <span>Jan</span>
-                            <span>Feb</span>
-                            <span>Mar</span>
-                            <span>Apr</span>
-                            <span>May</span>
-                            <span>Jun</span>
+                            {growth.map((g, i) => (
+                                <span key={i}>{g.month}</span>
+                            ))}
                         </div>
                     </div>
                 </div>
-
             </div>
         </>
     );

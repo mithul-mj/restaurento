@@ -53,13 +53,13 @@ const BookingDetails = () => {
         <div className="w-16 h-16 bg-red-100/50 rounded-full flex items-center justify-center text-red-500 mb-4">
           <AlertCircle size={32} />
         </div>
-        <h2 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Booking Not Found</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Booking Not Found</h2>
         <p className="text-gray-400 mb-6 text-center max-w-sm font-bold">
           The booking you are looking for might have been deleted or moved.
         </p>
         <button
           onClick={() => navigate("/restaurant/bookings")}
-          className="px-8 py-3 bg-gray-900 text-white rounded-2xl font-black hover:bg-gray-800 transition-all active:scale-95"
+          className="px-8 py-3 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all active:scale-95"
         >
           Back to Bookings
         </button>
@@ -92,7 +92,7 @@ const BookingDetails = () => {
 
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
               {booking.userId?.fullName}
             </h1>
           </div>
@@ -217,8 +217,8 @@ const BookingDetails = () => {
                   </div>
                 )}
                 <div className="pt-6 mt-4 border-t border-dashed border-gray-100 flex justify-between items-center">
-                  <p className="font-black text-gray-900">Total Payable</p>
-                  <p className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter">₹{total.toFixed(2)}</p>
+                  <p className="font-bold text-gray-900">Total Payable</p>
+                  <p className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tighter">₹{total.toFixed(2)}</p>
                 </div>
               </div>
             </div>
