@@ -8,6 +8,7 @@ export const getPaymentDashboard = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 7;
         const search = (req.query.search || "").trim();
         const dateFilter = req.query.date || "all";
+        const statusFilter = req.query.status || "all";
         const skip = (page - 1) * limit;
 
         const now = new Date();
@@ -15,8 +16,52 @@ export const getPaymentDashboard = async (req, res, next) => {
         const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
+        let listFilter = {};
+        let statsMatch = { status: { $ne: "canceled" } };
+
+        if (statusFilter === "paid") {
+            listFilter.status = { $ne: "canceled" };
+            statsMatch = { status: { $ne: "canceled" } };
+        } else if (statusFilter === "refund") {
+            listFilter.status = "canceled";
+            statsMatch = { status: "canceled" };
+        }
+
+        if (search) {
+            const matchedRestaurants = await Restaurant.find({
+                restaurantName: { $regex: search, $options: "i" }
+            }).select("_id");
+            const restaurantIds = matchedRestaurants.map(r => r._id);
+
+            listFilter.$or = [
+                { razorpayPaymentId: { $regex: search, $options: "i" } },
+                { restaurantId: { $in: restaurantIds } }
+            ];
+        }
+
+        if (dateFilter === "today") {
+            const startOfToday = new Date(now);
+            startOfToday.setHours(0, 0, 0, 0);
+            listFilter.createdAt = { $gte: startOfToday };
+        } else if (dateFilter === "thisMonth") {
+            listFilter.createdAt = { $gte: startOfCurrentMonth };
+        } else if (dateFilter === "thisYear") {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            listFilter.createdAt = { $gte: startOfYear };
+        } else if (dateFilter === "custom" && req.query.startDate && req.query.endDate) {
+            const start = new Date(req.query.startDate);
+            const end = new Date(req.query.endDate);
+            end.setHours(23, 59, 59, 999);
+            listFilter.createdAt = { $gte: start, $lte: end };
+        }
+
+        // Apply date filtering to stats match as well if a date filter is present
+        if (listFilter.createdAt) {
+            statsMatch.createdAt = listFilter.createdAt;
+        }
+
         const stats = await Booking.aggregate([
-            { $match: { status: { $ne: "canceled" } } },
+            { $match: statsMatch },
             {
                 $facet: {
                     total: [
@@ -69,26 +114,6 @@ export const getPaymentDashboard = async (req, res, next) => {
             return parseFloat(((curr - prev) / prev * 100).toFixed(1));
         };
 
-        let listFilter = {};
-        if (search) {
-            const matchedRestaurants = await Restaurant.find({
-                restaurantName: { $regex: search, $options: "i" }
-            }).select("_id");
-            const restaurantIds = matchedRestaurants.map(r => r._id);
-
-            listFilter.$or = [
-                { razorpayPaymentId: { $regex: search, $options: "i" } },
-                { restaurantId: { $in: restaurantIds } }
-            ];
-        }
-
-        if (dateFilter === "today") {
-            const startOfToday = new Date(now.setHours(0, 0, 0, 0));
-            listFilter.createdAt = { $gte: startOfToday };
-        } else if (dateFilter === "thisMonth") {
-            listFilter.createdAt = { $gte: startOfCurrentMonth };
-        }
-
         const [transactions, totalFilteredCount] = await Promise.all([
             Booking.find(listFilter)
                 .populate("restaurantId", "restaurantName")
@@ -112,9 +137,9 @@ export const getPaymentDashboard = async (req, res, next) => {
         res.status(STATUS_CODES.OK).json({
             success: true,
             stats: {
-                commissionEarnings: total.commission,
+                commissionEarnings: currentM.commission,
                 monthlyRevenue: currentM.revenue,
-                totalTransactions: total.count,
+                totalTransactions: currentM.count,
                 commissionGrowth: calculateGrowth(currentM.commission, prevM.commission),
                 revenueGrowth: calculateGrowth(currentM.revenue, prevM.revenue),
                 transactionGrowth: calculateGrowth(currentM.count, prevM.count)

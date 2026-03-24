@@ -1,11 +1,11 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import adminService from '../services/admin.service'
 
-export const usePayments = ({ page, limit, search, date }) => {
-  const queryKey = ['admin_payments', page, limit, search, date];
+export const usePayments = ({ page, limit, search, date, status, startDate, endDate }) => {
+  const queryKey = ['admin_payments', page, limit, search, date, status, startDate, endDate];
   const query = useQuery({
     queryKey,
-    queryFn: () => adminService.fetchPayments({ page, limit, search, date }),
+    queryFn: () => adminService.fetchPayments({ page, limit, search, date, status, startDate, endDate }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 5,
   })

@@ -36,9 +36,9 @@ const adminService = {
     return response.data;
   },
 
-  fetchPayments: async ({ page, limit, search, date }) => {
+  fetchPayments: async ({ page, limit, search, date, status, startDate, endDate }) => {
     const response = await api.get("/admin/payments/dashboard", {
-      params: { page, limit, search, date },
+      params: { page, limit, search, date, status, startDate, endDate },
     });
     return response.data;
   },
