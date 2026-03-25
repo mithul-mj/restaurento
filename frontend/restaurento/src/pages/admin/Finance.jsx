@@ -160,23 +160,64 @@ const AdminFinance = () => {
                 <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">
                     {typeof value === 'number' ? (isCurrency ? `₹${value.toLocaleString()}` : value.toLocaleString()) : value}
                 </h3>
-                <p className={`text-sm font-bold flex items-center gap-1 ${growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {growth >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                    {growth > 0 ? `+${growth}%` : `${growth}%`}
-                    <span className="text-gray-400 font-medium ml-1">vs last month</span>
-                </p>
+                {date !== 'custom' && (
+                    <p className={`text-sm font-bold flex items-center gap-1 ${growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {growth >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                        {growth > 0 ? `+${growth}%` : `${growth}%`}
+                        <span className="text-gray-400 font-medium ml-1">{stats.growthLabel || "vs last month"}</span>
+                    </p>
+                )}
             </div>
         </div>
     );
 
 
     return (
-        <div className="max-w-[1600px] mx-auto transition-all duration-300">
+        <div className="max-w-[1600px] mx-auto transition-all duration-300">            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">Payments & Revenue</h1>
+                    <p className="text-gray-500 font-medium md:text-lg opacity-80 italic">Global platform financial intelligence for {date === 'all' ? 'All Time' : date === 'thisWeek' ? 'the last 7 days' : date === 'thisMonth' ? 'this Month' : date === 'thisYear' ? 'this Year' : 'the selected period'}.</p>
+                </div>
 
-            {/* Header */}
-            <div className="mb-6 md:mb-10">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">Payments & Revenue</h1>
-                <p className="text-gray-500 text-base md:text-lg font-medium opacity-80">Monitor and manage the platform's financial performance.</p>
+                <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                    <div className="relative group">
+                        <div className="flex items-center gap-8 px-5 py-2.5 bg-white border border-gray-200 rounded-2xl shadow-sm transition-all group-hover:border-gray-300">
+                            <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
+                                Timeframe: <span className="text-[#ff5e00] ml-0.5">{date === 'all' ? 'All' : date === 'thisWeek' ? 'Weekly' : date === 'thisMonth' ? 'Monthly' : date === 'thisYear' ? 'Yearly' : 'Custom'}</span>
+                            </span>
+                            <Calendar size={20} className="text-[#ff5e00]" />
+                        </div>
+                        <select
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        >
+                            <option value="all">All</option>
+                            <option value="thisWeek">Weekly</option>
+                            <option value="thisMonth">Monthly</option>
+                            <option value="thisYear">Yearly</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+
+                    {date === 'custom' && (
+                        <div className="flex gap-2 items-center bg-gray-50/50 p-1 rounded-2xl border border-gray-100 animate-in fade-in slide-in-from-left-4 duration-300 shadow-sm">
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:border-[#ff5e00] shadow-inner"
+                            />
+                            <span className="text-gray-400 font-black text-[10px] uppercase">to</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:border-[#ff5e00] shadow-inner"
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
 
@@ -190,20 +231,19 @@ const AdminFinance = () => {
                     icon={DollarSign}
                 />
                 <StatCard
-                    title="Monthly Revenue"
+                    title="Revenue"
                     value={stats.monthlyRevenue || 0}
                     growth={stats.revenueGrowth || 0}
                     icon={PieChart}
                 />
                 <StatCard
-                    title="Total Transactions"
+                    title="Transactions"
                     value={stats.totalTransactions || 0}
                     growth={stats.transactionGrowth || 0}
                     icon={Activity}
                     isCurrency={false}
                 />
             </div>
-            {/* Filter Bar Standardized */}
             <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
                 <div className="relative w-full md:w-96 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#ff5e00] transition-colors" size={18} />
@@ -223,23 +263,7 @@ const AdminFinance = () => {
                         </button>
                     )}
                 </div>
-
                 <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 items-center">
-                    <div className="relative">
-                        <select
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="appearance-none flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap pr-8 cursor-pointer focus:outline-none focus:border-[#ff5e00]"
-                        >
-                            <option value="all">Date: All</option>
-                            <option value="today">Today</option>
-                            <option value="thisMonth">This Month</option>
-                            <option value="thisYear">This Year</option>
-                            <option value="custom">Custom Range</option>
-                        </select>
-                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                    </div>
-
                     <div className="relative">
                         <select
                             value={status}

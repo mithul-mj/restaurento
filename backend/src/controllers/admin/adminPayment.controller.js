@@ -15,6 +15,42 @@ export const getPaymentDashboard = async (req, res, next) => {
         const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const endOfPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        endOfPreviousMonth.setHours(23, 59, 59, 999);
+
+        // Define the chronological boundaries for period-over-period financial auditing
+        let startOfCurrentPeriod = startOfCurrentMonth; 
+        let startOfPreviousPeriod = startOfPreviousMonth;
+        let endOfPreviousPeriod = endOfPreviousMonth;
+        let growthLabel = "vs last month";
+
+        if (dateFilter === "today") {
+            startOfCurrentPeriod = new Date(now);
+            startOfCurrentPeriod.setHours(0, 0, 0, 0);
+            startOfPreviousPeriod = new Date(startOfCurrentPeriod);
+            startOfPreviousPeriod.setDate(startOfCurrentPeriod.getDate() - 1);
+            endOfPreviousPeriod = new Date(startOfCurrentPeriod);
+            endOfPreviousPeriod.setMilliseconds(-1);
+            growthLabel = "vs yesterday";
+        } else if (dateFilter === "thisWeek") {
+            startOfCurrentPeriod = new Date(now);
+            startOfCurrentPeriod.setDate(now.getDate() - 7);
+            startOfPreviousPeriod = new Date(startOfCurrentPeriod);
+            startOfPreviousPeriod.setDate(startOfCurrentPeriod.getDate() - 7);
+            endOfPreviousPeriod = new Date(startOfCurrentPeriod);
+            endOfPreviousPeriod.setMilliseconds(-1);
+            growthLabel = "vs last week";
+        } else if (dateFilter === "thisMonth") {
+            startOfCurrentPeriod = startOfCurrentMonth;
+            startOfPreviousPeriod = startOfPreviousMonth;
+            endOfPreviousPeriod = endOfPreviousMonth;
+            growthLabel = "vs last month";
+        } else if (dateFilter === "thisYear") {
+            startOfCurrentPeriod = new Date(now.getFullYear(), 0, 1);
+            startOfPreviousPeriod = new Date(now.getFullYear() - 1, 0, 1);
+            endOfPreviousPeriod = new Date(now.getFullYear(), 0, 0);
+            endOfPreviousPeriod.setHours(23, 59, 59, 999);
+            growthLabel = "vs last year";
+        }
 
         let listFilter = {};
         let statsMatch = { status: { $ne: "canceled" } };
@@ -43,6 +79,10 @@ export const getPaymentDashboard = async (req, res, next) => {
             const startOfToday = new Date(now);
             startOfToday.setHours(0, 0, 0, 0);
             listFilter.createdAt = { $gte: startOfToday };
+        } else if (dateFilter === "thisWeek") {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - 7);
+            listFilter.createdAt = { $gte: startOfWeek };
         } else if (dateFilter === "thisMonth") {
             listFilter.createdAt = { $gte: startOfCurrentMonth };
         } else if (dateFilter === "thisYear") {
@@ -55,11 +95,12 @@ export const getPaymentDashboard = async (req, res, next) => {
             listFilter.createdAt = { $gte: start, $lte: end };
         }
 
-        // Apply date filtering to stats match as well if a date filter is present
+        // Synchronize the statistics window with the user's active list filter
         if (listFilter.createdAt) {
             statsMatch.createdAt = listFilter.createdAt;
         }
 
+        // Execute a multi-facet aggregation to fetch overall totals and historical comparison data in a single pass
         const stats = await Booking.aggregate([
             { $match: statsMatch },
             {
@@ -74,8 +115,8 @@ export const getPaymentDashboard = async (req, res, next) => {
                             }
                         }
                     ],
-                    currentMonth: [
-                        { $match: { createdAt: { $gte: startOfCurrentMonth } } },
+                    currentPeriod: [
+                        { $match: { createdAt: { $gte: startOfCurrentPeriod } } },
                         {
                             $group: {
                                 _id: null,
@@ -85,10 +126,10 @@ export const getPaymentDashboard = async (req, res, next) => {
                             }
                         }
                     ],
-                    previousMonth: [
+                    previousPeriod: [
                         {
                             $match: {
-                                createdAt: { $gte: startOfPreviousMonth, $lte: endOfPreviousMonth }
+                                createdAt: { $gte: startOfPreviousPeriod, $lte: endOfPreviousPeriod }
                             }
                         },
                         {
@@ -106,8 +147,8 @@ export const getPaymentDashboard = async (req, res, next) => {
 
         const s = stats[0] || {};
         const total = s.total[0] || { commission: 0, revenue: 0, count: 0 };
-        const currentM = s.currentMonth[0] || { commission: 0, revenue: 0, count: 0 };
-        const prevM = s.previousMonth[0] || { commission: 0, revenue: 0, count: 0 };
+        const currentP = s.currentPeriod[0] || { commission: 0, revenue: 0, count: 0 };
+        const prevP = s.previousPeriod[0] || { commission: 0, revenue: 0, count: 0 };
 
         const calculateGrowth = (curr, prev) => {
             if (!prev || prev === 0) return curr > 0 ? 100 : 0;
@@ -137,12 +178,13 @@ export const getPaymentDashboard = async (req, res, next) => {
         res.status(STATUS_CODES.OK).json({
             success: true,
             stats: {
-                commissionEarnings: currentM.commission,
-                monthlyRevenue: currentM.revenue,
-                totalTransactions: currentM.count,
-                commissionGrowth: calculateGrowth(currentM.commission, prevM.commission),
-                revenueGrowth: calculateGrowth(currentM.revenue, prevM.revenue),
-                transactionGrowth: calculateGrowth(currentM.count, prevM.count)
+                commissionEarnings: total.commission,
+                monthlyRevenue: total.revenue,
+                totalTransactions: total.count,
+                commissionGrowth: calculateGrowth(currentP.commission, prevP.commission),
+                revenueGrowth: calculateGrowth(currentP.revenue, prevP.revenue),
+                transactionGrowth: calculateGrowth(currentP.count, prevP.count),
+                growthLabel
             },
             meta: {
                 totalCount: totalFilteredCount,

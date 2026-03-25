@@ -61,7 +61,7 @@ const Earnings = () => {
     const handleExportPDF = () => {
         const doc = new jsPDF();
         doc.setFontSize(22);
-        doc.setTextColor(255, 94, 0); 
+        doc.setTextColor(255, 94, 0);
         doc.text("Earnings Report - Restaurento", 14, 22);
 
         doc.setFontSize(14);
@@ -82,10 +82,15 @@ const Earnings = () => {
 
         const finalY = doc.lastAutoTable.finalY || 60;
 
+        const dateLabel = date === 'thisWeek' ? 'This Week' :
+            date === 'thisMonth' ? 'This Month' :
+                date === 'thisYear' ? 'This Year' :
+                    date === 'custom' ? `Custom (${startDate} to ${endDate})` : 'All Time';
+
         doc.setFontSize(9);
         doc.setTextColor(100, 100, 100);
         doc.text(`Generated on: ${dayjs().format('DD MMM YYYY, hh:mm A')}`, 14, finalY + 10);
-        doc.text(`Filter Applied: Status=${status}, Date=${date}`, 14, finalY + 15);
+        doc.text(`Filter Applied: Status=${status.toUpperCase()}, View=${dateLabel}`, 14, finalY + 15);
 
         const tableColumn = ["Order ID", "Date", "Customer", "Amount", "Fees", "Net", "Status"];
         const tableRows = transactions.map(tx => [
@@ -112,7 +117,15 @@ const Earnings = () => {
     };
 
     const handleExportExcel = () => {
+        const dateLabel = date === 'thisWeek' ? 'This Week' :
+            date === 'thisMonth' ? 'This Month' :
+                date === 'thisYear' ? 'This Year' :
+                    date === 'custom' ? `${startDate} to ${endDate}` : 'All Time';
+
         const summaryData = [
+            { "Metric": "Report Type", "Value": "Earnings Report" },
+            { "Metric": "Timeframe", "Value": dateLabel },
+            { "Metric": "Status Filter", "Value": status.toUpperCase() },
             { "Metric": "Total Earnings", "Value": earnings.totalEarnings || 0 },
             { "Metric": "Successful Bookings", "Value": earnings.successfulBookings || 0 },
             { "Metric": "Net Payout", "Value": earnings.netPayout || 0 },
@@ -152,35 +165,70 @@ const Earnings = () => {
                     <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Earnings Dashboard</h2>
                     <p className="text-gray-500 mt-1 font-medium">Keep track of your restaurant's revenue and payouts.</p>
                 </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                    <div className="relative w-full sm:w-48">
+                        <select
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="w-full appearance-none flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:border-[#ff5e00]/30 transition-all pr-10 cursor-pointer focus:outline-none shadow-sm"
+                        >
+                            <option value="all">Timeframe: All</option>
+                            <option value="thisWeek">This Week</option>
+                            <option value="thisMonth">This Month</option>
+                            <option value="thisYear">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-[#ff5e00]" size={16} />
+                    </div>
+
+                    {date === 'custom' && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-[#ff5e00]/10 focus:border-[#ff5e00] outline-none shadow-sm"
+                            />
+                            <span className="text-gray-300">/</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-[#ff5e00]/10 focus:border-[#ff5e00] outline-none shadow-sm"
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatsCard
                     title="Total Earnings"
                     value={formatCurrency(earnings.totalEarnings || 0)}
-                    subtext="Overall restaurant revenue"
+                    subtext={date === 'all' ? "Overall restaurant revenue" : `Revenue for ${date.replace('this', 'this ').toLowerCase()}`}
                     icon={<TrendingUp className="text-green-500" size={20} />}
                 />
                 <StatsCard
                     title="Successful Bookings"
                     value={earnings.successfulBookings || 0}
-                    subtext="Completed & Confirmed"
+                    subtext={date === 'all' ? "Completed & Confirmed" : `Bookings for ${date.replace('this', 'this ').toLowerCase()}`}
                     icon={<CalendarCheck className="text-blue-500" size={20} />}
                 />
                 <StatsCard
                     title="Net Payout"
                     value={formatCurrency(earnings.netPayout || 0)}
-                    subtext="Earnings after fees"
+                    subtext={date === 'all' ? "Earnings after fees" : `Net for ${date.replace('this', 'this ').toLowerCase()}`}
                     icon={<Wallet className="text-orange-500" size={20} />}
                 />
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-800 tracking-tight">Revenue Trend</h3>
-                        <p className="text-xs text-gray-400">Monthly distribution of your successful bookings</p>
-                    </div>
+                <div className="mb-8">
+                    <h3 className="text-lg font-bold text-gray-800 tracking-tight">Revenue Trend</h3>
+                    <p className="text-xs text-gray-400 capitalize">
+                        {date === 'all' || date === 'thisYear' ? 'Monthly' : date === 'thisMonth' ? 'Daily' : date === 'thisWeek' ? 'Weekly' : 'Custom'} distribution of successful bookings
+                    </p>
                 </div>
                 <div className="h-80 w-full pr-4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -231,7 +279,7 @@ const Earnings = () => {
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div>
                             <h3 className="text-lg font-bold text-gray-800 tracking-tight">Transaction History</h3>
-                            <p className="text-xs text-gray-400 mt-1">Detailed breakdown of all your individual earnings.</p>
+                            <p className="text-xs text-gray-400 mt-1">Audit every individual payout and order detail from this period.</p>
                         </div>
 
                         <div className="flex flex-wrap lg:flex-nowrap gap-4 w-full lg:w-auto items-center">
@@ -255,21 +303,6 @@ const Earnings = () => {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <select
-                                        value={date}
-                                        onChange={(e) => setDate(e.target.value)}
-                                        className="appearance-none flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-gray-300 transition-all pr-10 cursor-pointer focus:outline-none shadow-sm"
-                                    >
-                                        <option value="all">Date: All</option>
-                                        <option value="today">Today</option>
-                                        <option value="thisMonth">This Month</option>
-                                        <option value="thisYear">This Year</option>
-                                        <option value="custom">Custom Range</option>
-                                    </select>
-                                    <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                                </div>
-
                                 <div className="relative">
                                     <select
                                         value={status}
@@ -306,29 +339,6 @@ const Earnings = () => {
                             </div>
                         </div>
                     </div>
-
-                    {date === 'custom' && (
-                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300 px-6 pb-6">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">From</span>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="px-3 py-1.5 bg-gray-50 border border-transparent rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#ff5e00]/10 focus:border-[#ff5e00] focus:bg-white outline-none"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">To</span>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="px-3 py-1.5 bg-gray-50 border border-transparent rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#ff5e00]/10 focus:border-[#ff5e00] focus:bg-white outline-none"
-                                />
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 <div className="overflow-x-auto">

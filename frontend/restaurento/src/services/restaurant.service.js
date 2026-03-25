@@ -68,6 +68,12 @@ const restaurantService = {
         const response = await api.patch(`/restaurant/bookings/${bookingId}/status`, { status });
         return response.data;
     },
+    getDashboardStats: async (dateFilter) => {
+        const response = await api.get("/restaurant/stats", {
+            params: { dateFilter }
+        });
+        return response.data;
+    },
     getEarnings: async ({ page, limit, status, search, date, startDate, endDate }) => {
         const response = await api.get("/restaurant/earnings", {
             params: { page, limit, status, search, date, startDate, endDate }

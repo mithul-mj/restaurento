@@ -708,51 +708,191 @@ export const updateBookingStatus = async (req, res, next) => {
 export const getRestaurantStats = async (req, res, next) => {
     try {
         const restaurantId = req.user._id;
+        const dateFilter = req.query.dateFilter || "thisMonth";
+        const now = new Date();
 
+        // 1. Build date filter for all metrics
+        let dateMatch = {
+            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+        };
+
+        if (dateFilter === "thisWeek") {
+            const startOfWeek = new Date(now);
+            const day = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+            startOfWeek.setDate(diff);
+            startOfWeek.setHours(0, 0, 0, 0);
+            dateMatch.bookingDate = { $gte: startOfWeek };
+        } else if (dateFilter === "thisMonth") {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            dateMatch.bookingDate = { $gte: startOfMonth };
+        } else if (dateFilter === "thisYear") {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            dateMatch.bookingDate = { $gte: startOfYear };
+        }
+
+        // 2. Fetch Aggregated Metrics
         const stats = await Booking.aggregate([
-            {
-                $match: {
-                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                    status: { $in: ['approved', 'checked-in', 'canceled'] }
-                }
-            },
+            { $match: dateMatch },
             {
                 $group: {
                     _id: null,
-                    totalEarnings: {
-                        $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, "$totalAmount", 0] }
+                    totalRevenue: { 
+                        $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, "$totalAmount", 0] } 
                     },
-                    totalRefunded: {
-                        $sum: { $cond: [{ $eq: ["$status", "canceled"] }, "$totalAmount", 0] }
+                    canceledBookings: {
+                        $sum: { $cond: [{ $eq: ["$status", "canceled"] }, 1, 0] }
                     },
                     successfulBookings: {
                         $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, 1, 0] }
-                    },
-                    refundedBookings: {
-                        $sum: { $cond: [{ $eq: ["$status", "canceled"] }, 1, 0] }
                     }
                 }
             }
         ]);
 
-        const result = stats[0] || {
-            totalEarnings: 0,
-            totalRefunded: 0,
-            successfulBookings: 0,
-            refundedBookings: 0
+        const metricResult = stats[0] || { 
+            totalRevenue: 0, 
+            canceledBookings: 0, 
+            successfulBookings: 0 
         };
+
+        // 3. Generate Sales Trend for Graph
+        let trendAggregate = [];
+        let trendFormat = [];
+
+        if (dateFilter === "thisYear") {
+            trendAggregate = [
+                {
+                    $match: {
+                        ...dateMatch,
+                        status: { $in: ["approved", "checked-in"] }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $month: "$bookingDate" },
+                        bookings: { $sum: 1 }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            trendFormat = Array.from({ length: 12 }, (_, i) => ({
+                name: new Date(new Date().getFullYear(), i).toLocaleString('default', { month: 'short' }),
+                bookings: 0,
+                id: i + 1
+            }));
+        } else if (dateFilter === "thisMonth") {
+             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+             trendAggregate = [
+                 {
+                     $match: {
+                         ...dateMatch,
+                         status: { $in: ["approved", "checked-in"] }
+                     }
+                 },
+                 {
+                     $group: {
+                         _id: { $dayOfMonth: "$bookingDate" },
+                         bookings: { $sum: 1 }
+                     }
+                 },
+                 { $sort: { "_id": 1 } }
+             ];
+             trendFormat = Array.from({ length: daysInMonth }, (_, i) => ({
+                 name: `${i + 1}`,
+                 bookings: 0,
+                 id: i + 1
+             }));
+        } else {
+            // thisWeek
+            trendAggregate = [
+                {
+                    $match: {
+                        ...dateMatch,
+                        status: { $in: ["approved", "checked-in"] }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dayOfWeek: "$bookingDate" },
+                        bookings: { $sum: 1 }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            trendFormat = days.map((d, i) => ({
+                name: d,
+                bookings: 0,
+                id: i + 1
+            }));
+        }
+
+        const trendResult = await Booking.aggregate(trendAggregate);
+        const trend = trendFormat.map(f => {
+            const match = trendResult.find(t => t._id === f.id);
+            return { name: f.name, bookings: match ? match.bookings : 0 };
+        });
+
+        // 4. Calculate Top Selling Dishes
+        const topDishesResult = await Booking.aggregate([
+            { $match: { ...dateMatch, status: { $in: ["approved", "checked-in"] } } },
+            { $unwind: "$preOrderItems" },
+            {
+                $group: {
+                    _id: "$preOrderItems.dishId",
+                    name: { $first: "$preOrderItems.name" },
+                    orders: { $sum: "$preOrderItems.qty" }
+                }
+            },
+            { $sort: { orders: -1 } },
+            { $limit: 10 }
+        ]);
+
+        const maxOrders = topDishesResult[0]?.orders || 1;
+        const topDishes = topDishesResult.map(dish => ({
+            name: dish.name,
+            orders: dish.orders,
+            progress: Math.round((dish.orders / maxOrders) * 100)
+        }));
+
+        // 5. Hourly Distribution (Peak Hours)
+        const hourlyStatsResult = await Booking.aggregate([
+            { $match: { ...dateMatch, status: { $in: ["approved", "checked-in"] } } },
+            {
+                $group: {
+                    _id: { $floor: { $divide: ["$slotTime", 60] } }, // Assuming slotTime is in minutes
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        const hourlyWiseBookings = Array.from({ length: 24 }, (_, i) => {
+            const match = hourlyStatsResult.find(h => h._id === i);
+            const hour = i % 12 || 12;
+            const ampm = i < 12 ? 'AM' : 'PM';
+            return {
+                time: `${hour}${ampm}`,
+                count: match ? match.count : 0,
+                hour: i
+            };
+        });
 
         res.status(STATUS_CODES.OK).json({
             success: true,
             data: {
-                totalRevenue: result.totalEarnings,
-                totalRefunded: result.totalRefunded,
-                netRevenue: result.totalEarnings - result.totalRefunded,
-                bookingStats: {
-                    successful: result.successfulBookings,
-                    refunded: result.refundedBookings,
-                    total: result.successfulBookings + result.refundedBookings
-                }
+                metrics: {
+                    totalRevenue: metricResult.totalRevenue,
+                    successfulBookings: metricResult.successfulBookings,
+                    canceledBookings: metricResult.canceledBookings,
+                    averageOrderValue: Number(metricResult.successfulBookings) > 0 
+                        ? Math.round(Number(metricResult.totalRevenue) / Number(metricResult.successfulBookings)) 
+                        : 0
+                },
+                trend,
+                topDishes,
+                hourlyWiseBookings
             }
         });
     } catch (error) {
@@ -774,15 +914,35 @@ export const getRestaurantEarnings = async (req, res, next) => {
         const skip = (page - 1) * limit;
         const now = new Date();
 
-        // Calculate overarching business metrics (Total Sales, Total Bookings, and Payout)
-        // Note: These ignore UI filters (search/date) to provide a persistent overview of lifetime/year progress.
+        // Build the date filter for all metrics
+        let dateMatch = {
+            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+            status: { $in: ["approved", "checked-in"] }
+        };
+
+        if (dateFilter === "thisWeek") {
+            const startOfWeek = new Date(now);
+            const day = startOfWeek.getDay(); // 0 is Sunday
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+            startOfWeek.setDate(diff);
+            startOfWeek.setHours(0, 0, 0, 0);
+            dateMatch.createdAt = { $gte: startOfWeek };
+        } else if (dateFilter === "thisMonth") {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            dateMatch.createdAt = { $gte: startOfMonth };
+        } else if (dateFilter === "thisYear") {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            dateMatch.createdAt = { $gte: startOfYear };
+        } else if (dateFilter === "custom" && startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setUTCHours(23, 59, 59, 999);
+            dateMatch.createdAt = { $gte: start, $lte: end };
+        }
+
+        // Calculate overarching business metrics (Filtered by date)
         const stats = await Booking.aggregate([
-            {
-                $match: {
-                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                    status: { $in: ["approved", "checked-in"] }
-                }
-            },
+            { $match: dateMatch },
             {
                 $group: {
                     _id: null,
@@ -796,23 +956,189 @@ export const getRestaurantEarnings = async (req, res, next) => {
         const result = stats[0] || { totalEarnings: 0, totalPlatformFees: 0, successfulBookings: 0 };
         const netPayout = result.totalEarnings - result.totalPlatformFees;
 
-        // Generate monthly revenue distribution for the current year trend graph
-        const trendData = await Booking.aggregate([
-            {
-                $match: {
-                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                    status: { $in: ["approved", "checked-in"] },
-                    bookingDate: { $gte: new Date(now.getFullYear(), 0, 1) }
+        // Generate trend data based on timeframe
+        let trendAggregate = [];
+        let trendFormat = [];
+
+        if (dateFilter === "thisYear" || dateFilter === "all") {
+            trendAggregate = [
+                {
+                    $match: {
+                        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                        status: { $in: ["approved", "checked-in"] },
+                        createdAt: { $gte: new Date(now.getFullYear(), 0, 1) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $month: "$createdAt" },
+                        earnings: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            trendFormat = Array.from({ length: 12 }, (_, i) => ({
+                month: new Date(new Date().getFullYear(), i).toLocaleString('default', { month: 'short' }),
+                earnings: 0,
+                id: i + 1
+            }));
+        } else if (dateFilter === "thisMonth") {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            trendAggregate = [
+                {
+                    $match: {
+                        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                        status: { $in: ["approved", "checked-in"] },
+                        createdAt: { $gte: startOfMonth }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dayOfMonth: "$createdAt" },
+                        earnings: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            trendFormat = Array.from({ length: daysInMonth }, (_, i) => ({
+                month: `${i + 1}`,
+                earnings: 0,
+                id: i + 1
+            }));
+        } else if (dateFilter === "thisWeek") {
+            const startOfWeek = new Date(now);
+            const day = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+            startOfWeek.setDate(diff);
+            startOfWeek.setHours(0, 0, 0, 0);
+            
+            trendAggregate = [
+                {
+                    $match: {
+                        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                        status: { $in: ["approved", "checked-in"] },
+                        createdAt: { $gte: startOfWeek }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dayOfWeek: "$createdAt" }, // 1 (Sun) to 7 (Sat)
+                        earnings: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            trendFormat = days.map((d, i) => ({
+                month: d,
+                earnings: 0,
+                id: i + 1
+            }));
+        } else if (dateFilter === "custom" && startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const dayDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+            if (dayDiff <= 60) {
+                // Show daily trend for custom range
+                trendAggregate = [
+                    {
+                        $match: {
+                            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                            status: { $in: ["approved", "checked-in"] },
+                            createdAt: { $gte: start, $lte: end }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: { 
+                                day: { $dayOfMonth: "$createdAt" },
+                                month: { $month: "$createdAt" }
+                            },
+                            earnings: { $sum: "$totalAmount" }
+                        }
+                    },
+                    { $sort: { "_id.month": 1, "_id.day": 1 } }
+                ];
+                trendFormat = [];
+                const current = new Date(start);
+                while (current <= end) {
+                    trendFormat.push({
+                        month: `${current.getDate()} ${current.toLocaleString('default', { month: 'short' })}`,
+                        earnings: 0,
+                        dayNum: current.getDate(),
+                        monthNum: current.getMonth() + 1
+                    });
+                    current.setDate(current.getDate() + 1);
                 }
-            },
-            {
-                $group: {
-                    _id: { $month: "$bookingDate" },
-                    earnings: { $sum: "$totalAmount" }
+            } else {
+                // Show monthly trend for large custom range
+                trendAggregate = [
+                    {
+                        $match: {
+                            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                            status: { $in: ["approved", "checked-in"] },
+                            createdAt: { $gte: start, $lte: end }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: { $month: "$createdAt" },
+                            earnings: { $sum: "$totalAmount" }
+                        }
+                    },
+                    { $sort: { "_id": 1 } }
+                ];
+                trendFormat = [];
+                const current = new Date(start);
+                while (current <= end) {
+                    const label = current.toLocaleString('default', { month: 'short', year: '2-digit' });
+                    if (!trendFormat.find(f => f.month === label)) {
+                        trendFormat.push({
+                            month: label,
+                            earnings: 0,
+                            id: current.getMonth() + 1
+                        });
+                    }
+                    current.setMonth(current.getMonth() + 1);
                 }
-            },
-            { $sort: { "_id": 1 } }
-        ]);
+            }
+        } else {
+            // Default to year trend
+            trendAggregate = [
+                {
+                    $match: {
+                        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                        status: { $in: ["approved", "checked-in"] },
+                        createdAt: { $gte: new Date(now.getFullYear(), 0, 1) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $month: "$createdAt" },
+                        earnings: { $sum: "$totalAmount" }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            trendFormat = Array.from({ length: 12 }, (_, i) => ({
+                month: new Date(new Date().getFullYear(), i).toLocaleString('default', { month: 'short' }),
+                earnings: 0,
+                id: i + 1
+            }));
+        }
+
+        const trendResult = await Booking.aggregate(trendAggregate);
+        const trend = trendFormat.map(f => {
+            const match = trendResult.find(t => {
+                if (typeof t._id === 'object') {
+                    return t._id.month === f.monthNum && t._id.day === f.dayNum;
+                }
+                return t._id === f.id;
+            });
+            return { month: f.month, earnings: match ? match.earnings : 0 };
+        });
 
         // Build the dynamic filter object for the searchable transaction history
         let transactionFilter = {
@@ -828,26 +1154,14 @@ export const getRestaurantEarnings = async (req, res, next) => {
             transactionFilter.status = { $in: ["approved", "checked-in", "canceled"] };
         }
 
-        // Apply time-based boundaries to the listing
-        if (dateFilter === "today") {
-            const startOfToday = new Date(now);
-            startOfToday.setUTCHours(0, 0, 0, 0);
-            transactionFilter.bookingDate = { $gte: startOfToday };
-        } else if (dateFilter === "thisMonth") {
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            transactionFilter.bookingDate = { $gte: startOfMonth };
-        } else if (dateFilter === "thisYear") {
-            const startOfYear = new Date(now.getFullYear(), 0, 1);
-            transactionFilter.bookingDate = { $gte: startOfYear };
-        } else if (dateFilter === "custom" && startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            end.setUTCHours(23, 59, 59, 999);
-            transactionFilter.bookingDate = { $gte: start, $lte: end };
+        // Apply time-based boundaries to the listing (reuse dateMatch logic but include canceled if filter allows)
+        if (dateMatch.createdAt) {
+            transactionFilter.createdAt = dateMatch.createdAt;
         }
 
         const transactionAggregate = [
             { $match: transactionFilter },
+            { $sort: { createdAt: -1 } },
             {
                 $lookup: {
                     from: "users",
@@ -877,7 +1191,6 @@ export const getRestaurantEarnings = async (req, res, next) => {
 
         const transactionsResult = await Booking.aggregate([
             ...transactionAggregate,
-            { $sort: { bookingDate: -1 } },
             {
                 $facet: {
                     metadata: [{ $count: "total" }],
@@ -897,18 +1210,11 @@ export const getRestaurantEarnings = async (req, res, next) => {
                     successfulBookings: result.successfulBookings,
                     netPayout: netPayout
                 },
-                trend: Array.from({ length: 12 }, (_, i) => {
-                    const monthIndex = i + 1;
-                    const mData = trendData.find(t => t._id === monthIndex);
-                    return {
-                        month: new Date(new Date().getFullYear(), i).toLocaleString('default', { month: 'short' }),
-                        earnings: mData ? mData.earnings : 0
-                    };
-                }),
+                trend,
                 transactions: rawTransactions.map(t => ({
                     id: t._id,
                     orderId: `#ORD-${t._id.toString().slice(-5).toUpperCase()}`,
-                    date: t.bookingDate,
+                    date: t.createdAt,
                     customer: t.customer.fullName,
                     amount: t.totalAmount,
                     fees: t.platformFee,
