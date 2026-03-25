@@ -9,19 +9,33 @@ const couponSchema = z.object({
         .min(3, "Code must be at least 3 characters")
         .max(15, "Code is too long")
         .trim(),
-    description: z.string().max(500, "Description is too long").optional().nullable(),
+    description: z.string({ required_error: "Description is required" })
+        .min(10, "Description must be at least 10 characters")
+        .max(500, "Description is too long")
+        .trim(),
     discountValue: z.preprocess(
         (val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)),
         z.number({ required_error: "Discount percentage is required" }).min(1, "Minimum 1%").max(100, "Maximum 100%")
     ),
-    maxDiscountCap: z.preprocess((val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)), z.number().min(0, "Cannot be negative").optional()),
-    minOrderValue: z.preprocess((val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)), z.number().min(0, "Cannot be negative").optional()),
+    maxDiscountCap: z.preprocess((val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)), 
+        z.number({ required_error: "Max discount cap is required" })
+        .min(1, "Cap must be at least ₹1")
+        .max(1000, "Cap cannot exceed ₹1000")),
+    minOrderValue: z.preprocess((val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)), 
+        z.number().min(0, "Cannot be negative").max(5000, "Threshold cannot exceed ₹5000").optional()),
     expiryDate: z.string().optional().nullable().refine(val => {
         if (!val) return true;
         return new Date(val).setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0);
     }, "Expiry date cannot be in the past"),
-    usageLimit: z.preprocess((val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)), z.number().min(1, "Minimum 1 usage").optional()),
+    usageLimit: z.preprocess((val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)), z.number().min(1, "Minimum 1 usage").max(10000, "Limit cannot exceed 10,000").optional()),
     isActive: z.boolean().default(true).optional()
+}).refine((data) => {
+    const cap = data.maxDiscountCap || 0;
+    const minBill = data.minOrderValue || 0;
+    return minBill >= cap;
+}, {
+    message: "Minimum order value must be greater than or equal to the maximum discount cap",
+    path: ["minOrderValue"]
 });
 
 const CreateCouponModal = ({ isOpen, onClose, onCreate, isCreating, initialData }) => {

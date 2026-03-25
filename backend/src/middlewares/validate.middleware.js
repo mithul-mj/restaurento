@@ -4,6 +4,7 @@ export const validate = (schema) => async (req, res, next) => {
       ...req.body,
       ...req.params,
       ...req.query,
+      file: req.file,
       files: req.files,
     });
     req.body = { ...req.body, ...validatedData }; // Merge to preserve multipart keys while applying validation transforms

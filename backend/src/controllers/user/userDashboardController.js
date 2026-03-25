@@ -89,7 +89,6 @@ export const getUserDashboard = async (req, res, next) => {
               $match: {
                 $expr: { $eq: ["$restaurantId", "$$rid"] },
                 isActive: true,
-                usageLimit: { $gt: 0 },
                 validFrom: { $lte: new Date() },
                 $or: [
                   { validUntil: { $exists: false } },
@@ -273,7 +272,6 @@ export const getRestaurantDetails = async (req, res, next) => {
       Offer.find({
         restaurantId: new mongoose.Types.ObjectId(id),
         isActive: true,
-        usageLimit: { $gt: 0 },
         validFrom: { $lte: new Date() },
         $or: [
           { validUntil: { $exists: false } },

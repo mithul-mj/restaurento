@@ -1,6 +1,7 @@
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { X, Clock, Settings } from 'lucide-react';
+import { showError } from '../../utils/alert';
 import EditSlotsModal from '../modals/EditSlotsModal';
 import { calculateSlots } from '../../utils/slotGenerator';
 
@@ -8,7 +9,7 @@ const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satu
 
 const Step1BasicInfo = ({ isEditing = false }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { register, control, watch, setValue, getValues, formState: { errors } } = useFormContext();
+    const { register, control, watch, setValue, getValues, setError, clearErrors, formState: { errors } } = useFormContext();
 
     const { fields } = useFieldArray({
         control,
@@ -25,14 +26,24 @@ const Step1BasicInfo = ({ isEditing = false }) => {
 
     const addTag = (e) => {
         e.preventDefault();
+        const input = tagInput.trim().toLowerCase();
+
+        if (!input) return;
+
         const MAX_TAGS = 5;
         if (tags.length >= MAX_TAGS) {
+            setError("tags", { type: "manual", message: "Maximum 5 tags allowed" });
             return;
         }
-        if (tagInput.trim() && !tags.includes(tagInput.trim().toLowerCase())) {
-            setValue("tags", [...tags, tagInput.trim().toLowerCase()]);
-            setTagInput("");
+
+        if (tags.includes(input.trim().toLowerCase())) {
+            setError("tags", { type: "manual", message: `"${input}" is already added` });
+            return;
         }
+
+        clearErrors("tags");
+        setValue("tags", [...tags, input]);
+        setTagInput("");
     };
 
     const removeTag = (tagToRemove) => {

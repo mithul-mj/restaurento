@@ -7,6 +7,11 @@ export const authPlugin = (schema, options = {}) => {
 
   schema.pre("save", async function () {
     if (!this.isModified("password")) return;
+
+    if (this.password && this.password.length > 30) {
+      throw new Error("Password cannot exceed 30 characters");
+    }
+
     this.password = await bcrypt.hash(this.password, 10);
   });
 

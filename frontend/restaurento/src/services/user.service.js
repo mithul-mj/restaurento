@@ -76,6 +76,10 @@ const userService = {
     });
     return response.data;
   },
+  checkBookingAvailability: async (id) => {
+    const response = await api.get(`/bookings/${id}/check-availability`);
+    return response.data;
+  },
   getBookingDetails: async (bookingId) => {
     const response = await api.get(`/bookings/${bookingId}`);
     return response.data;

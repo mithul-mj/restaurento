@@ -2,23 +2,32 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X, Tag, IndianRupee, Zap, Calendar } from "lucide-react";
+import { X, IndianRupee, Zap, Calendar } from "lucide-react";
 
 const offerSchema = z.object({
   discountValue: z.preprocess(
     (val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)),
-    z.number({ required_error: "Discount amount is required" }).min(1, "Minimum ₹1 discount")
+    z.number({ required_error: "Discount amount is required" }).min(1, "Minimum ₹1 discount").max(1000, "Discount cannot exceed ₹1000")
   ),
   minOrderValue: z.preprocess(
     (val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)),
-    z.number().min(0, "Cannot be negative").optional()
-  ),
-  usageLimit: z.preprocess(
-    (val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)),
-    z.number({ required_error: "Usage limit is required" }).min(1, "Minimum 1 usage")
+    z.number().min(0, "Cannot be negative").max(5000, "Minimum bill cannot exceed ₹5000").optional()
   ),
   validFrom: z.string().optional().nullable(),
   validUntil: z.string().optional().nullable()
+}).refine((data) => {
+  const discount = data.discountValue || 0;
+  const minBill = data.minOrderValue || 0;
+  return discount < minBill;
+}, {
+  message: "Discount must be less than the minimum bill",
+  path: ["discountValue"]
+}).refine((data) => {
+  if (!data.validUntil || !data.validFrom) return true;
+  return new Date(data.validUntil) > new Date(data.validFrom);
+}, {
+  message: "Expiry date must be after the start date",
+  path: ["validUntil"]
 });
 
 const CreateOfferModal = ({ isOpen, onClose, onCreate, isCreating, initialData }) => {
@@ -28,7 +37,6 @@ const CreateOfferModal = ({ isOpen, onClose, onCreate, isCreating, initialData }
     defaultValues: {
       discountValue: 0,
       minOrderValue: 0,
-      usageLimit: 0,
       validFrom: new Date().toISOString().split('T')[0],
       validUntil: ""
     }
@@ -40,7 +48,6 @@ const CreateOfferModal = ({ isOpen, onClose, onCreate, isCreating, initialData }
         reset({
           discountValue: initialData.discountValue,
           minOrderValue: initialData.minOrderValue,
-          usageLimit: initialData.usageLimit,
           validFrom: initialData.validFrom ? new Date(initialData.validFrom).toISOString().split('T')[0] : "",
           validUntil: initialData.validUntil ? new Date(initialData.validUntil).toISOString().split('T')[0] : ""
         });
@@ -48,7 +55,6 @@ const CreateOfferModal = ({ isOpen, onClose, onCreate, isCreating, initialData }
         reset({
           discountValue: 0,
           minOrderValue: 0,
-          usageLimit: 0,
           validFrom: new Date().toISOString().split('T')[0],
           validUntil: ""
         });
@@ -100,33 +106,18 @@ const CreateOfferModal = ({ isOpen, onClose, onCreate, isCreating, initialData }
 
           <div className="grid grid-cols-2 gap-4">
             {/* Min Order Value */}
-            <div className="space-y-2">
+            <div className="space-y-2 col-span-2">
               <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
                 <IndianRupee size={16} className="text-green-500" />
-                Min Bill (₹)
+                Minimum Bill Threshold (₹)
               </label>
               <input
                 type="number"
                 placeholder="e.g. 500"
                 {...register("minOrderValue")}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all font-semibold"
               />
               {errors.minOrderValue && <p className="text-red-500 text-xs mt-1">{errors.minOrderValue.message}</p>}
-            </div>
-
-            {/* Usage Limit */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                <Tag size={16} className="text-purple-500" />
-                Campaign Limit
-              </label>
-              <input
-                type="number"
-                placeholder="e.g. 50"
-                {...register("usageLimit")}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
-              />
-              {errors.usageLimit && <p className="text-red-500 text-xs mt-1">{errors.usageLimit.message}</p>}
             </div>
           </div>
 

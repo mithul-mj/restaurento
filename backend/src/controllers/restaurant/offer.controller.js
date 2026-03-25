@@ -5,15 +5,13 @@ import mongoose from "mongoose";
 
 export const createOffer = async (req, res, next) => {
     try {
-        const { discountValue, minOrderValue, usageLimit, validFrom, validUntil } = req.body;
+        const { discountValue, minOrderValue, validFrom, validUntil } = req.body;
         const restaurantId = req.user._id;
 
         const offer = await Offer.create({
             restaurantId,
             discountValue,
             minOrderValue,
-            usageLimit,
-            initialUsageLimit: usageLimit, // Store the starting point
             validFrom: validFrom ? new Date(validFrom) : undefined,
             validUntil: validUntil ? new Date(validUntil) : undefined
         });
@@ -57,14 +55,23 @@ export const getMyOffers = async (req, res, next) => {
         if (sortBy === "Oldest") sort = { createdAt: 1 };
         else if (sortBy === "Newest") sort = { createdAt: -1 };
 
-        // Use the initialUsageLimit minus current usageLimit to show claimed count
+        // Join with Booking collection to find actual usage per offer
         const offers = await Offer.aggregate([
             { $match: match },
             {
-                $addFields: {
-                    usedCount: { $subtract: ["$initialUsageLimit", "$usageLimit"] }
+                $lookup: {
+                    from: "bookings",
+                    localField: "_id",
+                    foreignField: "appliedOffer.offerId",
+                    as: "claims"
                 }
             },
+            {
+                $addFields: {
+                    usedCount: { $size: "$claims" }
+                }
+            },
+            { $project: { claims: 0 } },
             { $sort: sort },
             { $skip: skip },
             { $limit: limit }
@@ -75,19 +82,20 @@ export const getMyOffers = async (req, res, next) => {
         // Calculate Global Stats for the restaurant
         const totalActive = await Offer.countDocuments({ 
             restaurantId, 
-            isActive: true 
+            isActive: true,
+            $or: [
+                { validUntil: { $exists: false } },
+                { validUntil: null },
+                { validUntil: { $gte: new Date().setHours(0, 0, 0, 0) } }
+            ]
         });
 
-        const statsResult = await Offer.aggregate([
-            { $match: { restaurantId: new mongoose.Types.ObjectId(restaurantId) } },
-            {
-                $group: {
-                    _id: null,
-                    totalClaims: { $sum: { $subtract: ["$initialUsageLimit", "$usageLimit"] } }
-                }
-            }
-        ]);
-        const totalClaims = statsResult[0]?.totalClaims || 0;
+        // Calculate Global Stats: Total claims across all offers
+        const stats = await Booking.countDocuments({ 
+            restaurantId: new mongoose.Types.ObjectId(restaurantId),
+            "appliedOffer.offerId": { $exists: true }
+        });
+        const totalClaims = stats;
 
         res.status(STATUS_CODES.OK).json({
             success: true,
@@ -112,7 +120,7 @@ export const updateOffer = async (req, res, next) => {
     try {
         const { id } = req.params;
         const restaurantId = req.user._id;
-        const updates = req.body;
+        const updates = { ...req.body };
 
         const offer = await Offer.findOneAndUpdate(
             { _id: id, restaurantId },

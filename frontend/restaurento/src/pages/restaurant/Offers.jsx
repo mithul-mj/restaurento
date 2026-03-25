@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Calendar, ChevronDown, Ticket, Gift, Timer, Pencil, Trash2, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Plus, Search, Calendar, ChevronDown, Ticket, Timer, Pencil, Trash2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useOffers } from "../../hooks/useOffers";
 import useDebounce from "../../hooks/useDebounce";
 import PageLoader from "../../components/PageLoader";
@@ -19,7 +19,7 @@ const Offers = () => {
     const [editingOffer, setEditingOffer] = useState(null);
 
     const { data, isLoading, createOffer, isCreating, updateOffer, isUpdating, toggleOffer, deleteOffer } = useOffers({
-        page, 
+        page,
         limit: PAGE_LIMIT,
         search: debouncedSearch,
         status: statusFilter,
@@ -61,7 +61,7 @@ const Offers = () => {
     const offers = data?.data || [];
     const stats = data?.stats || { activeCampaigns: 0, totalClaims: 0 };
     const pagination = data?.meta || { totalPages: 1, totalCount: 0 };
-    
+
     // Check if we are performing any mutation
     const isWorking = isCreating || isUpdating;
 
@@ -137,7 +137,7 @@ const Offers = () => {
 
                 <div className="flex items-center gap-3 w-full lg:w-auto">
                     <div className="relative flex-1 lg:w-40">
-                        <select 
+                        <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="w-full pl-3 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 hover:border-gray-300 transition-all cursor-pointer">
@@ -148,7 +148,7 @@ const Offers = () => {
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                     </div>
                     <div className="relative flex-1 lg:w-40">
-                        <select 
+                        <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             className="w-full pl-3 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 hover:border-gray-300 transition-all cursor-pointer">
@@ -169,7 +169,7 @@ const Offers = () => {
                             <tr className="bg-[#FAF9F8] border-b border-gray-100 text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 <th className="py-4 px-6">Offer Value</th>
                                 <th className="py-4 px-6">Validity</th>
-                                <th className="py-4 px-6">Usage Progress</th>
+                                <th className="py-4 px-6">Total Claims</th>
                                 <th className="py-4 px-6 text-center">Status</th>
                                 <th className="py-4 px-6 text-right">Actions</th>
                             </tr>
@@ -177,7 +177,6 @@ const Offers = () => {
                         <tbody className="divide-y divide-gray-50">
                             {offers.length > 0 ? (
                                 offers.map((offer) => {
-                                    const progress = Math.min((offer.usedCount / offer.usageLimit) * 100, 100);
                                     const isExpired = offer.validUntil && new Date(offer.validUntil).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
                                     return (
                                         <tr key={offer._id} className="hover:bg-gray-50 transition-colors group">
@@ -191,26 +190,18 @@ const Offers = () => {
                                                 <div className="text-sm text-gray-800">{new Date(offer.validFrom).toLocaleDateString()}</div>
                                                 <div className="text-xs text-gray-500 mt-0.5">Ends: {offer.validUntil ? new Date(offer.validUntil).toLocaleDateString() : 'Forever'}</div>
                                             </td>
-                                            <td className="py-4 px-6 min-w-[180px]">
-                                                <div className="flex flex-col gap-1.5">
-                                                    <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                                        <span>{offer.usedCount} Claimed</span>
-                                                        <span>{offer.usageLimit} Limit</span>
-                                                    </div>
-                                                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                        <div 
-                                                            className={`h-full transition-all duration-700 ${progress > 80 ? 'bg-orange-600' : 'bg-orange-400'}`}
-                                                            style={{ width: `${progress}%` }}
-                                                        />
-                                                    </div>
+                                            <td className="py-4 px-6">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg font-bold text-gray-900">{offer.usedCount}</span>
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Claims</span>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
                                                 <div className="flex justify-center">
                                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border 
-                                                        ${isExpired ? 'bg-red-50 border-red-100 text-red-600' : 
-                                                          offer.isActive ? 'bg-orange-50 border-orange-100 text-[#ff5e00]' : 
-                                                          'bg-gray-100 border-gray-200 text-gray-600'}`}>
+                                                        ${isExpired ? 'bg-red-50 border-red-100 text-red-600' :
+                                                            offer.isActive ? 'bg-orange-50 border-orange-100 text-[#ff5e00]' :
+                                                                'bg-gray-100 border-gray-200 text-gray-600'}`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-red-500' : offer.isActive ? 'bg-orange-500' : 'bg-gray-400'}`}></span>
                                                         {isExpired ? 'Expired' : offer.isActive ? 'Active' : 'Paused'}
                                                     </span>
@@ -219,20 +210,20 @@ const Offers = () => {
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center justify-end gap-3">
                                                     {!isExpired && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => toggleOffer(offer._id)}
                                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${offer.isActive ? 'bg-[#ff5e00]' : 'bg-gray-200'}`}
                                                             title={offer.isActive ? "Pause" : "Resume"}>
                                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-200 ${offer.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                                                         </button>
                                                     )}
-                                                    <button 
+                                                    <button
                                                         onClick={() => { setEditingOffer(offer); setIsCreateOpen(true); }}
                                                         className="p-2 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
                                                         title="Edit">
                                                         <Pencil size={16} />
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleDelete(offer._id)}
                                                         className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all"
                                                         title="Delete">

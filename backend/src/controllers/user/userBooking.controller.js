@@ -198,24 +198,19 @@ export const BookingRestaurant = async (req, res, next) => {
         let offerDetails = null;
 
         if (appliedOfferId) {
-            // Atomic check and decrement for the offer
-            const offer = await Offer.findOneAndUpdate(
-                {
-                    _id: appliedOfferId,
-                    restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                    isActive: true,
-                    usageLimit: { $gt: 0 },
-                    validFrom: { $lte: new Date() },
-                    $or: [
-                        { validUntil: { $exists: false } },
-                        { validUntil: null },
-                        { validUntil: { $gt: new Date() } }
-                    ],
-                    minOrderValue: { $lte: subtotal }
-                },
-                { $inc: { usageLimit: -1 } },
-                { session, new: true }
-            );
+            // Find valid offer for the restaurant
+            const offer = await Offer.findOne({
+                _id: appliedOfferId,
+                restaurantId: new mongoose.Types.ObjectId(restaurantId),
+                isActive: true,
+                validFrom: { $lte: new Date() },
+                $or: [
+                    { validUntil: { $exists: false } },
+                    { validUntil: null },
+                    { validUntil: { $gt: new Date() } }
+                ],
+                minOrderValue: { $lte: subtotal }
+            }).session(session);
 
             if (!offer) {
                 await session.abortTransaction();
@@ -322,10 +317,6 @@ export const BookingRestaurant = async (req, res, next) => {
         }
 
 
-        // --- CASE 2: ONLINE PAYMENT (Store in Redis) ---
-        // End current DB session as we don't save to MongoDB yet
-        await session.commitTransaction();
-
         const amountToPay = finalTotal - walletAmountUsed;
         const options = {
             amount: Math.round(amountToPay * 100),
@@ -335,18 +326,27 @@ export const BookingRestaurant = async (req, res, next) => {
 
         const order = await razorpayInstance.orders.create(options);
 
-        // Store data in Redis (10 minutes expiry)
-        const redisKey = `pending_booking:${order.id}`;
-        await redisClient.setEx(redisKey, 600, JSON.stringify(pendingBookingData));
+        // --- CASE 2: ONLINE PAYMENT (Store in Database as Pending) ---
+        // Instead of Redis, we now save the booking to the DB with status 'pending-payment'
+        const pendingBooking = new Booking({
+            ...pendingBookingData,
+            status: 'pending-payment',
+            razorpayOrderId: order.id
+        });
 
-        // Keep the seats held for 10 minutes while the user completes payment
-        await redisClient.expire(holdKey, 600);
+        await pendingBooking.save({ session });
+        await session.commitTransaction();
+
+        // Delete the temporary Redis hold now that the booking is persisted in MongoDB
+        // MongoDB will now hold the seats via 'pending-payment' status + TTL index
+        await redisClient.del(holdKey);
 
         res.status(201).json({
             success: true,
             message: "Booking initiated successfully.",
             order,
-            remainingAmount: amountToPay
+            remainingAmount: amountToPay,
+            bookingId: pendingBooking._id
         });
 
     } catch (error) {
@@ -383,6 +383,8 @@ export const getMyBookings = async (req, res, next) => {
             ];
         } else if (type === 'canceled') {
             matchQuery.status = 'canceled';
+        } else if (type === 'pending') {
+            matchQuery.status = 'pending-payment';
         } else {
             // Past
             matchQuery.$or = [
@@ -438,6 +440,8 @@ export const getMyBookings = async (req, res, next) => {
                                 status: 1,
                                 canceledBy: 1,
                                 totalAmount: 1,
+                                razorpayOrderId: 1,
+                                walletAmountUsed: 1,
                                 preOrderItems: 1,
                                 restaurant: 1
                             }
@@ -523,6 +527,65 @@ export const getBookingDetails = async (req, res, next) => {
     }
 };
 
+export const checkBookingAvailability = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const booking = await Booking.findById(req.params.id);
+
+        if (!booking || booking.status !== 'pending-payment') {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Booking session not found or expired." });
+        }
+
+        if (booking.appliedCoupon?.couponId) {
+            const coupon = await Coupon.findById(booking.appliedCoupon.couponId);
+            if (!coupon || !coupon.isActive || (coupon.expiryDate && coupon.expiryDate < new Date())) {
+                return res.status(STATUS_CODES.BAD_REQUEST).json({
+                    success: false,
+                    message: "The applied coupon has expired or is no longer valid. Please start a new booking."
+                });
+            }
+        }
+
+        if (booking.appliedOffer?.offerId) {
+            const offer = await Offer.findById(booking.appliedOffer.offerId);
+            if (!offer || !offer.isActive || (offer.validUntil && offer.validUntil < new Date())) {
+                return res.status(STATUS_CODES.BAD_REQUEST).json({
+                    success: false,
+                    message: "The applied restaurant offer is no longer valid. Please start a new booking."
+                });
+            }
+        }
+
+        const available = await getRealTimeAvailability(
+            booking.restaurantId,
+            booking.bookingDate,
+            booking.slotTime,
+            userId
+        );
+
+        if (available < booking.guests) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "This time slot is no longer available. Please discard and try another slot."
+            });
+        }
+
+        if (booking.walletAmountUsed > 0) {
+            const user = await User.findById(userId);
+            if (!user || user.walletBalance < booking.walletAmountUsed) {
+                return res.status(STATUS_CODES.BAD_REQUEST).json({
+                    success: false,
+                    message: "Insufficient wallet balance. Please add funds to utilize your wallet amount for this booking."
+                });
+            }
+        }
+
+        res.status(STATUS_CODES.OK).json({ success: true, message: "Available" });
+    } catch (error) {
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+    }
+};
+
 export const cancelBooking = async (req, res, next) => {
     const session = await mongoose.startSession();
     try {
@@ -567,33 +630,28 @@ export const cancelBooking = async (req, res, next) => {
         }
 
         // 1. Mark booking as canceled
+        const previousStatus = booking.status;
         booking.status = 'canceled';
         booking.canceledBy = ROLES.USER;
         await booking.save({ session });
 
-        // 2. If it had an offer, increment the limit back
-        if (booking.appliedOffer?.offerId) {
-            await Offer.findByIdAndUpdate(
-                booking.appliedOffer.offerId,
-                { $inc: { usageLimit: 1 } },
+        // 2. Only refund to wallet if it was previously confirmed (approved/checked-in)
+        // because "pending-payment" means no money was deducted from wallet/online yet.
+        if (previousStatus !== 'pending-payment') {
+            await User.findByIdAndUpdate(
+                userId,
+                { $inc: { walletBalance: booking.totalAmount } },
                 { session }
             );
+
+            // 3. Create wallet transaction log for the refund
+            await WalletTransaction.create([{
+                userId,
+                bookingId: booking._id,
+                amount: booking.totalAmount, // Positive value represents a credit/refund
+                description: `Refund for cancelled booking at ${booking.restaurantId.restaurantName}`
+            }], { session });
         }
-
-        // 3. Refund to wallet
-        await User.findByIdAndUpdate(
-            userId,
-            { $inc: { walletBalance: booking.totalAmount } },
-            { session }
-        );
-
-        // 3. Create wallet transaction log
-        await WalletTransaction.create([{
-            userId,
-            bookingId: booking._id,
-            amount: booking.totalAmount, // Positive value represents a credit/refund
-            description: `Refund for cancelled booking at ${booking.restaurantId.restaurantName}`
-        }], { session });
 
         // Commit all changes
         await session.commitTransaction();

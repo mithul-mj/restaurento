@@ -15,6 +15,7 @@ const userSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      maxlength: [30, "Email must be under 30 characters"]
     },
     password: {
       type: String,

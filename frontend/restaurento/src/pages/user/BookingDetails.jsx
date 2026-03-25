@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
     Calendar,
@@ -24,7 +24,9 @@ const BookingDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { data, isLoading, isError } = useBookingDetails(id);
-    const { cancelBooking, isCanceling } = useBookings({});
+    const { cancelBooking, isCanceling, checkBookingAvailability, verifyRazorpayPayment } = useBookings({});
+
+    const [isRetrying, setIsRetrying] = useState(false);
 
     if (isLoading) {
         return (
@@ -70,6 +72,62 @@ const BookingDetails = () => {
                 cancelBooking(booking._id);
             }
         });
+    };
+
+    const handleRetryPayment = async () => {
+        if (isRetrying) return;
+        setIsRetrying(true);
+
+        try {
+            await checkBookingAvailability(booking._id);
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: booking.totalAmount * 100,
+                currency: "INR",
+                name: "Restaurento",
+                description: "Complete your table booking",
+                order_id: booking.razorpayOrderId,
+                modal: {
+                    ondismiss: () => setIsRetrying(false)
+                },
+                handler: async function (rzpResponse) {
+                    try {
+                        const verifyRes = await verifyRazorpayPayment({
+                            razorpay_order_id: rzpResponse.razorpay_order_id,
+                            razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                            razorpay_signature: rzpResponse.razorpay_signature
+                        });
+
+                        if (verifyRes.success) {
+                            showConfirm("Payment Success", "Your booking has been confirmed!", "Great").then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            setIsRetrying(false);
+                            showConfirm("Action Required", verifyRes.message || "Please try again.", "OK");
+                        }
+                    } catch (err) {
+                        setIsRetrying(false);
+                        const errorMessage = err.response?.data?.message || "Verification failed.";
+                        showConfirm("Error", errorMessage, "OK");
+                    }
+                },
+                theme: { color: "#ff5e00" }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function () {
+                setIsRetrying(false);
+                showConfirm("Payment Failed", "The retry attempt was unsuccessful.", "OK");
+            });
+            rzp.open();
+        } catch (error) {
+            console.error("Retry error:", error);
+            setIsRetrying(false);
+            const msg = error.response?.data?.message || "This slot is no longer available.";
+            showConfirm("Cannot Proceed", msg, "OK");
+        }
     };
 
     const bookingIdShort = booking._id.slice(-8).toUpperCase();
@@ -233,9 +291,34 @@ const BookingDetails = () => {
                                                 <span className="font-bold">₹{platformFee.toFixed(2)}</span>
                                             </div>
                                         )}
-                                        <div className="border-t border-gray-100 pt-4 mt-2 flex justify-between items-center">
-                                            <span className="text-lg font-bold text-gray-900 tracking-tight">Total Paid</span>
-                                            <span className="text-xl font-bold text-gray-900 tracking-tight">₹{totalPaid.toFixed(2)}</span>
+                                        {booking.appliedCoupon?.discountAmountApplied > 0 && (
+                                            <div className="flex justify-between items-center text-sm text-emerald-600 bg-emerald-50/50 px-3 py-2 rounded-lg border border-emerald-100/50">
+                                                <span className="font-semibold flex items-center gap-2">
+                                                    <span className="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Coupon</span>
+                                                    {booking.appliedCoupon.code}
+                                                </span>
+                                                <span className="font-bold">- ₹{booking.appliedCoupon.discountAmountApplied.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {booking.appliedOffer?.discountValue > 0 && (
+                                            <div className="flex justify-between items-center text-sm text-emerald-600 bg-emerald-50/50 px-3 py-2 rounded-lg border border-emerald-100/50">
+                                                <span className="font-semibold flex items-center gap-2">
+                                                    <span className="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Offer</span>
+                                                    Restaurant Discount
+                                                </span>
+                                                <span className="font-bold">- ₹{booking.appliedOffer.discountValue.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        <div className="border-t border-gray-100 pt-4 mt-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-lg font-bold text-gray-900 tracking-tight">Total Paid</span>
+                                                <span className="text-xl font-bold text-gray-900 tracking-tight">₹{totalPaid.toFixed(2)}</span>
+                                            </div>
+                                            {booking.walletAmountUsed > 0 && (
+                                                <div className="flex justify-between items-center mt-1 text-[11px] text-gray-400 font-medium">
+                                                    <span>(₹{booking.walletAmountUsed.toFixed(2)} paid via wallet)</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -250,7 +333,7 @@ const BookingDetails = () => {
                         <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center flex flex-col items-center">
                             <h3 className="text-xs font-bold text-gray-400 tracking-[0.1em] uppercase mb-6">Booking Status</h3>
 
-                            {!isCanceled ? (
+                            {booking.status === 'approved' ? (
                                 <>
                                     <div className="inline-flex items-center gap-2 px-6 py-2 bg-green-50 text-green-600 rounded-full font-bold text-sm mb-6 border border-green-100">
                                         <CheckCircle2 size={16} />
@@ -276,6 +359,23 @@ const BookingDetails = () => {
                                         )}
                                     </div>
                                 </>
+                            ) : booking.status === 'pending-payment' ? (
+                                <div className="py-10 flex flex-col items-center">
+                                    <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-100">
+                                        <AlertCircle size={32} />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-amber-600 mb-2">Payment Pending</h4>
+                                    <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto mb-6">
+                                        Your payment wasn't completed. Please finish the payment to receive your QR code.
+                                    </p>
+                                    <button
+                                        onClick={handleRetryPayment}
+                                        disabled={isRetrying}
+                                        className="px-6 py-2.5 bg-[#ff5e00] text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all disabled:opacity-50"
+                                    >
+                                        {isRetrying ? "Processing..." : "Retry Payment"}
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="py-10">
                                     <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
@@ -283,7 +383,7 @@ const BookingDetails = () => {
                                     </div>
                                     <h4 className="text-lg font-bold text-red-600 mb-2">Cancelled</h4>
                                     <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto">
-                                        {booking.canceledBy === 'RESTAURANT' 
+                                        {booking.canceledBy === 'RESTAURANT'
                                             ? "The restaurant had to cancel this booking. We apologize for the inconvenience."
                                             : "You've successfully cancelled this booking."
                                         }
@@ -307,7 +407,7 @@ const BookingDetails = () => {
                                     Get Directions
                                 </a>
 
-                                {!isCanceled && !isPast && (
+                                {!isCanceled && !isPast && booking.status !== 'pending-payment' && (
                                     <button
                                         onClick={handleCancel}
                                         disabled={isCanceling}

@@ -36,7 +36,7 @@ export const getDashboardStats = async (req, res, next) => {
         const newUsers = await User.countDocuments(dateFilter);
 
         // Calculate platform commission and metrics (Excluding canceled bookings)
-        const bookingFilter = { ...dateFilter, status: { $ne: "canceled" } };
+        const bookingFilter = { ...dateFilter, status: { $in: ["approved", "checked-in"] } };
 
         const bookingMetrics = await Booking.aggregate([
             { $match: bookingFilter },
@@ -152,7 +152,7 @@ export const getDashboardStats = async (req, res, next) => {
             { $group: { _id: groupFormat, count: { $sum: 1 } } }
         ]);
 
-        const growthBookingFilter = { ...dateMatch, status: { $ne: "canceled" } };
+        const growthBookingFilter = { ...dateMatch, status: { $in: ["approved", "checked-in"] } };
         const commissionGrowth = await Booking.aggregate([
             { $match: growthBookingFilter },
             { $group: { _id: groupFormat, total: { $sum: "$platformFee" } } }

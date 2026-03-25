@@ -142,6 +142,7 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                                 className="w-full p-3.5 rounded-xl border border-gray-200 outline-none focus:border-[#ff5e00] text-gray-700 bg-white placeholder:text-gray-400 resize-none"
                                 placeholder="e.g., Fresh basil, mozzarella, san marzano tomatoes on a hand-tossed crust."
                             />
+                            {errors.description && <span className="text-red-500 text-xs mt-1">{errors.description.message}</span>}
                         </div>
 
                         <div>

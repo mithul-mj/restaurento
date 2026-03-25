@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate } from '../../utils/timeUtils';
 import { getCategoryFromTimeSlot } from '../../utils/timeCategoryUtils';
-import { showToast } from '../../utils/alert';
+import { showToast, showConfirm } from '../../utils/alert';
 import userService from '../../services/user.service';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_HOLD_TIME_SECONDS } from '../../constants/constants';
 
@@ -67,26 +67,26 @@ const BookingSummary = () => {
             const response = await userService.createBooking(bookingData);
 
             if (response.success) {
-                // CASE 1: Full Wallet Payment (Booking ID is returned immediately)
+                const bookingId = response.bookingId;
+
                 if (response.remainingAmount === 0) {
-                    const bookingId = response.booking._id;
                     setIsBookingConfirmed(true);
-                    showToast("Booking successful using wallet!", "success");
-                    if (socket && user) {
-                        socket.emit("confirm_booking", {
-                            restaurantId: restaurant._id,
-                            date: date,
-                            slotMinutes: initialData.timeSlotMinutes || timeSlot,
-                            seats: partySize,
-                            userId: user._id || user.id,
-                            bookingId: bookingId
-                        });
-                    }
-                    navigate('/my-bookings');
+                    showConfirm("Booking Successful!", "Your table has been reserved using your wallet balance.", "View My Bookings").then(() => {
+                        if (socket && user) {
+                            socket.emit("confirm_booking", {
+                                restaurantId: restaurant._id,
+                                date: date,
+                                slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                                seats: partySize,
+                                userId: user._id || user.id,
+                                bookingId: bookingId
+                            });
+                        }
+                        navigate(`/my-bookings/${bookingId}`);
+                    });
                     return;
                 }
 
-                // CASE 2: Online/Partial Payment (Order is returned, No Booking ID yet)
                 const order = response.order;
 
                 const options = {
@@ -105,32 +105,43 @@ const BookingSummary = () => {
                             });
 
                             if (verifyRes.success) {
-                                const finalBookingId = verifyRes.bookingId;
                                 setIsBookingConfirmed(true);
-                                showToast("Payment Successful!", "success");
-
-                                if (socket && user) {
-                                    socket.emit("confirm_booking", {
-                                        restaurantId: restaurant._id,
-                                        date: date,
-                                        slotMinutes: initialData.timeSlotMinutes || timeSlot,
-                                        seats: partySize,
-                                        userId: user._id || user.id,
-                                        bookingId: finalBookingId
-                                    });
-                                }
-                                navigate('/my-bookings');
+                                showConfirm("Payment Successful!", "Your booking is now confirmed. Enjoy!", "Sweet!").then(() => {
+                                    if (socket && user) {
+                                        socket.emit("confirm_booking", {
+                                            restaurantId: restaurant._id,
+                                            date: date,
+                                            slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                                            seats: partySize,
+                                            userId: user._id || user.id,
+                                            bookingId: bookingId
+                                        });
+                                    }
+                                    navigate(`/my-bookings/${bookingId}`);
+                                });
                             }
                         } catch (err) {
-                            showToast("Payment verification failed", "error");
+                            const errorMsg = err.response?.data?.message || "Payment verification failed";
+                            showConfirm("Action Required", errorMsg, "OK").then(() => {
+                                navigate(`/my-bookings/${bookingId}`);
+                            });
                         }
                     },
                     theme: { color: "#ff5e00" }
                 };
 
+                options.modal = {
+                    ondismiss: () => {
+                        showToast("Payment cancelled", "info");
+                        navigate(`/my-bookings/${bookingId}`);
+                    }
+                };
+
                 const rzp = new window.Razorpay(options);
-                rzp.on('payment.failed', function (rzpResponse) {
-                    showToast("Payment Failed or Cancelled", "error");
+                rzp.on('payment.failed', function () {
+                    showConfirm("Payment Failed", "The transaction could not be completed.", "Try Again").then(() => {
+                        navigate(`/my-bookings/${bookingId}`);
+                    });
                 });
                 rzp.open();
             }

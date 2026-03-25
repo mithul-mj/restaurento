@@ -26,7 +26,9 @@ export const useBookings = ({ type = 'upcoming', page = 1, limit = 3 }) => {
     return {
         ...query,
         cancelBooking: cancelBookingMutation.mutate,
-        isCanceling: cancelBookingMutation.isPending
+        isCanceling: cancelBookingMutation.isPending,
+        checkBookingAvailability: userService.checkBookingAvailability,
+        verifyRazorpayPayment: userService.verifyRazorpayPayment
     };
 };
 

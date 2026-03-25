@@ -1,15 +1,15 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-    email: z.string().email("Invalid email format").max(100, "Email must be less than 100 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters").max(50, "Password too long"),
+    email: z.string().email("Invalid email format").max(30, "Email must be less than 30 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters").max(30, "Password too long"),
     role: z.enum(["USER", "RESTAURANT", "ADMIN"]).optional(),
 });
 
 export const signupSchema = z.object({
-    fullName: z.string().min(2, "Full name must be at least 2 characters").max(100, "Full name too long"),
-    email: z.string().email("Invalid email format").max(100, "Email must be less than 100 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters").max(50, "Password too long"),
+    fullName: z.string().min(2, "Full name must be at least 2 characters").max(30, "Full name too long"),
+    email: z.string().email("Invalid email format").max(30, "Email must be less than 30 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters").max(30, "Password too long"),
     referralCode: z.string().optional(),
 });
 

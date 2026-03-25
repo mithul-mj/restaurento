@@ -49,6 +49,11 @@ export const createAccount = async (Model, data) => {
 };
 
 export const loginAccount = async (Model, email, password, avatar, role) => {
+  // Security Layer: Reject inputs that exceed architectural specifications (Max 30)
+  if (email?.length > 30 || password?.length > 30) {
+    throw new ApiError(STATUS_CODES.BAD_REQUEST, "Invalid input: Credentials exceed character limits");
+  }
+
   const account = await Model.findOne({ email });
 
   if (!account) {
@@ -70,8 +75,6 @@ export const loginAccount = async (Model, email, password, avatar, role) => {
 
   const accessToken = account.generateAccessToken(role);
   const refreshToken = account.generateRefreshToken(role);
-
-
 
   return { account, accessToken, refreshToken };
 };

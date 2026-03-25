@@ -52,12 +52,12 @@ export const getPaymentDashboard = async (req, res, next) => {
             growthLabel = "vs last year";
         }
 
-        let listFilter = {};
-        let statsMatch = { status: { $ne: "canceled" } };
+        let listFilter = { status: { $in: ["approved", "checked-in", "canceled"] } };
+        let statsMatch = { status: { $in: ["approved", "checked-in"] } };
 
         if (statusFilter === "paid") {
-            listFilter.status = { $ne: "canceled" };
-            statsMatch = { status: { $ne: "canceled" } };
+            listFilter.status = { $in: ["approved", "checked-in"] };
+            statsMatch = { status: { $in: ["approved", "checked-in"] } };
         } else if (statusFilter === "refund") {
             listFilter.status = "canceled";
             statsMatch = { status: "canceled" };

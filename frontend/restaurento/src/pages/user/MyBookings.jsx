@@ -20,11 +20,77 @@ const MyBookings = () => {
     const [page, setPage] = useState(1);
     const limit = 2;
 
-    const { data, isLoading, isError, cancelBooking, isCanceling } = useBookings({
+    const [retryingBookingId, setRetryingBookingId] = useState(null);
+
+    const { data, isLoading, isError, cancelBooking, isCanceling, checkBookingAvailability, verifyRazorpayPayment } = useBookings({
         type: activeTab,
         page,
         limit,
     });
+
+    const handleRetryPayment = async (booking) => {
+        if (retryingBookingId) return;
+        setRetryingBookingId(booking._id);
+
+        try {
+            // 1. Pre-check availability
+        try {
+            await checkBookingAvailability(booking._id);
+        } catch (availErr) {
+            setRetryingBookingId(null);
+            const msg = availErr.response?.data?.message || "This slot is no longer available.";
+            showConfirm("Cannot Proceed", msg, "OK");
+            return;
+        }
+
+
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: booking.totalAmount * 100,
+                currency: "INR",
+                name: "Restaurento",
+                description: "Complete your table booking",
+                order_id: booking.razorpayOrderId,
+                modal: {
+                    ondismiss: () => setRetryingBookingId(null)
+                },
+                handler: async function (rzpResponse) {
+                    try {
+                        const verifyRes = await verifyRazorpayPayment({
+                            razorpay_order_id: rzpResponse.razorpay_order_id,
+                            razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                            razorpay_signature: rzpResponse.razorpay_signature
+                        });
+
+                        if (verifyRes.success) {
+                            showConfirm("Payment Success", "Your booking has been confirmed!", "Great").then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            setRetryingBookingId(null);
+                            showConfirm("Payment Action Required", verifyRes.message || "Something went wrong.", "OK");
+                        }
+                    } catch (err) {
+                        setRetryingBookingId(null);
+                        const errorMessage = err.response?.data?.message || "Payment verification failed.";
+                        showConfirm("Verification Failed", errorMessage, "OK");
+                    }
+                },
+                theme: { color: "#ff5e00" }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function () {
+                setRetryingBookingId(null);
+                showConfirm("Payment Failed", "The retry attempt was unsuccessful.", "OK");
+            });
+            rzp.open();
+        } catch (error) {
+            console.error("Retry error:", error);
+            setRetryingBookingId(null);
+        }
+    };
 
     useEffect(() => {
         setPage(1);
@@ -48,14 +114,14 @@ const MyBookings = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-8 border-b border-gray-100">
-                    {["upcoming", "past", "canceled"].map((tab) => (
+                    {["upcoming", "pending", "past", "canceled"].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`pb-4 text-sm font-bold capitalize transition-all relative ${activeTab === tab ? "text-[#ff5e00]" : "text-gray-400 hover:text-gray-600"
                                 }`}
                         >
-                            {tab}
+                            {tab === "pending" ? "Failed Payments" : tab}
                             {activeTab === tab && (
                                 <motion.div
                                     layoutId="activeTab"
@@ -92,6 +158,8 @@ const MyBookings = () => {
                                             }
                                         });
                                     }}
+                                    onRetry={() => handleRetryPayment(booking)}
+                                    retryingBookingId={retryingBookingId}
                                     isCanceling={isCanceling}
                                     type={activeTab}
                                 />
@@ -107,7 +175,12 @@ const MyBookings = () => {
                                 <Calendar size={32} />
                             </div>
                             <h3 className="text-lg font-bold text-gray-900 mb-1">No bookings found</h3>
-                            <p className="text-sm text-gray-500">You don't have any {activeTab} bookings at the moment.</p>
+                            <p className="text-sm text-gray-500">
+                                {activeTab === "pending"
+                                    ? "Good news! You have no failed or pending payments."
+                                    : `You don't have any ${activeTab} bookings at the moment.`
+                                }
+                            </p>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -141,9 +214,10 @@ const MyBookings = () => {
     );
 };
 
-const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
+const BookingCard = ({ booking, onCancel, onRetry, isCanceling, retryingBookingId, type }) => {
     const restaurant = booking.restaurant;
     const isCanceled = booking.status === "canceled";
+    const isPending = booking.status === "pending-payment";
 
     return (
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
@@ -171,10 +245,15 @@ const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
                                         Completed
                                     </div>
                                 )}
+                                {isPending && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 text-red-600 border border-red-100 animate-pulse">
+                                        <XCircle size={12} />
+                                        Payment Failed
+                                    </div>
+                                )}
                                 {isCanceled && (
-                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
-                                        booking.canceledBy === 'RESTAURANT' ? 'bg-orange-50 text-[#ff5e00]' : 'bg-gray-100 text-gray-500'
-                                    }`}>
+                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${booking.canceledBy === 'RESTAURANT' ? 'bg-orange-50 text-[#ff5e00]' : 'bg-gray-100 text-gray-500'
+                                        }`}>
                                         {booking.canceledBy === 'RESTAURANT' ? 'Cancelled by restaurant' : 'Cancelled by you'}
                                     </span>
                                 )}
@@ -198,11 +277,21 @@ const BookingCard = ({ booking, onCancel, isCanceling, type }) => {
                     </div>
 
                     <div className="mt-6 flex flex-wrap gap-3 items-center justify-end border-t border-gray-50 pt-5">
-                        {type === "upcoming" && !isCanceled && (
+                        {isPending && (
+                            <button
+                                onClick={onRetry}
+                                disabled={retryingBookingId !== null || isCanceling}
+                                className={`px-6 py-2.5 bg-orange-500 text-white font-black text-xs rounded-xl shadow-lg shadow-orange-200 transition-all transform active:scale-95 ${(retryingBookingId !== null || isCanceling) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-600'
+                                    }`}
+                            >
+                                {retryingBookingId === booking._id ? "Starting..." : "Retry Payment"}
+                            </button>
+                        )}
+                        {!isCanceled && booking.status === 'approved' && (
                             <button
                                 onClick={onCancel}
-                                disabled={isCanceling}
-                                className="px-6 py-2.5 bg-gray-50 text-gray-600 font-bold text-xs rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
+                                disabled={isCanceling || retryingBookingId !== null}
+                                className="px-6 py-2.5 bg-gray-50 text-gray-600 font-bold text-xs rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Cancel Booking
                             </button>

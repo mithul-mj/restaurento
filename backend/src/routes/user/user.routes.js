@@ -3,7 +3,8 @@ import {
     BookingRestaurant,
     getMyBookings,
     cancelBooking,
-    getBookingDetails
+    getBookingDetails,
+    checkBookingAvailability
 } from "../../controllers/user/userBooking.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
@@ -53,6 +54,7 @@ router.patch("/profile/change-email/verify", verifyEmailChange);
 router.post("/booking", validate(createBookingSchema), BookingRestaurant);
 router.get("/bookings", getMyBookings);
 router.get("/bookings/:id", getBookingDetails);
+router.get("/bookings/:id/check-availability", checkBookingAvailability);
 router.patch("/bookings/:id/cancel", cancelBooking);
 router.get('/wallet/balance', getWalletBalance)
 router.get('/wallet', getMyWalletHistory)

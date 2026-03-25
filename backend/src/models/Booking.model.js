@@ -33,8 +33,8 @@ const bookingSchema = new Schema(
         },
         status: {
             type: String,
-            enum: ["approved", "canceled", "checked-in"],
-            default: "approved",
+            enum: ["pending-payment", "approved", "canceled", "checked-in"],
+            default: "pending-payment",
             required: true,
         },
         canceledBy: {
@@ -65,6 +65,9 @@ const bookingSchema = new Schema(
         walletTransactionId: {
             type: Schema.Types.ObjectId,
             ref: "WalletTransaction",
+        },
+        razorpayOrderId: {
+            type: String,
         },
         razorpayPaymentId: {
             type: String,
@@ -103,8 +106,21 @@ const bookingSchema = new Schema(
     { timestamps: true }
 );
 
+// Optimization for high-speed lookups across coupons, analytics, and booking history
+bookingSchema.index({ "appliedCoupon.couponId": 1, status: 1 });
+bookingSchema.index({ "appliedOffer.offerId": 1, status: 1 });
+bookingSchema.index({ restaurantId: 1, bookingDate: 1, status: 1 });
+bookingSchema.index({ userId: 1, createdAt: -1 });
+
+// TTL Index: Auto-delete bookings that stay in "pending-payment" for more than 30 minutes
+bookingSchema.index({ createdAt: 1 }, { 
+    expireAfterSeconds: 1800, 
+    partialFilterExpression: { status: "pending-payment" } 
+});
+
 bookingSchema.pre('save', function () {
-    if (this.isNew) {
+    // Only generate the check-in token if confirmed and not already set
+    if (this.status === 'approved' && !this.checkInToken) {
         const payload = {
             bid: this._id,
             rid: this.restaurantId,

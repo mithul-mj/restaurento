@@ -642,15 +642,6 @@ export const updateBookingStatus = async (req, res, next) => {
                 sessionBooking.canceledBy = ROLES.RESTAURANT;
                 await sessionBooking.save({ session });
 
-                // 2. Restore Offer Limit if applicable
-                if (sessionBooking.appliedOffer?.offerId) {
-                    await Offer.findByIdAndUpdate(
-                        sessionBooking.appliedOffer.offerId,
-                        { $inc: { usageLimit: 1 } },
-                        { session }
-                    );
-                }
-
                 // 3. Refund to User Wallet
                 await User.findByIdAndUpdate(
                     sessionBooking.userId,
@@ -737,8 +728,8 @@ export const getRestaurantStats = async (req, res, next) => {
             {
                 $group: {
                     _id: null,
-                    totalRevenue: { 
-                        $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, "$totalAmount", 0] } 
+                    totalRevenue: {
+                        $sum: { $cond: [{ $in: ["$status", ["approved", "checked-in"]] }, "$totalAmount", 0] }
                     },
                     canceledBookings: {
                         $sum: { $cond: [{ $eq: ["$status", "canceled"] }, 1, 0] }
@@ -750,10 +741,10 @@ export const getRestaurantStats = async (req, res, next) => {
             }
         ]);
 
-        const metricResult = stats[0] || { 
-            totalRevenue: 0, 
-            canceledBookings: 0, 
-            successfulBookings: 0 
+        const metricResult = stats[0] || {
+            totalRevenue: 0,
+            canceledBookings: 0,
+            successfulBookings: 0
         };
 
         // 3. Generate Sales Trend for Graph
@@ -782,27 +773,27 @@ export const getRestaurantStats = async (req, res, next) => {
                 id: i + 1
             }));
         } else if (dateFilter === "thisMonth") {
-             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-             trendAggregate = [
-                 {
-                     $match: {
-                         ...dateMatch,
-                         status: { $in: ["approved", "checked-in"] }
-                     }
-                 },
-                 {
-                     $group: {
-                         _id: { $dayOfMonth: "$bookingDate" },
-                         bookings: { $sum: 1 }
-                     }
-                 },
-                 { $sort: { "_id": 1 } }
-             ];
-             trendFormat = Array.from({ length: daysInMonth }, (_, i) => ({
-                 name: `${i + 1}`,
-                 bookings: 0,
-                 id: i + 1
-             }));
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            trendAggregate = [
+                {
+                    $match: {
+                        ...dateMatch,
+                        status: { $in: ["approved", "checked-in"] }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dayOfMonth: "$bookingDate" },
+                        bookings: { $sum: 1 }
+                    }
+                },
+                { $sort: { "_id": 1 } }
+            ];
+            trendFormat = Array.from({ length: daysInMonth }, (_, i) => ({
+                name: `${i + 1}`,
+                bookings: 0,
+                id: i + 1
+            }));
         } else {
             // thisWeek
             trendAggregate = [
@@ -886,8 +877,8 @@ export const getRestaurantStats = async (req, res, next) => {
                     totalRevenue: metricResult.totalRevenue,
                     successfulBookings: metricResult.successfulBookings,
                     canceledBookings: metricResult.canceledBookings,
-                    averageOrderValue: Number(metricResult.successfulBookings) > 0 
-                        ? Math.round(Number(metricResult.totalRevenue) / Number(metricResult.successfulBookings)) 
+                    averageOrderValue: Number(metricResult.successfulBookings) > 0
+                        ? Math.round(Number(metricResult.totalRevenue) / Number(metricResult.successfulBookings))
                         : 0
                 },
                 trend,
@@ -1012,7 +1003,7 @@ export const getRestaurantEarnings = async (req, res, next) => {
             const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
             startOfWeek.setDate(diff);
             startOfWeek.setHours(0, 0, 0, 0);
-            
+
             trendAggregate = [
                 {
                     $match: {
@@ -1052,7 +1043,7 @@ export const getRestaurantEarnings = async (req, res, next) => {
                     },
                     {
                         $group: {
-                            _id: { 
+                            _id: {
                                 day: { $dayOfMonth: "$createdAt" },
                                 month: { $month: "$createdAt" }
                             },

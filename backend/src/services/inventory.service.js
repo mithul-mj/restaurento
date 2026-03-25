@@ -37,17 +37,23 @@ export const getRealTimeAvailability = async (restaurantId, date, slotMinutes, e
     const nextDate = new Date(searchDate);
     nextDate.setDate(searchDate.getDate() + 1);
 
-    // Get permanent bookings for this specific slot
+    // Get permanent and pending bookings for this specific slot
+    const bookingMatch = {
+        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+        bookingDate: { $gte: searchDate, $lt: nextDate },
+        status: { $in: ["approved", "checked-in", "pending-payment"] },
+        slotTime: { $lte: parseInt(slotMinutes) },
+        slotEndTime: { $gt: parseInt(slotMinutes) }
+    };
+
+    // If we're checking availability for a specific user, exclude their own pending bookings 
+    // to avoid double counting with their Redis hold or preventing them from finishing checkout
+    if (excludeUserId) {
+        bookingMatch.userId = { $ne: new mongoose.Types.ObjectId(excludeUserId) };
+    }
+
     const approvedBookings = await Booking.aggregate([
-        {
-            $match: {
-                restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                bookingDate: { $gte: searchDate, $lt: nextDate },
-                status: { $in: ["approved", "checked-in"] },
-                slotTime: { $lte: parseInt(slotMinutes) },
-                slotEndTime: { $gt: parseInt(slotMinutes) }
-            }
-        },
+        { $match: bookingMatch },
         {
             $group: {
                 _id: null,
