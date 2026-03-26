@@ -297,6 +297,14 @@ export const BookingRestaurant = async (req, res, next) => {
             // Delete the hold now that booking is confirmed
 
             await redisClient.del(holdKey);
+            
+            // Emit real-time update to all users
+            const io = req.app.get("io");
+            const newAvailable = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
+            io.to(`res_${restaurantId}_${bookingDate}`).emit("slot_update", {
+                slotMinutes: slotTime,
+                available: newAvailable
+            });
 
             // Send Confirmation Email for Wallet Payment
             try {
@@ -340,6 +348,14 @@ export const BookingRestaurant = async (req, res, next) => {
         // Delete the temporary Redis hold now that the booking is persisted in MongoDB
         // MongoDB will now hold the seats via 'pending-payment' status + TTL index
         await redisClient.del(holdKey);
+
+        // Emit real-time update to all users
+        const io = req.app.get("io");
+        const newAvailable = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
+        io.to(`res_${restaurantId}_${bookingDate}`).emit("slot_update", {
+            slotMinutes: slotTime,
+            available: newAvailable
+        });
 
         res.status(201).json({
             success: true,

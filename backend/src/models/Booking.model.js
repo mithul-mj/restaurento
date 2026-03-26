@@ -61,6 +61,8 @@ const bookingSchema = new Schema(
         checkInToken: {
             type: String,
             unique: true,
+            sparse: true,
+
         },
         walletTransactionId: {
             type: Schema.Types.ObjectId,
@@ -113,9 +115,9 @@ bookingSchema.index({ restaurantId: 1, bookingDate: 1, status: 1 });
 bookingSchema.index({ userId: 1, createdAt: -1 });
 
 // TTL Index: Auto-delete bookings that stay in "pending-payment" for more than 30 minutes
-bookingSchema.index({ createdAt: 1 }, { 
-    expireAfterSeconds: 1800, 
-    partialFilterExpression: { status: "pending-payment" } 
+bookingSchema.index({ createdAt: 1 }, {
+    expireAfterSeconds: 1800,
+    partialFilterExpression: { status: "pending-payment" }
 });
 
 bookingSchema.pre('save', function () {
