@@ -41,17 +41,20 @@ const LandingPage = () => {
     }, [user, role, navigate]);
 
     return (
-        <div className="bg-[#fafafa] min-h-screen font-inter selection:bg-orange-100 selection:text-[#ff5e00]" ref={containerRef}>
-            {/* Minimal Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-[#fafafa]/80 backdrop-blur-md px-10 py-8 flex justify-center items-center border-b border-gray-100">
-                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/landing')}>
-                    <div className="w-8 h-8 bg-gray-900 rounded-sm flex items-center justify-center text-white font-black text-lg">R</div>
-                    <span className="text-xl font-black text-gray-900 font-outfit tracking-tighter uppercase">RESTAURENTO</span>
-                </div>
-            </header>
+        <div className="bg-[#fafafa] min-h-screen font-inter selection:bg-orange-100 selection:text-[#ff5e00] relative" ref={containerRef}>
+            {/* Minimal Floating Elements - No Navbar */}
+            <div className="absolute top-10 left-10 z-50 flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/landing')}>
+                <div className="w-8 h-8 bg-[#ff5e00] rounded-sm flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-200">R</div>
+                <span className="text-xl font-black text-gray-900 font-outfit tracking-tighter uppercase">RESTAURENTO</span>
+            </div>
+
+            <div className="absolute top-10 right-10 z-50 flex items-center gap-8">
+                <Link to="/login" className="text-[10px] font-black tracking-[0.4em] text-gray-400 hover:text-[#ff5e00] uppercase transition-colors">Login</Link>
+                <Link to="/signup" className="text-[10px] font-black tracking-[0.4em] px-6 py-2 border-b border-[#ff5e00] text-[#ff5e00] hover:text-[#e05200] hover:border-[#e05200] transition-all uppercase">Get Started</Link>
+            </div>
 
             {/* Premium Minimal Hero */}
-            <main className="pt-24">
+            <main>
                 <section className="min-h-[90vh] flex flex-col md:flex-row items-center px-10 gap-0 border-b border-gray-100">
                     <div className="flex-1 relative h-[80vh] w-full overflow-hidden bg-gray-50 border-r border-gray-100">
                         <motion.div style={{ y: backgroundY }} className="h-full w-full">
@@ -84,9 +87,9 @@ const LandingPage = () => {
                             <div className="flex flex-col md:flex-row items-center gap-16">
                                 <button 
                                     onClick={() => navigate('/')}
-                                    className="group flex items-center gap-6 text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase hover:text-[#ff5e00] transition-colors"
+                                    className="group flex items-center gap-6 text-[10px] font-black tracking-[0.4em] text-[#ff5e00] uppercase hover:text-[#e05200] transition-colors"
                                 >
-                                    <span className="h-[1px] w-16 bg-gray-900 group-hover:bg-[#ff5e00] transition-colors"></span>
+                                    <span className="h-[1px] w-16 bg-[#ff5e00] group-hover:bg-[#e05200] transition-colors"></span>
                                     EXPLORE DINING
                                 </button>
                             </div>
@@ -107,6 +110,45 @@ const LandingPage = () => {
                         </div>
                     ))}
                 </section>
+                {/* Philosophy Section - About Us */}
+                <section className="py-32 px-10 border-b border-gray-100 bg-[#fafafa]">
+                    <div className="flex flex-col md:flex-row items-center gap-24">
+                        <div className="flex-1 space-y-12">
+                            <div className="space-y-4">
+                                <span className="text-[10px] font-black tracking-[0.4em] text-[#ff5e00] uppercase">OUR PHILOSOPHY</span>
+                                <h2 className="text-5xl font-black text-gray-900 font-outfit uppercase tracking-tighter leading-[0.9]">Beyond the reservation.</h2>
+                            </div>
+                            <div className="space-y-8 max-w-lg">
+                                <p className="text-lg font-bold text-gray-900 leading-relaxed">
+                                    RESTAURENTO was born out of a simple belief: dining should be seamless, curated, and intentional. 
+                                </p>
+                                <p className="text-sm font-medium text-gray-500 leading-relaxed">
+                                    We partner with only the finest establishments to ensure that every table we provide is a stage for connection. From our smart pre-ordering system that respects your time, to our integrated wallet that rewards your loyalty, we are redefining the luxury of choice.
+                                </p>
+                                <div className="pt-8 grid grid-cols-2 gap-12">
+                                    <div className="space-y-2">
+                                        <span className="text-2xl font-black text-[#ff5e00]">500+</span>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Partnered Chefs</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <span className="text-2xl font-black text-[#ff5e00]">20+</span>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cities Covered</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex-1 w-full bg-gray-50 border border-gray-100 overflow-hidden relative group">
+                            <motion.img 
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                src="/about-us-img.png" 
+                                className="w-full h-[600px] object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-1000"
+                                alt="Philosophy"
+                            />
+                            <div className="absolute inset-0 bg-gray-900/5 pointer-events-none" />
+                        </div>
+                    </div>
+                </section>
 
                 {/* Curated Grid - Even more minimal */}
                 {topRestaurants.length > 0 && (
@@ -118,7 +160,7 @@ const LandingPage = () => {
                             </div>
                             <button 
                                 onClick={() => navigate('/')}
-                                className="hidden md:block text-[10px] font-black tracking-[0.4em] text-gray-400 hover:text-gray-900 uppercase underline underline-offset-8"
+                                className="hidden md:block text-[10px] font-black tracking-[0.4em] text-gray-400 hover:text-[#ff5e00] uppercase underline underline-offset-8"
                             >
                                 View All
                             </button>
@@ -197,7 +239,7 @@ const LandingPage = () => {
 
                     <div className="flex flex-col gap-6">
                         <span className="text-[11px] font-black text-gray-900 tracking-[0.4em] uppercase mb-2">Explore</span>
-                        <Link to="/" className="text-[10px] font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors">All Restaurants</Link>
+                        <Link to="/" className="text-[10px] font-bold text-gray-400 hover:text-[#ff5e00] tracking-widest uppercase transition-colors">All Restaurants</Link>
                         <button 
                             onClick={() => document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' })}
                             className="text-[10px] text-left font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors"

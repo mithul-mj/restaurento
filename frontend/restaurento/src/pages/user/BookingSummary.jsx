@@ -82,7 +82,7 @@ const BookingSummary = () => {
                                 bookingId: bookingId
                             });
                         }
-                        navigate(`/my-bookings/${bookingId}`);
+                        navigate(`/my-bookings/${bookingId}`, { replace: true });
                     });
                     return;
                 }
@@ -117,13 +117,13 @@ const BookingSummary = () => {
                                             bookingId: bookingId
                                         });
                                     }
-                                    navigate(`/my-bookings/${bookingId}`);
+                                    navigate(`/my-bookings/${bookingId}`, { replace: true });
                                 });
                             }
                         } catch (err) {
                             const errorMsg = err.response?.data?.message || "Payment verification failed";
                             showConfirm("Action Required", errorMsg, "OK").then(() => {
-                                navigate(`/my-bookings/${bookingId}`);
+                                navigate(`/my-bookings/${bookingId}`, { replace: true });
                             });
                         }
                     },
@@ -133,14 +133,14 @@ const BookingSummary = () => {
                 options.modal = {
                     ondismiss: () => {
                         showToast("Payment cancelled", "info");
-                        navigate(`/my-bookings/${bookingId}`);
+                        navigate(`/my-bookings/${bookingId}`, { replace: true });
                     }
                 };
 
                 const rzp = new window.Razorpay(options);
                 rzp.on('payment.failed', function () {
                     showConfirm("Payment Failed", "The transaction could not be completed.", "Try Again").then(() => {
-                        navigate(`/my-bookings/${bookingId}`);
+                        navigate(`/my-bookings/${bookingId}`, { replace: true });
                     });
                 });
                 rzp.open();
@@ -241,7 +241,7 @@ const BookingSummary = () => {
                 if (currentRemaining <= 0) {
                     clearInterval(timer);
                     showToast("Your reservation hold has expired. Please try booking again.", "error");
-                    navigate(`/restaurants/${restaurant._id}`);
+                    navigate(`/restaurants/${restaurant._id}`, { replace: true });
                     return 0;
                 }
                 return currentRemaining;
