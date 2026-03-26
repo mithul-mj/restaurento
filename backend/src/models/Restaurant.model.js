@@ -121,10 +121,6 @@ const restaurantSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    ratingStats: {
-      average: { type: Number, default: 0 },
-      count: { type: Number, default: 0 },
-    },
     refreshToken: {
       type: String,
     },

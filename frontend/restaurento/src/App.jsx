@@ -3,6 +3,7 @@ import { useEffect, Suspense, lazy } from "react";
 import { Toaster } from "sonner";
 import "./App.css";
 
+const LandingPage = lazy(() => import("./pages/user/LandingPage"));
 const Home = lazy(() => import("./pages/user/Home"));
 const Profile = lazy(() => import("./pages/user/Profile"));
 const EditProfile = lazy(() => import("./pages/user/EditProfile"));
@@ -127,6 +128,8 @@ function App() {
           </Route>
 
           <Route path="/reset-password" element={<ResetPassword />} />
+
+          <Route path="/landing" element={<LandingPage />} />
 
           <Route element={<UserLayout />}>
             <Route path="/" element={<Home />} />

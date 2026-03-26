@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Clock, ShieldCheck, UtensilsCrossed, ChevronRight } from 'lucide-react';
+import { ArrowRight, Clock, ShieldCheck, UtensilsCrossed, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -129,10 +129,9 @@ const Landing = () => {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-1 text-orange-500">
-                                            <Star className="w-4 h-4 fill-current" />
-                                            <span className="font-bold text-slate-900">4.9</span>
+                                            <span className="font-bold text-slate-900">10k+</span>
                                         </div>
-                                        <p className="text-xs text-slate-500">Positive Reviews</p>
+                                        <p className="text-xs text-slate-500">Happy Customers</p>
                                     </div>
                                 </motion.div>
                             </div>

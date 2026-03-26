@@ -101,6 +101,10 @@ const userService = {
   getAvailableCoupons: async () => {
     const response = await api.get('/coupons');
     return response.data;
+  },
+  getTopRestaurants: async () => {
+    const response = await api.get('/top-restaurants');
+    return response.data;
   }
 };
 

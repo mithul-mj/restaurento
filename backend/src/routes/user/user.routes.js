@@ -17,7 +17,7 @@ import {
     updateProfile,
     verifyEmailChange,
 } from "../../controllers/user/userProfile.controller.js";
-import { getUserDashboard, getRestaurantDetails, getRestaurantMenu } from "../../controllers/user/userDashboardController.js";
+import { getUserDashboard, getRestaurantDetails, getRestaurantMenu, getTopRestaurants } from "../../controllers/user/userDashboardController.js";
 import { getAvailableCoupons } from "../../controllers/userCoupon.controller.js";
 import multer from "multer";
 import { storage } from "../../config/cloudinary.config.js";
@@ -33,6 +33,7 @@ const upload = multer({ storage });
 const router = express.Router();
 
 router.get("/dashboard", getUserDashboard);
+router.get("/top-restaurants", getTopRestaurants);
 router.get("/banners", getActiveBanners);
 router.get("/restaurants/:id", getRestaurantDetails);
 router.get("/restaurants/:id/menu", getRestaurantMenu);

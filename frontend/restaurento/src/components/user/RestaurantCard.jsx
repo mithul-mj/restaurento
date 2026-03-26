@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, MapPin, Tag } from "lucide-react";
+import { MapPin, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop";
@@ -57,15 +57,7 @@ const RestaurantCard = React.memo(({ item }) => {
                     <h4 className="text-lg font-bold text-gray-900 line-clamp-1">
                         {item.restaurantName}
                     </h4>
-                    <div className="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold shrink-0">
-                        <span>{item.ratingStats?.average || "New"}</span>
-                        <Star size={10} fill="currentColor" />
-                    </div>
                 </div>
-
-                <p className="text-xs text-gray-400 font-medium mb-3">
-                    ({item.ratingStats?.count || 0} ratings)
-                </p>
 
                 <p className="text-sm text-gray-600 mb-4 line-clamp-1">
                     {item.tags?.join(", ") || "Classical"}

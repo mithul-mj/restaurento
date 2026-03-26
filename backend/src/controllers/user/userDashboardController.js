@@ -1,6 +1,7 @@
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { Schedule } from "../../models/Schedule.model.js";
 import { Offer } from "../../models/Offer.model.js";
+import { Booking } from "../../models/Booking.model.js";
 import mongoose from "mongoose";
 import STATUS_CODES from "../../constants/statusCodes.js";
 
@@ -378,6 +379,89 @@ export const getRestaurantMenu = async (req, res, next) => {
       }
     });
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTopRestaurants = async (req, res, next) => {
+  try {
+    const topBooked = await Booking.aggregate([
+      { $match: { status: { $in: ["approved", "checked-in"] } } },
+      { $group: { _id: "$restaurantId", bookingCount: { $sum: 1 } } },
+      { $sort: { bookingCount: -1 } },
+      { $limit: 5 }
+    ]);
+
+    let restaurantIds = topBooked.map(b => b._id);
+
+    if (restaurantIds.length < 5) {
+      const extra = await Restaurant.find({ 
+        _id: { $nin: restaurantIds },
+        status: "active",
+        verificationStatus: "approved",
+        isOnboardingCompleted: true
+      })
+      .sort({ "ratingStats.average": -1 })
+      .limit(5 - restaurantIds.length)
+      .select("_id");
+      
+      restaurantIds = [...restaurantIds, ...extra.map(r => r._id)];
+    }
+
+    const pipeline = [
+      { $match: { _id: { $in: restaurantIds } } },
+      {
+        $lookup: {
+          from: "schedules",
+          let: { rid: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$restaurantId", "$$rid"] }, validFrom: { $lte: new Date() } } },
+            { $sort: { validFrom: -1 } },
+            { $limit: 1 }
+          ],
+          as: "schedule"
+        }
+      },
+      { $unwind: { path: "$schedule", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "offers",
+          let: { rid: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$restaurantId", "$$rid"] },
+                isActive: true,
+                validFrom: { $lte: new Date() },
+                $or: [{ validUntil: { $exists: false } }, { validUntil: null }, { validUntil: { $gt: new Date() } }]
+              }
+            },
+            { $sort: { discountValue: -1 } },
+            { $limit: 1 }
+          ],
+          as: "bestOffer"
+        }
+      },
+      { $addFields: { bestOffer: { $arrayElemAt: ["$bestOffer", 0] } } },
+      {
+        $project: {
+          _id: 1,
+          restaurantName: 1,
+          address: 1,
+          location: 1,
+          images: { $slice: ["$images", 1] },
+          ratingStats: 1,
+          tags: 1,
+          slotPrice: "$schedule.slotPrice",
+          bestOffer: 1,
+        }
+      }
+    ];
+
+    const restaurants = await Restaurant.aggregate(pipeline);
+
+    res.status(STATUS_CODES.OK).json({ success: true, restaurants });
   } catch (error) {
     next(error);
   }

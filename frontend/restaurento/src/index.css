@@ -1,16 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Inter:wght@100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     html {
-        font-family: "Poppins", system-ui, sans-serif;
+        font-family: "Inter", system-ui, sans-serif;
     }
 
     body {
         @apply antialiased bg-gray-50 text-gray-900;
-        font-family: "Poppins", system-ui, sans-serif;
+        font-family: "Inter", system-ui, sans-serif;
     }
+}
+
+.font-outfit {
+    font-family: 'Outfit', sans-serif;
 }
 
 @layer utilities {
