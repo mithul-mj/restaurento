@@ -1,16 +1,31 @@
 import Swal from "sweetalert2";
+import { toast } from "sonner";
+
+// Helper for brand-standard SweetAlert options
+const swalStandardOptions = {
+    confirmButtonColor: "#ff5e00", // Restaurento Brand Orange
+    cancelButtonColor: "#f3f4f6", // Light Gray
+    background: "#fff",
+    color: "#111827", // text-gray-900
+    backdrop: `rgba(0,0,0,0.4) blur(4px)`, // Modern backdrop blur
+    customClass: {
+        popup: "rounded-2xl shadow-2xl border-none",
+        title: "text-xl font-bold text-gray-900",
+        htmlContainer: "text-gray-600 text-sm font-medium",
+        confirmButton: "px-8 py-2.5 rounded-xl font-bold text-white transition-all hover:scale-105",
+        cancelButton: "px-8 py-2.5 rounded-xl font-bold text-gray-600 border border-gray-100 transition-all hover:bg-gray-100",
+        input: "rounded-xl border border-gray-100 bg-gray-50 focus:border-[#ff5e00] outline-none",
+    },
+    buttonsStyling: true,
+};
 
 export const showAlert = (title, text, icon = "success", confirmButtonText = "OK") => {
     return Swal.fire({
+        ...swalStandardOptions,
         title,
         text,
         icon,
         confirmButtonText,
-        customClass: {
-            popup: "dark:bg-gray-800 dark:text-white",
-            title: "dark:text-white",
-            content: "dark:text-gray-300",
-        },
     });
 };
 
@@ -24,37 +39,27 @@ export const showError = (title, text) => {
 
 export const showConfirm = (title, text, confirmButtonText = "Yes, do it!", isHtml = false) => {
     return Swal.fire({
+        ...swalStandardOptions,
         title,
-        [isHtml ? "html" : "text"]: text,
+        text: isHtml ? undefined : text,
+        html: isHtml ? text : undefined,
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
         confirmButtonText,
-        customClass: {
-            popup: "dark:bg-gray-800 dark:text-white",
-            title: "dark:text-white",
-            content: "dark:text-gray-300 whitespace-pre-line",
-        },
+        cancelButtonText: "Cancel",
     });
 };
 
 export const showPrompt = (title, text, confirmButtonText = "Submit", inputPlaceholder = "Enter your reason") => {
     return Swal.fire({
+        ...swalStandardOptions,
         title,
         text,
         input: "textarea",
         inputPlaceholder,
         showCancelButton: true,
         confirmButtonText,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        customClass: {
-            popup: "dark:bg-gray-800 dark:text-white",
-            title: "dark:text-white",
-            content: "dark:text-gray-300",
-            input: "dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600",
-        },
+        cancelButtonText: "Cancel",
         preConfirm: (value) => {
             if (!value) {
                 Swal.showValidationMessage("You need to write something!");
@@ -64,15 +69,15 @@ export const showPrompt = (title, text, confirmButtonText = "Submit", inputPlace
     });
 };
 
-import { toast } from "sonner";
-
 export const showToast = (message, type = "success") => {
     switch (type) {
         case "success":
             toast.success(message);
             break;
         case "error":
-            toast.error(message);
+            toast.error(message, {
+                style: { backgroundColor: '#fef2f2', border: '1px solid #fee2e2', color: '#991b1b' }
+            });
             break;
         case "info":
             toast.info(message);

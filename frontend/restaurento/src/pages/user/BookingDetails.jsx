@@ -19,6 +19,9 @@ import Loader from "../../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
 import { showConfirm } from "../../utils/alert";
 import { QRCodeSVG } from "qrcode.react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Download } from "lucide-react";
 
 const BookingDetails = () => {
     const { id } = useParams();
@@ -139,6 +142,114 @@ const BookingDetails = () => {
     const tax = booking.tax;
     const platformFee = booking.platformFee;
     const totalPaid = booking.totalAmount;
+
+    const handleDownloadInvoice = () => {
+        const doc = new jsPDF();
+        const primaryColor = [255, 94, 0]; // Restaurento Orange
+
+        // Header Branding
+        doc.setFontSize(22);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setFont("helvetica", "bold");
+        doc.text("RESTAURENTO", 20, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.setFont("helvetica", "normal");
+        doc.text("Dine-in Reservation Invoice", 20, 26);
+
+        // Restaurant Info
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold");
+        doc.text(restaurant?.restaurantName || "Restaurant", 20, 40);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(80);
+        doc.text(restaurant?.address || "", 20, 45, { maxWidth: 100 });
+
+        // Invoice Meta
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold");
+        doc.text("Invoice #:", 140, 20);
+        doc.text("Date:", 140, 26);
+        doc.text("Time:", 140, 32);
+        doc.text("Guests:", 140, 38);
+
+        doc.setFont("helvetica", "normal");
+        doc.text(`BK-${bookingIdShort}`, 165, 20);
+        doc.text(formatDate(booking.bookingDate), 165, 26);
+        doc.text(formatTime12Hour(booking.slotTime), 165, 32);
+        doc.text(`${booking.guests} People`, 165, 38);
+
+        // Tables Section
+        const tableBody = booking.preOrderItems.map(item => [
+            String(item.name).toUpperCase(),
+            `${item.qty} x Rs. ${item.priceAtBooking.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+            `Rs. ${(item.priceAtBooking * item.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+        ]);
+
+        const result = autoTable(doc, {
+            startY: 60,
+            head: [['Item Name', 'Price Details', 'Subtotal']],
+            body: tableBody,
+            headStyles: { fillColor: primaryColor, textColor: 255 },
+            alternateRowStyles: { fillColor: [248, 248, 248] },
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 8, font: "helvetica" }
+        });
+
+        // Summary Calculations - Robust positioning
+        const finalY = (result?.finalY || doc.lastAutoTable?.finalY || 120) + 12;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50);
+
+        const summaryData = [
+            [`Booking Fee (${booking.guests} x Rs. ${slotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}):`, `Rs. ${bookingFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+            ["Food & Beverages Subtotal:", `Rs. ${preOrderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+            ["Goods & Service Tax (5%):", `Rs. ${tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+            ["Platform Handling Fee (5%):", `Rs. ${platformFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+        ];
+
+        if (booking.appliedCoupon?.discountAmountApplied) {
+            summaryData.push([`Coupon Discount (${booking.appliedCoupon.code}):`, `- Rs. ${booking.appliedCoupon.discountAmountApplied.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]);
+        }
+        if (booking.appliedOffer?.discountValue) {
+            summaryData.push(["Restaurant Promotional Offer:", `- Rs. ${booking.appliedOffer.discountValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]);
+        }
+
+        let currentY = finalY;
+        summaryData.forEach(row => {
+            doc.text(String(row[0]), 20, currentY);
+            doc.text(String(row[1]), 190, currentY, { align: "right" });
+            currentY += 7;
+        });
+
+        doc.setLineWidth(0.3);
+        doc.setDrawColor(230);
+        doc.line(20, currentY + 1, 190, currentY + 1);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+        doc.text("GRAND TOTAL (PAID):", 20, currentY + 10);
+        doc.text(`${totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`, 190, currentY + 10, { align: "right" });
+
+        if (booking.walletAmountUsed > 0) {
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.text(`(${booking.walletAmountUsed.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR paid via wallet)`, 190, currentY + 15, { align: "right" });
+        }
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Thank you for choosing Restaurento. Please arrive on time.", 105, 280, { align: "center" });
+
+        doc.save(`Invoice_BK_${bookingIdShort}.pdf`);
+    };
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] pb-20">
@@ -359,6 +470,16 @@ const BookingDetails = () => {
                                         )}
                                     </div>
                                 </>
+                            ) : booking.status === 'checked-in' ? (
+                                <div className="py-10 flex flex-col items-center">
+                                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+                                        <CheckCircle2 size={32} />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-blue-600 mb-2">Checked In</h4>
+                                    <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto">
+                                        Enjoy your meal! You have successfully checked in at the restaurant.
+                                    </p>
+                                </div>
                             ) : booking.status === 'pending-payment' ? (
                                 <div className="py-10 flex flex-col items-center">
                                     <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-100">
@@ -421,6 +542,16 @@ const BookingDetails = () => {
                                                 Cancel Booking
                                             </>
                                         )}
+                                    </button>
+                                )}
+
+                                {(booking.status === "approved" || booking.status === "checked-in") && (
+                                    <button
+                                        onClick={handleDownloadInvoice}
+                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#ff5e00] border border-orange-200 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-sm mt-3"
+                                    >
+                                        <Download size={18} />
+                                        Download Invoice
                                     </button>
                                 )}
 

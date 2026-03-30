@@ -8,6 +8,7 @@ const menuSchema = new Schema({
   categories: [{ type: String }], // Array: ["Breakfast", "Lunch", "Dinner"]
   image: { type: String },
   isAvailable: { type: Boolean, default: true },
+  isDeleted: { type: Boolean, default: false },
 });
 
 const dayHoursSchema = new Schema(

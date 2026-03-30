@@ -33,7 +33,7 @@ const UserLogin = () => {
   const onSubmit = async (data) => {
     try {
       setServerError("");
-      const response = await authService.userLogin(data);
+      const response = await authService.login(data, "USER");
 
       dispatch(
         setCredentials({

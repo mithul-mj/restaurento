@@ -71,9 +71,9 @@ const Earnings = () => {
         autoTable(doc, {
             startY: 40,
             body: [
-                ["Total Earnings:", formatCurrency(earnings.totalEarnings || 0)],
+                ["Total Earnings:", `Rs. ${(earnings.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
                 ["Successful Bookings:", earnings.successfulBookings?.toString() || "0"],
-                ["Net Payout:", formatCurrency(earnings.netPayout || 0)]
+                ["Net Payout:", `Rs. ${(earnings.netPayout || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]
             ],
             theme: 'plain',
             styles: { fontSize: 10, cellPadding: 2, textColor: [60, 60, 60] },
@@ -96,10 +96,10 @@ const Earnings = () => {
         const tableRows = transactions.map(tx => [
             tx.orderId,
             dayjs(tx.date).format('DD/MM/YYYY'),
-            tx.customer,
-            `INR ${tx.amount}`,
-            `INR ${tx.fees}`,
-            `INR ${tx.netEarning}`,
+            String(tx.customer),
+            `${tx.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+            `${tx.fees.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+            `${tx.netEarning.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
             tx.status.toUpperCase()
         ]);
 

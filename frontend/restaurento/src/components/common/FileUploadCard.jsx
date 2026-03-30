@@ -3,6 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import { CheckCircle, X, Upload, FileCheck, FileText } from "lucide-react";
 import ImageCropper from './ImageCropper';
+import { showToast } from '../../utils/alert';
 
 const FileUploadCard = ({
     name,
@@ -16,26 +17,54 @@ const FileUploadCard = ({
 
     const file = watch(name);
 
-    const onDrop = useCallback(async (acceptedFiles) => {
+    const onDrop = useCallback(async (acceptedFiles, fileRejections) => {
+        // Handle Rejections first
+        if (fileRejections.length > 0) {
+            const error = fileRejections[0].errors[0];
+            if (error.code === 'file-invalid-type') {
+                showToast("Invalid file type! Only images are allowed.", "error");
+            } else if (error.code === 'file-too-large') {
+                showToast("File is too large! Max 5MB allowed.", "error");
+            } else {
+                showToast(error.message, "error");
+            }
+            return;
+        }
+
         if (acceptedFiles.length > 0) {
             const file = acceptedFiles[0];
 
-            const dataUrl = await new Promise((resolve) => {
+            // Validate Size (Double check)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast("File is too large! Max 5MB allowed.", "error");
+                return;
+            }
+
+            const isImage = file.type.startsWith('image/');
+            const preview = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
                 reader.readAsDataURL(file);
             });
-            Object.assign(file, { preview: dataUrl });
-
-            const isImage = file.type.startsWith('image/') || (typeof file.preview === 'string' && file.preview.startsWith('data:image'));
+            Object.assign(file, { preview });
 
             if (isImage) {
                 setImageToCrop(file.preview);
             } else {
-                setValue(name, file, { shouldValidate: true });
+                // For non-images (like if we ever add PDF support), only allow if explicitly in acceptedFileTypes
+                const isAccepted = Object.keys(acceptedFileTypes).some(type => {
+                    if (type === 'image/*') return false; // Handled above
+                    return file.type === type || acceptedFileTypes[type].some(ext => file.name.endsWith(ext));
+                });
+
+                if (isAccepted) {
+                    setValue(name, file, { shouldValidate: true });
+                } else {
+                    showToast("Unsupported file type!", "error");
+                }
             }
         }
-    }, [name, setValue]);
+    }, [name, setValue, acceptedFileTypes]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,

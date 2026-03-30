@@ -42,7 +42,7 @@ const UserSignup = () => {
     const onSubmit = async (data) => {
         try {
             setServerError("");
-            await authService.userSignup(data);
+            await authService.signup(data, "USER");
 
             setRegisteredEmail(data.email);
             showSuccess("Signup Successful", "Please verify your email to continue.");

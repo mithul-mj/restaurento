@@ -1,24 +1,14 @@
 import api from "./api";
 
 const authService = {
-  userLogin: async (credintials) => {
-    const response = await api.post("/login", credintials);
+  login: async (credentials, role = "USER") => {
+    const endpoints = { ADMIN: "/admin/login", RESTAURANT: "/restaurant/login", USER: "/login" };
+    const response = await api.post(endpoints[role] || "/login", credentials);
     return response;
   },
-  userSignup: async (credintials) => {
-    const response = await api.post("/register", credintials);
-    return response;
-  },
-  adminLogin: async (credintials) => {
-    const response = await api.post("/admin/login", credintials);
-    return response;
-  },
-  restaurantRegister: async (credintials) => {
-    const response = await api.post("/restaurant/register", credintials);
-    return response;
-  },
-  restaurantLogin: async (credintials) => {
-    const response = await api.post("/restaurant/login", credintials);
+  signup: async (credentials, role = "USER") => {
+    const endpoint = role === "RESTAURANT" ? "/restaurant/register" : "/register";
+    const response = await api.post(endpoint, credentials);
     return response;
   },
   verifyEmail: async (data) => {
@@ -34,13 +24,8 @@ const authService = {
     return response;
   },
   logout: async (role = "USER") => {
-    if (role === 'ADMIN') {
-      return await api.post("/admin/logout");
-    } else if (role === 'RESTAURANT') {
-      return await api.post("/restaurant/logout");
-    } else {
-      return await api.post("/logout");
-    }
+    const endpoints = { ADMIN: "/admin/logout", RESTAURANT: "/restaurant/logout", USER: "/logout" };
+    return await api.post(endpoints[role] || "/logout");
   },
   forgotPassword: async (data) => {
     const response = await api.patch("/auth/forgot-password", data);
@@ -51,18 +36,12 @@ const authService = {
     return response;
   },
   googleLogin: async (googleToken, role = "USER", referralCode) => {
-    if (role === "RESTAURANT") {
-      const response = await api.post("/restaurant/auth/google", {
-        token: googleToken,
-      });
-      return response;
-    } else {
-      const response = await api.post("/auth/google", { 
-        token: googleToken,
-        referralCode 
-      });
-      return response;
-    }
+    const endpoint = role === "RESTAURANT" ? "/restaurant/auth/google" : "/auth/google";
+    const response = await api.post(endpoint, { 
+      token: googleToken,
+      referralCode 
+    });
+    return response;
   },
 };
 

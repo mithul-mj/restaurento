@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Heart, Trash2, ArrowRight, ChevronLeft, ChevronRight, Utensils } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useWishlist } from "../../hooks/useWishlist";
-import { showConfirm } from "../../utils/alert";
+import { showConfirm, showToast } from "../../utils/alert";
 import Loader from "../../components/Loader";
 import { formatDate } from "../../utils/timeUtils";
 
@@ -51,14 +51,24 @@ function WishlistCard({ restaurant, onRemove }) {
                     </div>
                     <div className="flex flex-col gap-3.5 h-[120px] overflow-y-auto pr-2 custom-scrollbar">
                         {restaurant.items.length > 0 ? (
-                            restaurant.items.map((item, i) => (
-                                <div key={i} className="flex justify-between items-center">
-                                    <span className="text-sm font-semibold text-gray-700 truncate mr-4">{item.dishDetails?.name || "Dish"}</span>
-                                    <span className="px-2 py-0.5 bg-orange-100 text-[#ff5e00] text-[10px] font-bold rounded-lg shrink-0">
-                                        x{item.qty}
-                                    </span>
-                                </div>
-                            ))
+                            restaurant.items.map((item, i) => {
+                                const isUnavailable = !item.dishDetails || item.dishDetails.isDeleted || !item.dishDetails.isAvailable;
+                                return (
+                                    <div key={i} className="flex justify-between items-center">
+                                        <div className="flex flex-col">
+                                            <span className={`text-sm font-semibold truncate mr-4 ${isUnavailable ? 'text-gray-400 line-through decoration-red-400' : 'text-gray-700'}`}>
+                                                {item.dishDetails?.name || "Unknown Dish"}
+                                            </span>
+                                            {isUnavailable && (
+                                                <span className="text-[9px] font-bold text-red-500 uppercase tracking-tighter">Unavailable</span>
+                                            )}
+                                        </div>
+                                        <span className="px-2 py-0.5 bg-orange-100 text-[#ff5e00] text-[10px] font-bold rounded-lg shrink-0">
+                                            x{item.qty}
+                                        </span>
+                                    </div>
+                                );
+                            })
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-gray-400">
                                 <span className="text-xs italic">No items pre-ordered</span>
@@ -76,13 +86,20 @@ function WishlistCard({ restaurant, onRemove }) {
                         to={`/restaurants/${restaurant.restaurantId}`}
                         state={{
                             prefilledCart: restaurant.items.reduce((acc, curr) => {
-                                if (curr.dishDetails) {
+                                const isAvailable = curr.dishDetails && !curr.dishDetails.isDeleted && curr.dishDetails.isAvailable;
+                                if (isAvailable) {
                                     acc[curr.dishId] = { ...curr.dishDetails, _id: curr.dishId, qty: curr.qty };
                                 }
                                 return acc;
                             }, {})
                         }}
-                        className="bg-[#f27b21] text-white text-sm font-bold px-8 py-3 rounded-2xl hover:bg-[#e06a12] transition-all shadow-lg shadow-orange-500/10 active:scale-95"
+                        onClick={(e) => {
+                            const hasUnavailable = restaurant.items.some(item => !item.dishDetails || item.dishDetails.isDeleted || !item.dishDetails.isAvailable);
+                            if (hasUnavailable) {
+                                showToast("Some items from your plan are no longer available and were skipped.", "warning");
+                            }
+                        }}
+                        className="bg-[#f27b21] text-white text-sm font-bold px-8 py-3 rounded-2xl hover:bg-[#e06a12] transition-all shadow-lg shadow-orange-500/10 active:scale-95 text-center"
                     >
                         Book Now →
                     </Link>

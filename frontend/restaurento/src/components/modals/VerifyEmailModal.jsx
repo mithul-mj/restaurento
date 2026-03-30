@@ -64,6 +64,26 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
       inputRefs.current[index - 1].focus();
     }
   };
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").slice(0, 6).split("");
+    const newOtp = [...otp];
+
+    pastedData.forEach((char, index) => {
+      if (index < 6 && !isNaN(char)) {
+        newOtp[index] = char;
+      }
+    });
+
+    setOtp(newOtp);
+    setValue("otp", newOtp.join(""));
+
+    // Focus last character or next empty
+    const nextIndex = Math.min(pastedData.length, 5);
+    if (inputRefs.current[nextIndex]) {
+      inputRefs.current[nextIndex].focus();
+    }
+  };
 
   const onSubmit = (data) => {
     setLocalError("");
@@ -117,6 +137,7 @@ const VerifyEmailModal = ({ email, onClose, onVerify }) => {
                 value={digit}
                 onChange={(e) => handleChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
+                onPaste={handlePaste}
                 className="w-10 h-12 sm:w-12 sm:h-14 border border-gray-300 rounded-lg text-center text-xl font-bold text-gray-800 focus:border-[#ff5e00] focus:ring-1 focus:ring-[#ff5e00] outline-none transition-all bg-white"
                 autoFocus={index === 0}
               />

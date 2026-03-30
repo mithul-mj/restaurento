@@ -137,6 +137,26 @@ const EmailChangeModal = ({
         }
     };
 
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData("text").slice(0, 6).split("");
+        const newOtp = [...otpValues];
+
+        pastedData.forEach((char, index) => {
+            if (index < 6 && !isNaN(char)) {
+                newOtp[index] = char;
+            }
+        });
+
+        setOtpValues(newOtp);
+        setValue("otpCode", newOtp.join(""), { shouldValidate: true });
+
+        const nextIndex = Math.min(pastedData.length, 5);
+        if (inputRefs.current[nextIndex]) {
+            inputRefs.current[nextIndex].focus();
+        }
+    };
+
     const handleResendOtp = async () => {
         setTimeLeft(120);
         setEndTime(Date.now() + 120000);
@@ -265,6 +285,7 @@ const EmailChangeModal = ({
                                         value={digit}
                                         onChange={(e) => handleOtpChange(index, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(index, e)}
+                                        onPaste={handlePaste}
                                         className={`w-12 h-14 text-center text-xl font-bold bg-gray-50 border-2 rounded-xl outline-none transition-all ${errors.otpCode
                                             ? "border-red-200 focus:border-red-500 bg-red-50/50"
                                             : "border-transparent focus:border-[#ff5e00] focus:bg-white"

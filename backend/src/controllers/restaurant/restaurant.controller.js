@@ -233,7 +233,9 @@ export const getMenu = async (req, res, next) => {
 
         const skip = (page - 1) * limit;
 
-        const matchStage = {};
+        const matchStage = {
+            "menuItems.isDeleted": { $ne: true }
+        };
 
         if (search) {
             matchStage.$or = [
@@ -296,8 +298,8 @@ export const toggleItemAvailability = async (req, res, next) => {
 
         const menuItem = restaurant.menuItems.id(itemId);
 
-        if (!menuItem) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item not found" });
+        if (!menuItem || menuItem.isDeleted) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item not found or already deleted" });
         }
 
         menuItem.isAvailable = !menuItem.isAvailable;
@@ -329,8 +331,8 @@ export const updateMenuItem = async (req, res, next) => {
 
         const menuItem = restaurant.menuItems.id(itemId);
 
-        if (!menuItem) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item not found" });
+        if (!menuItem || menuItem.isDeleted) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item not found or already deleted" });
         }
 
         if (name) menuItem.name = name;
@@ -394,17 +396,24 @@ export const addMenuItem = async (req, res, next) => {
 export const deleteMenuItem = async (req, res, next) => {
     try {
         const { itemId } = req.params;
-        const restaurant = await Restaurant.findByIdAndUpdate(req.user._id, {
-            $pull: {
-                menuItems: { _id: itemId }
-            }
-        });
+        const restaurant = await Restaurant.findOneAndUpdate(
+            { _id: req.user._id, "menuItems._id": itemId },
+            {
+                $set: { "menuItems.$.isDeleted": true }
+            },
+            { new: true }
+        );
+
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item or Restaurant not found" });
         }
+
+        // Return only non-deleted items to stay consistent
+        const activeMenuItems = restaurant.menuItems.filter(item => !item.isDeleted);
+
         return res.status(STATUS_CODES.OK).json({
             message: "Menu item removed successfully",
-            menuItems: restaurant.menuItems,
+            menuItems: activeMenuItems,
         });
 
     } catch (error) {
@@ -541,7 +550,13 @@ export const verifyCheckIn = async (req, res, next) => {
             });
         }
 
-        if (rid !== restaurantId.toString()) {
+        // The token might have been generated with an object for rid (e.g. from a populated field) instead of a simple string
+        const tokenRestaurantId = typeof rid === 'object' && rid !== null && rid._id
+            ? rid._id.toString()
+            : rid.toString();
+
+        console.log("Checking Token:", { tokenRid: tokenRestaurantId, userRid: restaurantId.toString() });
+        if (tokenRestaurantId !== restaurantId.toString()) {
             return res.status(STATUS_CODES.FORBIDDEN).json({
                 message: "Unauthorized: this booking belongs to another restaurant"
             });
@@ -557,6 +572,37 @@ export const verifyCheckIn = async (req, res, next) => {
         if (booking.status === "checked-in") {
             return res.status(STATUS_CODES.CONFLICT).json({ message: "Guest is already checked-in" });
         }
+
+        /*
+        // --- ARRIVAL TIME VALIDATION ---
+        const now = new Date();
+        const bookingDate = new Date(booking.bookingDate);
+        
+        // Reset both to midnight for accurate date-only comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        bookingDate.setHours(0, 0, 0, 0);
+
+        // Arriving on the wrong day (too early)
+        if (bookingDate > today) {
+            return res.status(STATUS_CODES.FORBIDDEN).json({ 
+                message: "Too Early: This booking is for a future date." 
+            });
+        }
+
+        // Arriving today, but far too early for the specific slot
+        // We define 'too early' as arriving more than 30 minutes BEFORE the start time.
+        if (bookingDate.getTime() === today.getTime()) {
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const earlyBuffer = 30; // 30-minute grace period before slot starts
+
+            if (currentMinutes < (booking.slotTime - earlyBuffer)) {
+                return res.status(STATUS_CODES.FORBIDDEN).json({
+                    message: "Too Early: Check-in opens 30 minutes before your slot."
+                });
+            }
+        }
+        */
 
         booking.status = "checked-in";
         await booking.save();
@@ -632,9 +678,12 @@ export const updateBookingStatus = async (req, res, next) => {
                 // Re-fetch inside session
                 const sessionBooking = await Booking.findOne({ _id: bookingId, restaurantId }).session(session);
 
-                if (!sessionBooking || sessionBooking.status === 'canceled') {
+                if (!sessionBooking || sessionBooking.status === 'canceled' || sessionBooking.status === 'checked-in') {
                     await session.abortTransaction();
-                    return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Booking already canceled or not found" });
+                    const message = sessionBooking?.status === 'checked-in'
+                        ? "Cannot cancel a booking that is already checked-in"
+                        : "Booking already canceled or not found";
+                    return res.status(STATUS_CODES.BAD_REQUEST).json({ message });
                 }
 
                 // 1. Mark as canceled

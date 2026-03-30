@@ -1,4 +1,5 @@
 import { Restaurant } from "../../models/Restaurant.model.js";
+import { Review } from "../../models/Review.model.js";
 import { Schedule } from "../../models/Schedule.model.js";
 import { Offer } from "../../models/Offer.model.js";
 import { Booking } from "../../models/Booking.model.js";
@@ -112,6 +113,27 @@ export const getUserDashboard = async (req, res, next) => {
     ];
 
     pipeline.push(...lookupOfferStage);
+    
+    // Calculate Dynamic Rating Stats
+    const lookupRatingStats = [
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "restaurantId",
+          as: "reviews"
+        }
+      },
+      {
+        $addFields: {
+          ratingStats: {
+            average: { $ifNull: [{ $avg: "$reviews.rating" }, 0] },
+            count: { $size: "$reviews" }
+          }
+        }
+      }
+    ];
+    pipeline.push(...lookupRatingStats);
 
     // Filter by Search, Rating, and Cost
     const matchConditions = [];
@@ -260,10 +282,20 @@ export const getRestaurantDetails = async (req, res, next) => {
     }
 
     // Get restaurant info, current schedule, and all active offers in parallel
-    const [restaurant, activeSchedule, availableOffers] = await Promise.all([
+    const [restaurant, ReviewData, activeSchedule, availableOffers] = await Promise.all([
       Restaurant.findOne({ _id: id, status: "active" })
         .select("-documents -onboardingStep -submissionAttempts -verificationStatus -isOnboardingCompleted -ownerId -menuItems -__v")
         .lean(),
+      Review.aggregate([
+        { $match: { restaurantId: new mongoose.Types.ObjectId(id) } },
+        {
+          $group: {
+            _id: null,
+            average: { $avg: "$rating" },
+            count: { $sum: 1 }
+          }
+        }
+      ]),
       Schedule.findOne({
         restaurantId: id,
         validFrom: { $lte: new Date() }
@@ -281,6 +313,9 @@ export const getRestaurantDetails = async (req, res, next) => {
         ]
       }).sort({ discountValue: -1 }).lean()
     ]);
+    
+    const ratingStats = ReviewData?.[0] || { average: 0, count: 0 };
+    if (ratingStats.average) ratingStats.average = parseFloat(ratingStats.average.toFixed(1));
 
     if (!restaurant) {
       return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant not found" });
@@ -311,6 +346,7 @@ export const getRestaurantDetails = async (req, res, next) => {
       slotConfig: activeSchedule.slotConfig,
       totalSeats: activeSchedule.totalSeats,
       slotPrice: activeSchedule.slotPrice,
+      ratingStats,
       isCurrentlyOpen: isCurrentlyOpen,
       offers: availableOffers || []
     };
@@ -345,6 +381,9 @@ export const getRestaurantMenu = async (req, res, next) => {
     if (search) {
       filterStage.$match["menuItems.name"] = { $regex: search, $options: "i" };
     }
+
+    // Always filter out deleted items
+    filterStage.$match["menuItems.isDeleted"] = { $ne: true };
 
     const pipeline = [
       matchStage,
@@ -444,6 +483,22 @@ export const getTopRestaurants = async (req, res, next) => {
         }
       },
       { $addFields: { bestOffer: { $arrayElemAt: ["$bestOffer", 0] } } },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "restaurantId",
+          as: "reviews"
+        }
+      },
+      {
+        $addFields: {
+          ratingStats: {
+            average: { $ifNull: [{ $avg: "$reviews.rating" }, 0] },
+            count: { $size: "$reviews" }
+          }
+        }
+      },
       {
         $project: {
           _id: 1,

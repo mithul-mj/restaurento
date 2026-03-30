@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {
   registerUserService,
   loginUserService,
@@ -12,6 +13,7 @@ import { createAccount } from "../../services/commonAuth.service.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import { WalletTransaction } from "../../models/WalletTransaction.model.js";
 import { REFERRAL_REWARD_REFERRER, REFERRAL_REWARD_NEW_USER } from "../../constants/constants.js";
+import { sendAuthResponse, clearAuthCookies } from "../../utils/auth.util.js";
 
 
 export const registerUser = async (req, res, next) => {
@@ -68,18 +70,6 @@ export const googleAuthUser = async (req, res, next) => {
         const referrer = await User.findOne({ referralCode });
         if (referrer) {
           referrerId = referrer._id;
-          signupBonus = REFERRAL_REWARD_NEW_USER;
-
-          // 1. Update Referrer Balance
-          referrer.walletBalance += REFERRAL_REWARD_REFERRER;
-          await referrer.save();
-
-          // 2. Create Transaction for Referrer
-          await WalletTransaction.create({
-            userId: referrer._id,
-            amount: REFERRAL_REWARD_REFERRER,
-            description: `Referral Bonus for inviting ${name}`
-          });
         }
       }
 
@@ -88,12 +78,10 @@ export const googleAuthUser = async (req, res, next) => {
         email,
         avatar: picture,
         isEmailVerified: true,
-        password:
-          Math.random().toString(36).slice(-8) +
-          Math.random().toString(36).slice(-8),
+        password: crypto.randomBytes(16).toString("hex"),
         role: ROLES.USER,
         referredBy: referrerId,
-        walletBalance: signupBonus,
+        walletBalance: 0,
       });
 
       // 3. Create Transaction for New User only if they got a bonus
@@ -116,35 +104,12 @@ export const googleAuthUser = async (req, res, next) => {
       });
     }
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = user.generateAccessToken(ROLES.USER);
+    const refreshToken = user.generateRefreshToken(ROLES.USER);
 
-    res.cookie("user_accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie("user_refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/api/v1/auth/refresh-token",
-    });
-
-    return res.status(STATUS_CODES.OK).json({
-      success: true,
-      message: "User logged in successfully",
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: ROLES.USER,
-        avatar: user.avatar,
-      },
+    return sendAuthResponse(res, ROLES.USER, user, "User logged in successfully", {
+        accessToken,
+        refreshToken
     });
   } catch (error) {
     console.error("Google Auth Error:", error);
@@ -165,32 +130,9 @@ export const loginUser = async (req, res, next) => {
       });
     }
 
-    res.cookie("user_accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie("user_refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/api/v1/auth/refresh-token",
-    });
-
-    return res.status(STATUS_CODES.OK).json({
-      success: true,
-      message: "User logged in successfully",
-      user: {
-        _id: account._id,
-        fullName: account.fullName,
-        email: account.email,
-        role: ROLES.USER,
-        avatar: account.avatar,
-      },
+    return sendAuthResponse(res, ROLES.USER, account, "User logged in successfully", {
+        accessToken,
+        refreshToken
     });
   } catch (error) {
     next(error);
@@ -201,18 +143,7 @@ export const loginUser = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.clearCookie("user_accessToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      path: "/",
-    });
-    res.clearCookie("user_refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      path: "/api/v1/auth/refresh-token",
-    });
+    clearAuthCookies(res, "USER");
     return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
   } catch (error) {
     next(error);

@@ -105,7 +105,21 @@ const userService = {
   getTopRestaurants: async () => {
     const response = await api.get('/top-restaurants');
     return response.data;
-  }
+  },
+  submitReview: async (data) => {
+    const response = await api.post("/reviews/submit", data);
+    return response.data;
+  },
+  getExistingReview: async (restaurantId) => {
+    const response = await api.get(`/reviews/${restaurantId}`);
+    return response.data;
+  },
+  getRestaurantReviews: async (id, page = 1, limit = 5) => {
+    const response = await api.get(`/reviews/${id}/all`, {
+      params: { page, limit }
+    });
+    return response.data;
+  },
 };
 
 export default userService;

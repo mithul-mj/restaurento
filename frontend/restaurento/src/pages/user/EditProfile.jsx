@@ -38,6 +38,20 @@ const EditProfile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showToast("Please upload a valid image file (JPG, PNG, or WEBP).", "error");
+        e.target.value = '';
+        return;
+      }
+
+      // Validate file size (e.g., 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Image size should be less than 5MB.", "error");
+        e.target.value = '';
+        return;
+      }
+
       // Create cropper preview URL
       const url = URL.createObjectURL(file);
       setImageToCrop(url);
@@ -219,7 +233,7 @@ const EditProfile = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-8 py-3 bg-gray-300 hover:bg-[#ff5e00] text-gray-700 hover:text-white font-bold rounded-lg transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+              className="px-8 py-3 bg-[#ff5e00] hover:bg-[#e05200] text-white font-bold rounded-lg transition-colors shadow-lg shadow-orange-100 disabled:opacity-70 disabled:cursor-not-allowed">
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
           </div>

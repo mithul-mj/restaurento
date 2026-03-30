@@ -6,7 +6,7 @@ import AddDishModal from "../../components/modals/AddDishModal";
 
 
 
-import { showConfirm } from "../../utils/alert";
+import { showConfirm, showToast } from "../../utils/alert";
 
 const TABS = ["All", "Breakfast", "Lunch", "Dinner"];
 
@@ -45,7 +45,12 @@ export default function Menu() {
         );
 
         if (result.isConfirmed) {
-            toggleAvailability(item._id);
+            try {
+                await toggleAvailability(item._id);
+                showToast(`${item.name} is now ${item.isAvailable ? "unavailable" : "available"}`, "success");
+            } catch (error) {
+                showToast("Failed to update availability", "error");
+            }
         }
     };
 
@@ -60,7 +65,12 @@ export default function Menu() {
             "Yes, Delete"
         );
         if (result.isConfirmed) {
-            await deleteMenuItem(item._id);
+            try {
+                await deleteMenuItem(item._id);
+                showToast(`${item.name} deleted successfully`, "success");
+            } catch (error) {
+                showToast("Failed to delete item", "error");
+            }
         }
     };
 
@@ -91,15 +101,19 @@ export default function Menu() {
         if (editingItem) {
             try {
                 await updateMenuItem({ itemId: editingItem._id, data: formData });
+                showToast(`${data.name} updated successfully`, "success");
                 handleCloseModal();
             } catch (error) {
+                showToast("Failed to update item", "error");
                 console.error("Failed to update item", error);
             }
         } else {
             try {
                 await addMenuItem(formData);
+                showToast(`${data.name} added successfully`, "success");
                 handleCloseModal();
             } catch (error) {
+                showToast("Failed to add item", "error");
                 console.error("Failed to add item", error);
             }
         }

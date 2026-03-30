@@ -2,6 +2,7 @@ import { loginAdminService } from "../../services/adminAuth.service.js";
 import ROLES from "../../constants/roles.js";
 import { env } from "../../config/env.config.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
+import { sendAuthResponse, clearAuthCookies } from "../../utils/auth.util.js";
 
 
 export const loginAdmin = async (req, res, next) => {
@@ -9,35 +10,9 @@ export const loginAdmin = async (req, res, next) => {
     const { account, accessToken, refreshToken } = await loginAdminService(
       req.body);
 
-    res.cookie("admin_accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie("admin_refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/api/v1/auth/refresh-token",
-    });
-
-    return res.status(STATUS_CODES.OK).json({
-      success: true,
-      message: "Admin logged in successfully",
-      admin: {
-        _id: account._id,
-        fullName: account.fullName,
-        email: account.email,
-        role: ROLES.ADMIN,
-      },
-      tokens: {
+    return sendAuthResponse(res, ROLES.ADMIN, account, "Admin logged in successfully", {
         accessToken,
-        refreshToken,
-      },
+        refreshToken
     });
   } catch (error) {
     next(error);
@@ -46,18 +21,7 @@ export const loginAdmin = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.clearCookie("admin_accessToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      path: "/",
-    });
-    res.clearCookie("admin_refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      path: "/api/v1/auth/refresh-token",
-    });
+    clearAuthCookies(res, "ADMIN");
     return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
   } catch (error) {
     next(error);

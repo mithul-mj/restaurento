@@ -1,5 +1,6 @@
 import { getRealTimeAvailability, getRealTimeAvailabilityMultiple } from "../services/inventory.service.js";
 import redisClient from "../config/redis.js";
+import { INITIAL_HOLD_TIME_SECONDS } from "../constants/constants.js";
 
 export const setupReservation = (io) => {
     io.on("connection", (socket) => {
@@ -17,16 +18,18 @@ export const setupReservation = (io) => {
             }
         });
 
-        socket.on("reserve_seats", async ({ restaurantId, date, slotMinutes, seats, userId }) => {
-            const holdKey = `hold:${userId}:${restaurantId}:${date}:${slotMinutes}:seats:${seats}`;
+        socket.on("reserve_seats", async ({ restaurantId, date, slotMinutes, seats, userId, guests }) => {
+            const dStr = new Date(date);
+            const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+            const holdKey = `hold:${userId}:${restaurantId}:${formattedDate}:${slotMinutes}:seats:${seats}`;
 
             try {
                 // Determine true organic availability from MongoDB & Redis combined
                 const available = await getRealTimeAvailability(restaurantId, date, slotMinutes);
 
                 if (available >= seats) {
-                    // Lock in the temporary hold for 5 minutes specifically for this user
-                    await redisClient.setEx(holdKey, 300, seats.toString());
+                    // Lock in the temporary hold for initial period specifically for this user
+                    await redisClient.setEx(holdKey, INITIAL_HOLD_TIME_SECONDS, seats.toString());
 
                     // Tell all users viewing this date that availability has dynamically changed
                     const newAvailable = available - seats;
@@ -46,7 +49,9 @@ export const setupReservation = (io) => {
         });
 
         socket.on("release_hold", async ({ restaurantId, date, slotMinutes, seats, userId }) => {
-            const holdKey = `hold:${userId}:${restaurantId}:${date}:${slotMinutes}:seats:${seats}`;
+            const dStr = new Date(date);
+            const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+            const holdKey = `hold:${userId}:${restaurantId}:${formattedDate}:${slotMinutes}:seats:${seats}`;
 
             try {
                 // If the user navigates away, clear their temporary hold early

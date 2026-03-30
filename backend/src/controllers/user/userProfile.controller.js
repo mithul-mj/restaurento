@@ -22,7 +22,6 @@ export const getProfile = async (req, res, next) => {
       success: true,
       user: {
         walletBalance: user.walletBalance,
-        address: user.location.address,
         createdAt: user.createdAt,
         isEmailVerified: user.isEmailVerified,
         referralCode: user.referralCode,
@@ -35,7 +34,7 @@ export const getProfile = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { fullName, address } = req.body;
+    const { fullName } = req.body;
     const userId = req.user._id;
 
     const user = await User.findById(userId);
@@ -51,10 +50,6 @@ export const updateProfile = async (req, res, next) => {
     }
 
     if (fullName) user.fullName = fullName;
-    if (address) {
-      user.location = user.location || {};
-      user.location.address = address;
-    }
 
     await user.save();
 
@@ -63,7 +58,6 @@ export const updateProfile = async (req, res, next) => {
       message: "Profile updated successfully",
       user: {
         fullName: user.fullName,
-        address: user.location?.address,
         avatar: user.avatar,
       },
     });

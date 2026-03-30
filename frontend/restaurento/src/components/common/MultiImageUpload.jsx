@@ -3,6 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import { Upload, X } from "lucide-react";
 import ImageCropper from './ImageCropper';
+import { showToast } from '../../utils/alert';
 
 const MultiImageUpload = ({
     name,
@@ -18,17 +19,48 @@ const MultiImageUpload = ({
     const [imageToCrop, setImageToCrop] = useState(null);
     const [pendingFiles, setPendingFiles] = useState([]);
 
-    const onDrop = useCallback(async (acceptedFiles) => {
-        // Calculate how many we can add
-        const remainingSlots = maxFiles - existingFiles.length;
-        if (remainingSlots <= 0) return;
+    const onDrop = useCallback(async (acceptedFiles, fileRejections) => {
+        // Handle Rejections first (LOUDLY)
+        if (fileRejections.length > 0) {
+            const genericRejection = fileRejections[0].errors[0];
+            if (genericRejection.code === 'file-invalid-type') {
+                showToast("Some files were skipped: Only JPG, PNG, WEBP are allowed.", "error");
+            } else if (genericRejection.code === 'file-too-large') {
+                showToast("Some files were skipped: Max size per file is 5MB.", "error");
+            } else {
+                showToast(`${fileRejections.length} file(s) rejected: ${genericRejection.message}`, "error");
+            }
+        }
 
-        // Take only what fits
-        const filesToProcess = acceptedFiles.slice(0, remainingSlots);
+        const remainingSlots = maxFiles - existingFiles.length;
+        if (remainingSlots <= 0) {
+            if (acceptedFiles.length > 0) showToast(`Limit reached. You can only upload ${maxFiles} images.`, "warning");
+            return;
+        }
+
+        // Separate valid images from invalid ones (if any slipped through)
+        const validImages = [];
+        const rejected = [];
+
+        acceptedFiles.forEach(file => {
+            if (!file.type.startsWith('image/')) {
+                rejected.push({ name: file.name, reason: 'Not an image' });
+            } else if (file.size > 5 * 1024 * 1024) {
+                rejected.push({ name: file.name, reason: 'Too large (>5MB)' });
+            } else if (validImages.length < remainingSlots) {
+                validImages.push(file);
+            }
+        });
+
+        if (rejected.length > 0) {
+            showToast(`${rejected.length} additional file(s) missed the size/type check.`, 'error');
+        }
+
+        if (validImages.length === 0) return;
 
         // Standardize file objects (add preview)
         const standardizedFiles = await Promise.all(
-            filesToProcess.map(async (file) => {
+            validImages.map(async (file) => {
                 const dataUrl = await new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onloadend = () => resolve(reader.result);
@@ -38,21 +70,10 @@ const MultiImageUpload = ({
             })
         );
 
-        // Separate images from others
-        const images = standardizedFiles.filter(f =>
-            f.type.startsWith('image/') || (typeof f.preview === 'string' && f.preview.startsWith('data:image'))
-        );
-        const others = standardizedFiles.filter(f => !images.includes(f));
-
-        // Add non-image files immediately
-        if (others.length > 0) {
-            setValue(name, [...existingFiles, ...others], { shouldValidate: true });
-        }
-
         // Begin cropping process for images
-        if (images.length > 0) {
-            setImageToCrop(images[0].preview);
-            setPendingFiles(images.slice(1));
+        if (standardizedFiles.length > 0) {
+            setImageToCrop(standardizedFiles[0].preview);
+            setPendingFiles(standardizedFiles.slice(1));
         }
 
     }, [existingFiles, maxFiles, name, setValue]);

@@ -5,12 +5,16 @@ import { Booking } from "../models/Booking.model.js";
 import mongoose from "mongoose";
 
 const getActiveHoldsForSlot = async (restaurantId, date, slotMinutes, excludeUserId = null) => {
+    // Ensure date is consistent YYYY-MM-DD format using UTC to avoid day-shuffling across timezones
+    const d = new Date(date);
+    const formattedDate = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+
     // Redis key format: hold:userId:restaurantId:date:slotMinutes:seats:seatsCount
-    const pattern = `hold:*:${restaurantId}:${date}:${slotMinutes}:seats:*`;
+    const pattern = `hold:*:${restaurantId}:${formattedDate}:${slotMinutes}:seats:*`;
     let keys = await redisClient.keys(pattern);
     
     if (excludeUserId) {
-        const excludePattern = `hold:${excludeUserId}:${restaurantId}:${date}:${slotMinutes}:seats:`;
+        const excludePattern = `hold:${excludeUserId}:${restaurantId}:${formattedDate}:${slotMinutes}:seats:`;
         keys = keys.filter(key => !key.startsWith(excludePattern));
     }
 
@@ -41,7 +45,7 @@ export const getRealTimeAvailability = async (restaurantId, date, slotMinutes, e
     const bookingMatch = {
         restaurantId: new mongoose.Types.ObjectId(restaurantId),
         bookingDate: { $gte: searchDate, $lt: nextDate },
-        status: { $in: ["approved", "checked-in", "pending-payment"] },
+        status: { $in: ["approved", "checked-in"] },
         slotTime: { $lte: parseInt(slotMinutes) },
         slotEndTime: { $gt: parseInt(slotMinutes) }
     };

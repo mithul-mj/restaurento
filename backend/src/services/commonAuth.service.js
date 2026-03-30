@@ -11,6 +11,8 @@ import { User } from "../models/User.model.js";
 import { Restaurant } from "../models/Restaurant.model.js";
 import { Admin } from "../models/Admin.model.js";
 import STATUS_CODES from "../constants/statusCodes.js";
+import { WalletTransaction } from "../models/WalletTransaction.model.js";
+import { REFERRAL_REWARD_REFERRER, REFERRAL_REWARD_NEW_USER } from "../constants/constants.js";
 
 
 export const checkExistingAccount = async (Model, email) => {
@@ -48,7 +50,7 @@ export const createAccount = async (Model, data) => {
   return newAccount;
 };
 
-export const loginAccount = async (Model, email, password, avatar, role) => {
+export const loginAccount = async (Model, email, password, role) => {
   // Security Layer: Reject inputs that exceed architectural specifications (Max 30)
   if (email?.length > 30 || password?.length > 30) {
     throw new ApiError(STATUS_CODES.BAD_REQUEST, "Invalid input: Credentials exceed character limits");
@@ -140,5 +142,36 @@ export const verifyAndRefreshToken = async (Model, token) => {
     return { account, accessToken, refreshToken: newRefreshToken };
   } catch (error) {
     throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid or expired refresh token");
+  }
+};
+
+
+export const processReferralReward = async (userId, session) => {
+
+  const user = await User.findById(userId).session(session);
+  if (!user || !user.referredBy || user.isReferralRewardClaimed) return;
+
+  const referrer = await User.findById(user.referredBy).session(session);
+  if (referrer) {
+    // 1. Award Referrer
+    referrer.walletBalance += REFERRAL_REWARD_REFERRER;
+    await referrer.save({ session });
+    await WalletTransaction.create([{
+      userId: referrer._id,
+      amount: REFERRAL_REWARD_REFERRER,
+      description: `Referral bonus for first purchase by ${user.fullName}`
+    }], { session });
+
+    // 2. Award Referred User
+    user.walletBalance += REFERRAL_REWARD_NEW_USER;
+    user.isReferralRewardClaimed = true;
+    await user.save({ session });
+    await WalletTransaction.create([{
+      userId: user._id,
+      amount: REFERRAL_REWARD_NEW_USER,
+      description: "Referral welcome bonus (Applied on first purchase)"
+    }], { session });
+
+    console.log(`Referral rewards processed for User: ${user._id} and Referrer: ${referrer._id}`);
   }
 };

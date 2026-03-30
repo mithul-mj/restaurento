@@ -14,6 +14,7 @@ import { showConfirm } from "../../utils/alert";
 import { formatDate, formatTime12Hour } from "../../utils/timeUtils";
 import Loader from "../../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
+import RatingModal from "../../components/user/RatingModal";
 
 const MyBookings = () => {
     const [activeTab, setActiveTab] = useState("upcoming");
@@ -21,6 +22,7 @@ const MyBookings = () => {
     const limit = 2;
 
     const [retryingBookingId, setRetryingBookingId] = useState(null);
+    const [ratingModal, setRatingModal] = useState({ isOpen: false, restaurantId: null, restaurantName: "" });
 
     const { data, isLoading, isError, cancelBooking, isCanceling, checkBookingAvailability, verifyRazorpayPayment } = useBookings({
         type: activeTab,
@@ -159,6 +161,11 @@ const MyBookings = () => {
                                         });
                                     }}
                                     onRetry={() => handleRetryPayment(booking)}
+                                    onRate={() => setRatingModal({ 
+                                        isOpen: true, 
+                                        restaurantId: booking.restaurantId?._id || booking.restaurantId, 
+                                        restaurantName: booking.restaurant?.restaurantName 
+                                    })}
                                     retryingBookingId={retryingBookingId}
                                     isCanceling={isCanceling}
                                     type={activeTab}
@@ -209,12 +216,19 @@ const MyBookings = () => {
                         </div>
                     </div>
                 )}
+                {/* Rating Modal */}
+                <RatingModal 
+                    isOpen={ratingModal.isOpen} 
+                    onClose={() => setRatingModal({ ...ratingModal, isOpen: false })} 
+                    restaurantId={ratingModal.restaurantId}
+                    restaurantName={ratingModal.restaurantName}
+                />
             </main>
         </div>
     );
 };
 
-const BookingCard = ({ booking, onCancel, onRetry, isCanceling, retryingBookingId, type }) => {
+const BookingCard = ({ booking, onCancel, onRetry, onRate, isCanceling, retryingBookingId, type }) => {
     const restaurant = booking.restaurant;
     const isCanceled = booking.status === "canceled";
     const isPending = booking.status === "pending-payment";
@@ -277,6 +291,14 @@ const BookingCard = ({ booking, onCancel, onRetry, isCanceling, retryingBookingI
                     </div>
 
                     <div className="mt-6 flex flex-wrap gap-3 items-center justify-end border-t border-gray-50 pt-5">
+                        {booking.status === 'checked-in' && (
+                            <button
+                                onClick={onRate}
+                                className="px-6 py-2.5 bg-orange-50 text-[#ff5e00] font-black text-xs rounded-xl hover:bg-orange-100 transition-all active:scale-95"
+                            >
+                                Rate Restaurant
+                            </button>
+                        )}
                         {isPending && (
                             <button
                                 onClick={onRetry}

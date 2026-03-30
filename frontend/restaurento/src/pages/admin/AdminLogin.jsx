@@ -24,11 +24,11 @@ const AdminLogin = () => {
     const onSubmit = async (data) => {
         try {
             setServerError("");
-            const response = await authService.adminLogin(data);
+            const response = await authService.login(data, 'ADMIN');
 
 
             dispatch(setCredentials({
-                user: response.data.admin || response.data.user,
+                user: response.data.user,
                 role: 'ADMIN'
             }));
 

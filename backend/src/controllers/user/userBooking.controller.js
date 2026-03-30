@@ -1,30 +1,19 @@
 import mongoose from 'mongoose';
-import { Booking } from '../../models/Booking.model.js'
-import { WalletTransaction } from '../../models/WalletTransaction.model.js'
-import { User } from '../../models/User.model.js'
-import { Restaurant } from '../../models/Restaurant.model.js';
-import { Schedule } from '../../models/Schedule.model.js';
-import { Coupon } from '../../models/Coupon.model.js';
-import { Offer } from '../../models/Offer.model.js';
+import { Booking } from '../../models/Booking.model.js';
+import { WalletTransaction } from '../../models/WalletTransaction.model.js';
+import { User } from '../../models/User.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
-import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import redisClient from '../../config/redis.js';
 import { getRealTimeAvailability } from '../../services/inventory.service.js';
 import ROLES from '../../constants/roles.js';
-import Razorpay from 'razorpay';
-import { env } from '../../config/env.config.js';
-import { sendEmail } from '../../services/commonAuth.service.js';
+import { sendEmail, processReferralReward } from '../../services/commonAuth.service.js';
 import { getBookingConfirmationEmailTemplate } from '../../utils/emailTemplates.js';
 import { sendNotification } from '../../utils/notification.util.js';
 import { format12hr } from '../../utils/timeUtils.js';
+import { PAYMENT_WINDOW_SECONDS, DEFAULT_SLOT_DURATION } from '../../constants/constants.js';
 
-
-
-
-const razorpayInstance = new Razorpay({
-    key_id: env.RAZORPAY_KEY_ID,
-    key_secret: env.RAZORPAY_KEY_SECRET,
-});
+// Service Imports
+import * as bookingService from '../../services/user/userBooking.service.js';
 
 export const BookingRestaurant = async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -34,512 +23,92 @@ export const BookingRestaurant = async (req, res, next) => {
         const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet, appliedCouponId, appliedOfferId } = req.body;
         const userId = req.user._id;
 
-        const requestedDishIds = (preOrderItems || []).map(
-            item => new mongoose.Types.ObjectId(item.dishId)
+        // 1. Basic Validations (existence, schedule, capacity)
+        const { restaurant, activeSchedule } = await bookingService.validateBookingBasics(
+            restaurantId, bookingDate, slotTime, guests, userId
         );
 
-        const [restaurant, activeSchedule] = await Promise.all([
-            Restaurant.findOne({
-                _id: new mongoose.Types.ObjectId(restaurantId)
-            }, {
-                restaurantName: 1,
-                menuItems: {
-                    $filter: {
-                        input: "$menuItems",
-                        as: "item",
-                        cond: { $in: ["$$item._id", requestedDishIds] }
-                    }
-                }
-            }).lean(),
-            Schedule.findOne({
-                restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                validFrom: { $lte: new Date(bookingDate) }
-            }).sort({ validFrom: -1 }).lean()
-        ]);
+        // 2. Pricing & Verification (dishes, coupons, offers)
+        const pricing = await bookingService.calculateBookingFinals(
+            restaurant, preOrderItems, guests, activeSchedule.slotPrice, appliedCouponId, appliedOfferId
+        );
 
-        if (!restaurant || !activeSchedule) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false,
-                message: "Restaurant or Active Schedule not found."
-            });
-        }
-
-        // Validate booking date and time
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-
-        const requestedDate = new Date(bookingDate);
-        const bookingDateMidnight = new Date(requestedDate);
-        bookingDateMidnight.setUTCHours(0, 0, 0, 0);
-
-        if (bookingDateMidnight < today) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "You cannot book for a past date."
-            });
-        }
-
-        if (bookingDateMidnight.getTime() === today.getTime()) {
-            const now = new Date();
-            const currentMinutes = (now.getHours() * 60) + now.getMinutes();
-            if (slotTime <= currentMinutes + BOOKING_BUFFER_MINUTES) {
-                await session.abortTransaction();
-                return res.status(STATUS_CODES.BAD_REQUEST).json({
-                    success: false,
-                    message: `This time slot has already passed or is too soon. Please select a slot at least ${BOOKING_BUFFER_MINUTES / 60} hour from now.`
-                });
-            }
-        }
-
-        const dayOfWeek = requestedDate.getDay();
-        const dayIndex = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
-        const dayConfig = activeSchedule.openingHours?.days?.[dayIndex];
-
-        if (!dayConfig || dayConfig.isClosed) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "The restaurant is closed on this day."
-            });
-        }
-
-        const isValidSlot = dayConfig.generatedSlots?.some(slot => slot.startTime === parseInt(slotTime));
-        if (!isValidSlot) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "The selected time slot is invalid."
-            });
-        }
-
+        const duration = activeSchedule.slotConfig?.duration || DEFAULT_SLOT_DURATION;
+        const slotEndTime = parseInt(slotTime) + duration;
         const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
 
-        // Check availability but ignore the user's current hold
-        const trueAvailability = await getRealTimeAvailability(restaurantId, bookingDate, slotTime, userId);
-
-        if (trueAvailability < guests) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "Enough seats are no longer available for this slot."
-            });
-        }
-
-        const pricePerPerson = activeSchedule.slotPrice || 0;
-        const bookingFee = pricePerPerson * guests;
-
-        let itemTotal = 0;
-        const verifiedPreOrderItems = [];
-
-        if (preOrderItems && preOrderItems.length > 0) {
-            for (const item of preOrderItems) {
-                const dbDish = restaurant.menuItems.find(
-                    (menuItem) => menuItem._id.toString() === item.dishId
-                )
-                if (dbDish) {
-                    itemTotal += (dbDish.price * item.qty);
-                    verifiedPreOrderItems.push({
-                        dishId: dbDish._id,
-                        name: dbDish.name,
-                        qty: item.qty,
-                        priceAtBooking: dbDish.price
-                    })
-                }
-            }
-        }
-
-        const subtotal = bookingFee + itemTotal;
-        const tax = itemTotal * TAX_RATE;
-        const platformFee = subtotal * PLATFORM_FEE_RATE;
-        
-        // --- COUPON VERIFICATION ---
-        let discountAmount = 0;
-        let couponDetails = null;
-
-        if (appliedCouponId) {
-            const coupon = await Coupon.findById(appliedCouponId).lean();
-            if (coupon && coupon.isActive) {
-                // Verify expiry
-                const now = new Date();
-                if (!coupon.expiryDate || new Date(coupon.expiryDate) > now) {
-                    // Check usage limit
-                    let isLimitReached = false;
-                    if (coupon.usageLimit) {
-                        const usageCount = await Booking.countDocuments({
-                            "appliedCoupon.couponId": coupon._id,
-                            status: { $ne: 'canceled' }
-                        });
-                        if (usageCount >= coupon.usageLimit) {
-                            isLimitReached = true;
-                        }
-                    }
-
-                    // Verify minimum order value (against subtotal)
-                    if (!isLimitReached && subtotal >= (coupon.minOrderValue || 0)) {
-                        const rawDiscount = subtotal * (coupon.discountValue / 100);
-                        discountAmount = coupon.maxDiscountCap
-                            ? Math.min(rawDiscount, coupon.maxDiscountCap)
-                            : rawDiscount;
-
-                        couponDetails = {
-                            couponId: coupon._id,
-                            code: coupon.code,
-                            discountValue: coupon.discountValue,
-                            discountAmountApplied: discountAmount
-                        };
-                    }
-                }
-            }
-        }
-        // --- OFFER VERIFICATION ---
-        let offerDiscount = 0;
-        let offerDetails = null;
-
-        if (appliedOfferId) {
-            // Find valid offer for the restaurant
-            const offer = await Offer.findOne({
-                _id: appliedOfferId,
-                restaurantId: new mongoose.Types.ObjectId(restaurantId),
-                isActive: true,
-                validFrom: { $lte: new Date() },
-                $or: [
-                    { validUntil: { $exists: false } },
-                    { validUntil: null },
-                    { validUntil: { $gt: new Date() } }
-                ],
-                minOrderValue: { $lte: subtotal }
-            }).session(session);
-
-            if (!offer) {
-                await session.abortTransaction();
-                return res.status(STATUS_CODES.BAD_REQUEST).json({
-                    success: false,
-                    message: "The selected offer is no longer valid, has expired, or the minimum order value was not met."
-                });
-            }
-
-            offerDiscount = offer.discountValue;
-            offerDetails = {
-                offerId: offer._id,
-                discountValue: offerDiscount
-            };
-        }
-
-        const finalTotal = subtotal + tax + platformFee - discountAmount - offerDiscount;
-
-        const duration = activeSchedule.slotConfig?.duration || 60;
-        const slotEndTime = slotTime + duration;
-
-        // Wallet Logic
+        // 3. Wallet Logic
         let walletAmountUsed = 0;
-
         if (useWallet) {
             const user = await User.findById(userId).session(session);
             if (user && user.walletBalance > 0) {
-                walletAmountUsed = Math.min(user.walletBalance, finalTotal);
-
-                // For full wallet payments, we deduct the balance immediately
-                if (walletAmountUsed === finalTotal) {
+                walletAmountUsed = Math.min(user.walletBalance, pricing.finalTotal);
+                if (walletAmountUsed === pricing.finalTotal) {
                     user.walletBalance -= walletAmountUsed;
                     await user.save({ session });
                 }
             }
         }
 
-        const pendingBookingData = {
-            userId,
-            restaurantId,
-            restaurantName: restaurant.restaurantName,
-            bookingDate,
-            slotTime,
-            slotEndTime,
-            guests,
-            totalAmount: finalTotal,
-            slotPrice: pricePerPerson,
-            tax,
-            platformFee,
-            preOrderItems: verifiedPreOrderItems,
-            appliedCoupon: couponDetails,
-            appliedOffer: offerDetails, // Add this
-            status: 'approved',
-            walletAmountUsed: walletAmountUsed,
-            holdKey: holdKey // Pass this so we can delete it after payment
+        const bookingData = {
+            userId, restaurantId, restaurantName: restaurant.restaurantName,
+            bookingDate, slotTime, slotEndTime, guests,
+            totalAmount: pricing.finalTotal, slotPrice: activeSchedule.slotPrice || 0,
+            tax: pricing.tax, platformFee: pricing.platformFee,
+            preOrderItems: pricing.verifiedPreOrderItems,
+            appliedCoupon: pricing.couponDetails, appliedOffer: pricing.offerDetails,
+            walletAmountUsed
         };
 
-        // --- CASE 1: FULL WALLET PAYMENT (Immediate DB Save) ---
-        if (walletAmountUsed === finalTotal) {
-            const booking = new Booking(pendingBookingData);
-
-            const walletTx = await WalletTransaction.create([{
-                userId,
-                bookingId: booking._id,
-                amount: -walletAmountUsed,
+        // --- CASE 1: FULL WALLET PAYMENT ---
+        if (walletAmountUsed === pricing.finalTotal) {
+            const booking = new Booking({ ...bookingData, status: 'approved' });
+            const [walletTx] = await WalletTransaction.create([{
+                userId, bookingId: booking._id, amount: -walletAmountUsed,
                 description: `Used wallet for booking at ${restaurant.restaurantName}`
             }], { session });
 
-            booking.walletTransactionId = walletTx[0]._id;
-
+            booking.walletTransactionId = walletTx._id;
             await booking.save({ session });
+            
+            // Process Referral Award if this is their first purchase
+            await processReferralReward(userId, session);
+
             await session.commitTransaction();
 
-            // Send notification
-            await sendNotification(req, {
-                recipientId: userId,
-                title: "Booking Confirmed! 🎉",
-                message: `Your reservation at ${restaurant.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}.`
-            });
-
-
-
-
-            // Delete the hold now that booking is confirmed
-
+            // Background Tasks
             await redisClient.del(holdKey);
-            
-            // Emit real-time update to all users
-            const io = req.app.get("io");
-            const newAvailable = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
-            io.to(`res_${restaurantId}_${bookingDate}`).emit("slot_update", {
-                slotMinutes: slotTime,
-                available: newAvailable
-            });
-
-            // Send Confirmation Email for Wallet Payment
-            try {
-                const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: restaurant.restaurantName }, req.user.fullName);
-                const subject = `Booking Confirmed: ${restaurant.restaurantName}`;
-                const text = `Your booking at ${restaurant.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()}.`;
-                await sendEmail(req.user.email, subject, text, html);
-            } catch (emailError) {
-                console.error("Email Error:", emailError);
-            }
+            emitSlotUpdate(req, restaurantId, bookingDate, slotTime);
+            sendBookingNotifications(req, booking, restaurant);
 
             return res.status(201).json({
-                success: true,
-                message: "Booking successful using wallet.",
-                booking,
-                remainingAmount: 0
+                success: true, message: "Booking successful using wallet.",
+                booking, remainingAmount: 0
             });
         }
 
+        // --- CASE 2: ONLINE PAYMENT ---
+        const amountToPay = pricing.finalTotal - walletAmountUsed;
+        const order = await bookingService.createRazorpayOrder(amountToPay);
 
-        const amountToPay = finalTotal - walletAmountUsed;
-        const options = {
-            amount: Math.round(amountToPay * 100),
-            currency: "INR",
-            receipt: `pending_rcpt_${Date.now()}`,
-        };
-
-        const order = await razorpayInstance.orders.create(options);
-
-        // --- CASE 2: ONLINE PAYMENT (Store in Database as Pending) ---
-        // Instead of Redis, we now save the booking to the DB with status 'pending-payment'
         const pendingBooking = new Booking({
-            ...pendingBookingData,
-            status: 'pending-payment',
-            razorpayOrderId: order.id
+            ...bookingData, status: 'pending-payment', razorpayOrderId: order.id
         });
 
         await pendingBooking.save({ session });
         await session.commitTransaction();
-
-        // Delete the temporary Redis hold now that the booking is persisted in MongoDB
-        // MongoDB will now hold the seats via 'pending-payment' status + TTL index
-        await redisClient.del(holdKey);
-
-        // Emit real-time update to all users
-        const io = req.app.get("io");
-        const newAvailable = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
-        io.to(`res_${restaurantId}_${bookingDate}`).emit("slot_update", {
-            slotMinutes: slotTime,
-            available: newAvailable
-        });
+        await redisClient.expire(holdKey, PAYMENT_WINDOW_SECONDS);
 
         res.status(201).json({
-            success: true,
-            message: "Booking initiated successfully.",
-            order,
-            remainingAmount: amountToPay,
-            bookingId: pendingBooking._id
+            success: true, message: "Booking initiated successfully.",
+            order, remainingAmount: amountToPay, bookingId: pendingBooking._id
         });
 
     } catch (error) {
-        if (session.inTransaction()) {
-            await session.abortTransaction();
-        }
-        next(error);
+        if (session.inTransaction()) await session.abortTransaction();
+        res.status(error.status || 500).json({ success: false, message: error.message || "Something went wrong" });
     } finally {
         session.endSession();
-    }
-}
-
-
-export const getMyBookings = async (req, res, next) => {
-    try {
-        const userId = req.user._id;
-        const { type = 'upcoming', page = 1, limit = 3 } = req.query;
-
-        const now = new Date();
-        const today = new Date(now);
-        today.setUTCHours(0, 0, 0, 0);
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-        let matchQuery = { userId: new mongoose.Types.ObjectId(userId) };
-
-        if (type === 'upcoming') {
-            matchQuery.status = 'approved';
-            matchQuery.$or = [
-                { bookingDate: { $gt: today } },
-                {
-                    bookingDate: { $eq: today },
-                    slotEndTime: { $gte: currentMinutes }
-                }
-            ];
-        } else if (type === 'canceled') {
-            matchQuery.status = 'canceled';
-        } else if (type === 'pending') {
-            matchQuery.status = 'pending-payment';
-        } else {
-            // Past
-            matchQuery.$or = [
-                { status: 'checked-in' },
-                {
-                    status: 'approved',
-                    $or: [
-                        { bookingDate: { $lt: today } },
-                        {
-                            bookingDate: { $eq: today },
-                            slotEndTime: { $lt: currentMinutes }
-                        }
-                    ]
-                }
-            ];
-        }
-
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-        const sortOrder = type === 'upcoming' ? 1 : -1;
-
-        const result = await Booking.aggregate([
-            { $match: { ...matchQuery } },
-            { $sort: { bookingDate: sortOrder, slotTime: sortOrder } },
-            {
-                $facet: {
-                    metadata: [{ $count: "total" }],
-                    data: [
-                        { $skip: skip },
-                        { $limit: parseInt(limit) },
-                        {
-                            $lookup: {
-                                from: 'restaurants',
-                                let: { rid: '$restaurantId' },
-                                pipeline: [
-                                    { $match: { $expr: { $eq: ['$_id', '$$rid'] } } },
-                                    {
-                                        $project: {
-                                            restaurantName: 1,
-                                            images: { $slice: ['$images', 1] }
-                                        }
-                                    }
-                                ],
-                                as: 'restaurant'
-                            }
-                        },
-                        { $unwind: '$restaurant' },
-                        {
-                            $project: {
-                                _id: 1,
-                                bookingDate: 1,
-                                slotTime: 1,
-                                guests: 1,
-                                status: 1,
-                                canceledBy: 1,
-                                totalAmount: 1,
-                                razorpayOrderId: 1,
-                                walletAmountUsed: 1,
-                                preOrderItems: 1,
-                                restaurant: 1
-                            }
-                        }
-                    ]
-                }
-            }
-        ]);
-
-        const bookings = result[0].data || [];
-        const totalCount = result[0].metadata[0]?.total || 0;
-
-        res.status(STATUS_CODES.OK).json({
-            success: true,
-            data: bookings,
-            meta: {
-                totalCount,
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(totalCount / parseInt(limit)),
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-export const getBookingDetails = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user._id;
-        const bookings = await Booking.aggregate([
-            {
-                $match: {
-                    _id: new mongoose.Types.ObjectId(id),
-                    userId: new mongoose.Types.ObjectId(userId)
-                }
-            },
-            {
-                $lookup: {
-                    from: "restaurants",
-                    localField: "restaurantId",
-                    foreignField: "_id",
-                    as: "restaurant"
-                }
-            },
-            { $unwind: "$restaurant" },
-            {
-                $addFields: {
-                    restaurant: {
-                        _id: "$restaurant._id",
-                        restaurantName: "$restaurant.restaurantName",
-                        address: "$restaurant.address",
-                        restaurantPhone: "$restaurant.restaurantPhone",
-                        email: "$restaurant.email",
-                        location: "$restaurant.location",
-                        slotPrice: "$restaurant.slotPrice",
-                        images: { $slice: ["$restaurant.images", 1] }
-                    }
-                }
-            },
-            {
-                $project: {
-                    restaurantId: 0,
-                    userId: 0,
-                    __v: 0
-                }
-            }
-        ]);
-
-        if (!bookings.length) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false,
-                message: "Booking not found."
-            });
-        }
-
-        res.status(STATUS_CODES.OK).json({
-            success: true,
-            data: bookings[0]
-        });
-    } catch (error) {
-        next(error);
     }
 };
 
@@ -547,58 +116,61 @@ export const checkBookingAvailability = async (req, res) => {
     try {
         const userId = req.user._id;
         const booking = await Booking.findById(req.params.id);
-
         if (!booking || booking.status !== 'pending-payment') {
             return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Booking session not found or expired." });
         }
 
-        if (booking.appliedCoupon?.couponId) {
-            const coupon = await Coupon.findById(booking.appliedCoupon.couponId);
-            if (!coupon || !coupon.isActive || (coupon.expiryDate && coupon.expiryDate < new Date())) {
-                return res.status(STATUS_CODES.BAD_REQUEST).json({
-                    success: false,
-                    message: "The applied coupon has expired or is no longer valid. Please start a new booking."
-                });
-            }
-        }
-
-        if (booking.appliedOffer?.offerId) {
-            const offer = await Offer.findById(booking.appliedOffer.offerId);
-            if (!offer || !offer.isActive || (offer.validUntil && offer.validUntil < new Date())) {
-                return res.status(STATUS_CODES.BAD_REQUEST).json({
-                    success: false,
-                    message: "The applied restaurant offer is no longer valid. Please start a new booking."
-                });
-            }
-        }
-
-        const available = await getRealTimeAvailability(
-            booking.restaurantId,
-            booking.bookingDate,
-            booking.slotTime,
-            userId
+        // Use core pricing logic to re-verify existence (dishes, coupons, offers)
+        // This is a great reuse of our Service layer!
+        const restaurant = await Restaurant.findById(booking.restaurantId).select('menuItems').lean();
+        await bookingService.calculateBookingFinals(
+            restaurant, booking.preOrderItems, booking.guests, booking.slotPrice, 
+            booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId
         );
 
+        // Re-check seat capacity
+        const available = await getRealTimeAvailability(booking.restaurantId, booking.bookingDate, booking.slotTime, userId);
         if (available < booking.guests) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "This time slot is no longer available. Please discard and try another slot."
-            });
-        }
-
-        if (booking.walletAmountUsed > 0) {
-            const user = await User.findById(userId);
-            if (!user || user.walletBalance < booking.walletAmountUsed) {
-                return res.status(STATUS_CODES.BAD_REQUEST).json({
-                    success: false,
-                    message: "Insufficient wallet balance. Please add funds to utilize your wallet amount for this booking."
-                });
-            }
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "This slot is no longer available." });
         }
 
         res.status(STATUS_CODES.OK).json({ success: true, message: "Available" });
     } catch (error) {
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+        res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+};
+
+export const retryBookingPayment = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const booking = await Booking.findOne({ _id: req.params.bookingId, userId });
+        if (!booking || booking.status === 'approved' || booking.status === 'checked-in') {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid retry request." });
+        }
+
+        // 1. Re-verify everything using the Service
+        const { restaurant } = await bookingService.validateBookingBasics(
+            booking.restaurantId, booking.bookingDate, booking.slotTime, booking.guests, userId
+        );
+        await bookingService.calculateBookingFinals(
+            restaurant, booking.preOrderItems, booking.guests, booking.slotPrice,
+            booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId
+        );
+
+        // 2. Re-establish Redis Hold
+        const dStr = new Date(booking.bookingDate);
+        const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+        const holdKey = `hold:${userId}:${booking.restaurantId}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
+        await redisClient.setEx(holdKey, PAYMENT_WINDOW_SECONDS, booking.guests.toString());
+
+        // 3. New Razorpay Order
+        const order = await bookingService.createRazorpayOrder(booking.totalAmount);
+        booking.razorpayOrderId = order.id;
+        await booking.save();
+
+        res.status(STATUS_CODES.OK).json({ success: true, order, message: "Retry initiated." });
+    } catch (error) {
+        res.status(error.status || 500).json({ success: false, message: error.message });
     }
 };
 
@@ -606,96 +178,72 @@ export const cancelBooking = async (req, res, next) => {
     const session = await mongoose.startSession();
     try {
         session.startTransaction();
-
         const { id } = req.params;
         const userId = req.user._id;
 
-        // Perform lookup inside session for transactional safety
-        const booking = await Booking.findOne({ _id: id, userId })
-            .populate('restaurantId', 'restaurantName')
-            .session(session);
-
-        if (!booking) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false,
-                message: "Booking not found."
-            });
+        const booking = await Booking.findOne({ _id: id, userId }).populate('restaurantId', 'restaurantName').session(session);
+        if (!booking || booking.status === 'canceled' || booking.status === 'checked-in') {
+            throw new Error("Booking not found, already canceled, or you have already checked in.");
         }
 
-        if (booking.status === 'canceled') {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "Booking is already canceled."
-            });
-        }
-
-        // Check if it's already in the past
+        // Validity check (prevent past cancellations)
         const now = new Date();
-        const today = new Date(now);
-        today.setUTCHours(0, 0, 0, 0);
+        const today = new Date(now).setUTCHours(0,0,0,0);
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-        if (booking.bookingDate < today || (booking.bookingDate.getTime() === today.getTime() && booking.slotTime < currentMinutes)) {
-            await session.abortTransaction();
-            return res.status(STATUS_CODES.BAD_REQUEST).json({
-                success: false,
-                message: "Cannot cancel a past booking."
-            });
+        if (booking.bookingDate < today || (booking.bookingDate.getTime() === today && booking.slotTime < currentMinutes)) {
+            throw new Error("Cannot cancel a past booking.");
         }
 
-        // 1. Mark booking as canceled
         const previousStatus = booking.status;
         booking.status = 'canceled';
         booking.canceledBy = ROLES.USER;
         await booking.save({ session });
 
-        // 2. Only refund to wallet if it was previously confirmed (approved/checked-in)
-        // because "pending-payment" means no money was deducted from wallet/online yet.
         if (previousStatus !== 'pending-payment') {
-            await User.findByIdAndUpdate(
-                userId,
-                { $inc: { walletBalance: booking.totalAmount } },
-                { session }
-            );
-
-            // 3. Create wallet transaction log for the refund
+            await User.findByIdAndUpdate(userId, { $inc: { walletBalance: booking.totalAmount } }, { session });
             await WalletTransaction.create([{
-                userId,
-                bookingId: booking._id,
-                amount: booking.totalAmount, // Positive value represents a credit/refund
+                userId, bookingId: booking._id, amount: booking.totalAmount,
                 description: `Refund for cancelled booking at ${booking.restaurantId.restaurantName}`
             }], { session });
         }
 
-        // Commit all changes
         await session.commitTransaction();
-
-        // Send cancellation notification
+        
+        // Notifications
         await sendNotification(req, {
-            recipientId: userId,
-            title: "Booking Cancelled by You",
-            message: `You cancelled your booking at ${booking.restaurantId.restaurantName} for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}. ₹${booking.totalAmount} refunded to wallet.`
+            recipientId: userId, title: "Booking Cancelled",
+            message: `Reservation at ${booking.restaurantId.restaurantName} cancelled. ₹${booking.totalAmount} refunded to wallet.`,
+            type: "BOOKING",
+            link: `/my-bookings/${booking._id}`
         });
 
-
-
-
-        res.status(STATUS_CODES.OK).json({
-            success: true,
-            message: "Booking canceled successfully and amount refunded to wallet.",
-            booking
-        });
-
-
+        res.status(STATUS_CODES.OK).json({ success: true, message: "Booking canceled successfully.", booking });
     } catch (error) {
-        // Only abort if the transaction hasn't been committed/aborted already
-        if (session.inTransaction()) {
-            await session.abortTransaction();
-        }
+        if (session.inTransaction()) await session.abortTransaction();
         next(error);
     } finally {
         session.endSession();
+    }
+};
+
+// --- Helper Functions (Local) ---
+const emitSlotUpdate = async (req, restaurantId, bookingDate, slotTime) => {
+    const io = req.app.get("io");
+    const newAvailable = await getRealTimeAvailability(restaurantId, bookingDate, slotTime);
+    io.to(`res_${restaurantId}_${bookingDate}`).emit("slot_update", { slotMinutes: slotTime, available: newAvailable });
+};
+
+const sendBookingNotifications = async (req, booking, restaurant) => {
+    try {
+        await sendNotification(req, {
+            recipientId: booking.userId, title: "Booking Confirmed! 🎉",
+            message: `Reservation at ${restaurant.restaurantName} is confirmed.`,
+            type: "BOOKING",
+            link: `/my-bookings/${booking._id}`
+        });
+        const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: restaurant.restaurantName }, req.user.fullName);
+        await sendEmail(req.user.email, `Booking Confirmed: ${restaurant.restaurantName}`, "", html);
+    } catch (err) {
+        console.error("Notification/Email Error:", err);
     }
 };

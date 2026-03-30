@@ -6,10 +6,11 @@ import { Booking } from '../models/Booking.model.js';
 import { WalletTransaction } from '../models/WalletTransaction.model.js';
 import { User } from '../models/User.model.js';
 import STATUS_CODES from '../constants/statusCodes.js';
-import { sendEmail } from '../services/commonAuth.service.js';
+import { sendEmail, processReferralReward } from '../services/commonAuth.service.js';
 import { getBookingConfirmationEmailTemplate } from '../utils/emailTemplates.js';
 import { sendNotification } from '../utils/notification.util.js';
 import { format12hr } from '../utils/timeUtils.js';
+import { Restaurant } from '../models/Restaurant.model.js';
 import { getRealTimeAvailability } from '../services/inventory.service.js';
 
 import redisClient from '../config/redis.js';
@@ -50,16 +51,16 @@ export const verifyRazorpayPayment = async (req, res) => {
                 return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Booking is already processed." });
             }
 
-            // 1. Safety Check: Is the wallet balance still sufficient?
-            // (User might have spent their wallet on another booking while this one was pending)
+            // We need to double-check: does the user still have enough money?
+            // They might have spent their wallet on another booking while this payment was pending.
             if (booking.walletAmountUsed > 0) {
                 const user = await User.findById(booking.userId).session(session);
                 if (!user || user.walletBalance < booking.walletAmountUsed) {
                     // FAIL CASE: Wallet balance is no longer sufficient.
                     // Refund the online payment amount back to the user's wallet.
                     const onlinePaymentAmount = booking.totalAmount - booking.walletAmountUsed;
-                    await User.findByIdAndUpdate(booking.userId, { 
-                        $inc: { walletBalance: onlinePaymentAmount } 
+                    await User.findByIdAndUpdate(booking.userId, {
+                        $inc: { walletBalance: onlinePaymentAmount }
                     }, { session });
 
                     await WalletTransaction.create([{
@@ -79,19 +80,19 @@ export const verifyRazorpayPayment = async (req, res) => {
                         message: `Your reservation at ${booking.restaurantId.restaurantName} could not be confirmed because your wallet balance changed. The ₹${onlinePaymentAmount} you paid online has been added to your wallet.`
                     });
 
-                    return res.status(STATUS_CODES.BAD_REQUEST).json({ 
-                        success: false, 
-                        message: "Insufficient wallet balance. Payment credited to wallet." 
+                    return res.status(STATUS_CODES.BAD_REQUEST).json({
+                        success: false,
+                        message: "Insufficient wallet balance. Payment credited to wallet."
                     });
                 }
             }
 
-            // 2. Safety Check: Are the seats still available? 
-            // (Seat hold might have expired while the user was performing the payment)
+            // Just to be safe: let's make sure someone else didn't snag these seats
+            // while our user was busy entering their card details.
             const availableSeats = await getRealTimeAvailability(
-                booking.restaurantId._id, 
-                booking.bookingDate, 
-                booking.slotTime, 
+                booking.restaurantId._id,
+                booking.bookingDate,
+                booking.slotTime,
                 booking.userId
             );
 
@@ -99,8 +100,8 @@ export const verifyRazorpayPayment = async (req, res) => {
                 // FAIL CASE: Double booking prevented!
                 // Seats were taken while payment was being processed. Refund online payment to wallet.
                 const onlinePaymentAmount = booking.totalAmount - booking.walletAmountUsed;
-                await User.findByIdAndUpdate(booking.userId, { 
-                    $inc: { walletBalance: onlinePaymentAmount } 
+                await User.findByIdAndUpdate(booking.userId, {
+                    $inc: { walletBalance: onlinePaymentAmount }
                 }, { session });
 
                 await WalletTransaction.create([{
@@ -120,13 +121,48 @@ export const verifyRazorpayPayment = async (req, res) => {
                     message: `The table at ${booking.restaurantId.restaurantName} is no longer available. The ₹${onlinePaymentAmount} you paid online has been added to your wallet.`
                 });
 
-                return res.status(STATUS_CODES.BAD_REQUEST).json({ 
-                    success: false, 
-                    message: "Seats are no longer available. Refunded to wallet." 
+                return res.status(STATUS_CODES.BAD_REQUEST).json({
+                    success: false,
+                    message: "Seats are no longer available. Refunded to wallet."
                 });
             }
 
-            // --- SUCCESS PATH ---
+            // One final check: did the restaurant stop serving any of these dishes 
+            // in the last 60 seconds? We shouldn't take money for something they can't cook.
+            if (booking.preOrderItems && booking.preOrderItems.length > 0) {
+                const restaurantForMenu = await Restaurant.findById(booking.restaurantId._id || booking.restaurantId).session(session);
+                if (!restaurantForMenu) throw new Error("Restaurant not found during safety check.");
+                
+                for (const item of booking.preOrderItems) {
+                    const dish = restaurantForMenu.menuItems.id(item.dishId);
+                    if (!dish || dish.isDeleted || !dish.isAvailable) {
+                        // FAIL CASE: Dish removed during payment. Refund online payment to wallet.
+                        const onlinePaymentAmount = booking.totalAmount - booking.walletAmountUsed;
+                        await User.findByIdAndUpdate(booking.userId, { $inc: { walletBalance: onlinePaymentAmount } }, { session });
+                        await WalletTransaction.create([{
+                            userId: booking.userId,
+                            bookingId: booking._id,
+                            amount: onlinePaymentAmount,
+                            description: `Booking failed: "${dish?.name || 'Item'}" is no longer available. System refund.`
+                        }], { session });
+
+                        booking.status = 'canceled';
+                        await booking.save({ session });
+                        await session.commitTransaction();
+
+                        await sendNotification(req, {
+                            recipientId: booking.userId,
+                            title: "Booking Failed ❌",
+                            message: `Item "${dish?.name || 'Unknown Item'}" is no longer available at ${booking.restaurantId.restaurantName}. The ₹${onlinePaymentAmount} you paid online has been added to your wallet.`
+                        });
+
+                        return res.status(STATUS_CODES.BAD_REQUEST).json({
+                            success: false,
+                            message: `Some dishes are no longer available. Refunded to wallet.`,
+                        });
+                    }
+                }
+            }
             booking.status = 'approved';
             booking.razorpayPaymentId = razorpay_payment_id;
 
@@ -151,21 +187,29 @@ export const verifyRazorpayPayment = async (req, res) => {
             }
 
             await booking.save({ session });
+            
+            // Process Referral Award if this is their first purchase
+            await processReferralReward(booking.userId, session);
+
             await session.commitTransaction();
 
-            // Release the seat hold since the booking is now confirmed in the database
-            if (booking.holdKey) {
-                await redisClient.del(booking.holdKey);
-            }
+            // The reservation is official now, so we can finally let go of the temporary seat hold.
+            // We'll clear out the Redis hold we created earlier.
+            const dStr = new Date(booking.bookingDate);
+            const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+            const holdKey = `hold:${booking.userId}:${booking.restaurantId._id || booking.restaurantId}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
+            await redisClient.del(holdKey);
 
-            // Send notification
+            // Time to send the "Booking Confirmed" notification!
             await sendNotification(req, {
                 recipientId: booking.userId,
                 title: "Payment Successful! 💳",
-                message: `Your booking at ${booking.restaurantId.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}.`
+                message: `Your booking at ${booking.restaurantId.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()} at ${format12hr(booking.slotTime)}.`,
+                type: "BOOKING",
+                link: `/my-bookings/${booking._id}`
             });
 
-            // Send Confirmation Email
+            // And for the final touch: let's send them a confirmation email.
             try {
                 const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: booking.restaurantId.restaurantName }, user.fullName);
                 const subject = `Booking Confirmed: ${booking.restaurantId.restaurantName}`;

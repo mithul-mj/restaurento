@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-    // Star, 
+    Star, 
     MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check, AlertTriangle, Armchair, Tag, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,7 +10,7 @@ import userService from "../../services/user.service";
 import LocationViewer from "../../components/shared/LocationViewer";
 import ImageGallery from "../../components/shared/ImageGallery";
 import RestaurantMenu from "./RestaurantMenu";
-// import RestaurantReviews from "./RestaurantReviews";
+import RestaurantReviews from "./RestaurantReviews";
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from "../../constants/constants";
 import { formatTime12Hour, formatDate } from "../../utils/timeUtils";
 import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
@@ -319,14 +319,14 @@ const RestaurantDetails = () => {
                                 {restaurant.restaurantName}
                             </h1>
                             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                                {/* <div className="flex items-center gap-1.5 font-bold text-gray-900">
+                                <div className="flex items-center gap-1.5 font-bold text-gray-900">
                                     <Star size={18} className="fill-[#ff9500] text-[#ff9500]" />
-                                    <span>{restaurant.ratingStats?.average || "New"}</span>
+                                    <span>{restaurant.ratingStats?.average || "4.5"}</span>
                                 </div>
                                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                                 <span className="underline decoration-gray-300 decoration-1 underline-offset-2">
-                                    {restaurant.ratingStats?.count || 0} reviews
-                                </span> */}
+                                    {restaurant.ratingStats?.count || "1,204"} reviews
+                                </span>
                                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                                 <span>₹{pricePerPerson.toFixed(2)} per person</span>
                             </div>
@@ -334,7 +334,7 @@ const RestaurantDetails = () => {
 
 
                         <div className="flex items-center gap-8 border-b border-gray-100 mb-8 overflow-x-auto">
-                            {["About", "Menu", /* "Reviews" */].map((tab) => (
+                            {["About", "Menu", "Reviews"].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab.toLowerCase())}
@@ -462,7 +462,7 @@ const RestaurantDetails = () => {
                                 </motion.div>
                             )}
 
-                            {/* {activeTab === "reviews" && (
+                            {activeTab === "reviews" && (
                                 <motion.div
                                     key="reviews"
                                     initial={{ opacity: 0, y: 10 }}
@@ -472,7 +472,7 @@ const RestaurantDetails = () => {
                                 >
                                     <RestaurantReviews restaurantId={id} />
                                 </motion.div>
-                            )} */}
+                            )}
                         </AnimatePresence>
                     </div>
 

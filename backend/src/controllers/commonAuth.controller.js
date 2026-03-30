@@ -14,6 +14,7 @@ import {
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.config.js";
 import STATUS_CODES from "../constants/statusCodes.js";
+import { sendAuthResponse } from "../utils/auth.util.js";
 
 
 const getModelByRole = (role) => {
@@ -155,47 +156,14 @@ export const refreshAccessToken = async (req, res, next) => {
     const Model = getModelByRole(role);
     if (!Model) throw new ApiError(STATUS_CODES.BAD_REQUEST, "Invalid role");
 
-    const { accessToken, refreshToken } = await verifyAndRefreshToken(
+    const { account, accessToken, refreshToken } = await verifyAndRefreshToken(
       Model,
       incomingRefreshToken
     );
-
-    const cookiePrefix = role === 'ADMIN' ? 'admin_' : role === 'RESTAURANT' ? 'restaurant_' : 'user_';
-
-    res.cookie(`${cookiePrefix}accessToken`, accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie(`${cookiePrefix}refreshToken`, refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/api/v1/auth/refresh-token",
-    });
-
-    const userDetails = await Model.findById(decoded._id);
-
-    return res.status(STATUS_CODES.OK).json({
-      success: true,
-      message: "Access token refreshed",
-      accessToken,
-      refreshToken,
-      user: {
-        _id: userDetails._id,
-        fullName: userDetails.fullName || userDetails.name,
-        email: userDetails.email,
-        avatar: userDetails.avatar,
-        role: role,
-        status: userDetails.status,
-        isOnboardingCompleted: userDetails.isOnboardingCompleted,
-        verificationStatus: userDetails.verificationStatus,
-      },
-      role: role,
+    
+    return sendAuthResponse(res, role, account, "Access token refreshed", {
+        accessToken,
+        refreshToken,
     });
   } catch (error) {
     next(error);

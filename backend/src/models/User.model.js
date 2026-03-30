@@ -26,15 +26,9 @@ const userSchema = new Schema(
       default: 0,
       required: true,
     },
-    location: {
-      coordinates: {
-        type: [Number], // [longitude, latitude]
-        index: "2dsphere",
-      },
-      address: {
-        type: String,
-        default: null,
-      },
+    isReferralRewardClaimed: {
+      type: Boolean,
+      default: false,
     },
     isEmailVerified: {
       type: Boolean,

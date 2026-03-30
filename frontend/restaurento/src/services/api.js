@@ -8,6 +8,13 @@ import STATUS_CODES from "../constants/statusCodes.js";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v1",
   withCredentials: true,
+  headers: {
+    // These headers help bypass automated warning screens from tunneling services (like ngrok, devtunnels, etc)
+    // which otherwise break JSON parsing with an HTML response.
+    "ngrok-skip-browser-warning": "69420",
+    "bypass-tunnel-reminder": "true",
+    "X-DevTunnel-Skip": "true"
+  }
 });
 
 api.interceptors.response.use(

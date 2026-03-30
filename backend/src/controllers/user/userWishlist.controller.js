@@ -28,7 +28,7 @@ export const addToWishlist = async (req, res, next) => {
     }
 
 }
-
+// We'll pull up all the restaurants and dishes this user has saved for later.
 export const getWishlists = async (req, res, next) => {
     try {
         const userId = new mongoose.Types.ObjectId(req.user?._id);
@@ -58,6 +58,8 @@ export const getWishlists = async (req, res, next) => {
                     ratingStats: "$restaurantInfo.ratingStats",
                     mealType: 1,
                     createdAt: 1,
+                    // Now for the most important part: we'll sync each saved dish with 
+                    // the restaurant's live menu to check if anything was sold out or deleted.
 
                     items: {
                         $map: {
@@ -69,10 +71,23 @@ export const getWishlists = async (req, res, next) => {
                                 dishDetails: {
                                     $arrayElemAt: [
                                         {
-                                            $filter: {
-                                                input: "$restaurantInfo.menuItems",
-                                                as: "menuSrc",
-                                                cond: { $eq: ["$$menuSrc._id", "$$item.dishId"] }
+                                            $map: {
+                                                input: {
+                                                    $filter: {
+                                                        input: "$restaurantInfo.menuItems",
+                                                        as: "menuSrc",
+                                                        cond: { $eq: ["$$menuSrc._id", "$$item.dishId"] }
+                                                    }
+                                                },
+                                                as: "filteredDish",
+                                                in: {
+                                                    _id: "$$filteredDish._id",
+                                                    name: "$$filteredDish.name",
+                                                    price: "$$filteredDish.price",
+                                                    image: "$$filteredDish.image",
+                                                    isAvailable: "$$filteredDish.isAvailable",
+                                                    isDeleted: { $ifNull: ["$$filteredDish.isDeleted", false] }
+                                                }
                                             }
                                         },
                                         0

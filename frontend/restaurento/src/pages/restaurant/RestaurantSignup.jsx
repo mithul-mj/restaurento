@@ -36,9 +36,7 @@ const RestaurantSignup = () => {
   const onSubmit = async (data) => {
     try {
       setServerError("");
-      await authService.restaurantRegister({
-        ...data,
-      });
+      await authService.signup(data, "RESTAURANT");
 
       setRegisteredEmail(data.email);
       setShowVerifyModal(true);
@@ -81,7 +79,7 @@ const RestaurantSignup = () => {
       );
       dispatch(
         setCredentials({
-          user: response.data.user || response.data.restaurant,
+          user: response.data.user,
           role: "RESTAURANT",
         }),
       );

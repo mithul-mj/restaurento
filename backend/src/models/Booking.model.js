@@ -124,9 +124,9 @@ bookingSchema.pre('save', function () {
     // Only generate the check-in token if confirmed and not already set
     if (this.status === 'approved' && !this.checkInToken) {
         const payload = {
-            bid: this._id,
-            rid: this.restaurantId,
-            uid: this.userId,
+            bid: this._id.toString(),
+            rid: this.restaurantId.toString(),
+            uid: this.userId.toString(),
             exp: Math.floor(new Date(this.bookingDate).getTime() / 1000) + (this.slotEndTime * 60)
         };
         this.checkInToken = jwt.sign(payload, env.QR_CODE_SECRET);

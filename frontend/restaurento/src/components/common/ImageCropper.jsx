@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../../utils/canvasUtils';
 import { Check, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { showToast } from '../../utils/alert';
 
 const ImageCropper = ({ imageSrc, onCropComplete, onCancel, aspect = 16 / 9 }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -64,6 +65,11 @@ const ImageCropper = ({ imageSrc, onCropComplete, onCancel, aspect = 16 / 9 }) =
                             onCropChange={onCropChange}
                             onZoomChange={onZoomChange}
                             onCropComplete={handleCropComplete}
+                            onMediaError={(err) => {
+                                console.error("Cropper media error", err);
+                                showToast("Could not load image. It might be corrupted or a non-image file.", "error");
+                                onCancel();
+                            }}
                             classes={{
                                 containerClassName: "cropper-container",
                                 mediaClassName: "cropper-media",

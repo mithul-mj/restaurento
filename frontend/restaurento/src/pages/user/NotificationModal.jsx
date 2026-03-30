@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { X, Bell, CheckCircle, Clock } from "lucide-react";
+import React, { useState } from "react";
+import { X, Bell, CheckCircle, Calendar, CreditCard, Tag, Settings } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useNavigate } from "react-router-dom";
 
 dayjs.extend(relativeTime);
 
 const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMarkAllAsRead, unreadCount, hasNextPage, onLoadMore }) => {
     const [activeTab, setActiveTab] = useState("unread");
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const navigate = useNavigate();
 
     if (!isOpen) return null;
 
@@ -21,9 +23,29 @@ const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMar
         setIsLoadingMore(false);
     };
 
+    const getIcon = (type) => {
+        switch (type) {
+            case 'BOOKING': return <Calendar size={18} />;
+            case 'WALLET': return <CreditCard size={18} />;
+            case 'PROMOTION': return <Tag size={18} />;
+            case 'SYSTEM':
+            default: return <Settings size={18} />;
+        }
+    };
+
+    const handleNotificationClick = (notification) => {
+        if (!notification.isRead) {
+            onMarkAsRead(notification._id);
+        }
+        if (notification.link) {
+            navigate(notification.link);
+            onClose();
+        }
+    };
+
 
     return (
-        <div className="absolute top-16 right-0 w-[420px] bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="absolute top-16 right-0 w-[420px] max-sm:fixed max-sm:left-4 max-sm:right-4 max-sm:w-auto bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
             <div className="p-6 flex items-start justify-between border-b border-gray-50">
                 <div className="flex items-center gap-4">
@@ -83,33 +105,27 @@ const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMar
                     filteredNotifications.map((notification) => (
                         <div
                             key={notification._id}
-                            className={`p-4 rounded-2xl border transition-all ${!notification.isRead ? "bg-white border-orange-100 shadow-sm" : "bg-gray-50 border-transparent text-gray-500"
+                            onClick={() => handleNotificationClick(notification)}
+                            className={`p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md flex gap-4 ${!notification.isRead ? "bg-white border-orange-100 shadow-sm" : "bg-gray-50 border-transparent text-gray-500"
                                 }`}
                         >
-
-                            <div className="flex justify-between items-start mb-1">
-                                <h3 className="font-bold text-gray-800 text-sm">{notification.title}</h3>
-                                <div className="flex items-center gap-2">
-                                    {!notification.isRead && <span className="w-2 h-2 bg-[#ff5e00] rounded-full shadow-[0_0_8px_rgba(255,94,0,0.6)]"></span>}
-                                    <span className="text-[11px] text-gray-400 font-medium">
-
-                                        {dayjs(notification.createdAt).fromNow()}
-                                    </span>
-
-                                </div>
+                            <div className={`p-2 h-fit rounded-xl shrink-0 ${!notification.isRead ? "bg-orange-50 text-[#ff5e00]" : "bg-gray-100 text-gray-400"}`}>
+                                {getIcon(notification.type)}
                             </div>
-                            <p className="text-xs leading-relaxed mb-3 text-gray-600">
-                                {notification.message}
-                            </p>
-                            {!notification.isRead && (
-                                <button
-                                    onClick={() => onMarkAsRead(notification._id)}
-                                    className="px-4 py-1.5 bg-[#ff5e00] text-white text-[11px] font-bold rounded-lg hover:bg-[#e05200] transition-all hover:shadow-lg active:scale-95"
-                                >
-                                    Mark as read
-                                </button>
-                            )}
-
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-1 gap-2">
+                                    <h3 className="font-bold text-gray-800 text-sm truncate">{notification.title}</h3>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {!notification.isRead && <span className="w-2 h-2 bg-[#ff5e00] rounded-full shadow-[0_0_8px_rgba(255,94,0,0.6)]"></span>}
+                                        <span className="text-[11px] text-gray-400 font-medium">
+                                            {dayjs(notification.createdAt).fromNow()}
+                                        </span>
+                                    </div>
+                                </div>
+                                <p className="text-xs leading-relaxed text-gray-600">
+                                    {notification.message}
+                                </p>
+                            </div>
                         </div>
                     ))
                 )}

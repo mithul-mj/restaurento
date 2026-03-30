@@ -1,34 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-    Calendar, 
-    ChevronRight, 
-    ArrowRight
+import {
+    Calendar,
+    ChevronRight,
+    ArrowRight,
+    Search,
+    ShoppingBag,
+    Wallet,
+    CheckCircle,
+    Instagram,
+    Twitter,
+    Menu,
+    X,
+    Utensils,
+    Clock,
+    Zap,
+    Star
 } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import userService from '../../services/user.service';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const { user, role } = useSelector(state => state.auth);
-    const containerRef = React.useRef(null);
-    const [topRestaurants, setTopRestaurants] = React.useState([]);
-    
-    // Minimal Parallax
+    const containerRef = useRef(null);
+    const [topRestaurants, setTopRestaurants] = useState([]);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+    // Parallax & Scroll Effects
+    const { scrollY } = useScroll();
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end start"]
     });
-    const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
 
-    React.useEffect(() => {
+    const heroOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
+    const heroTranslateY = useTransform(scrollYProgress, [0, 0.4], [0, -50]);
+    const backgroundScale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+
         if (user) {
             if (role === "USER") navigate('/');
             else if (role === "RESTAURANT") navigate('/restaurant/dashboard');
             else if (role === "ADMIN") navigate('/admin/dashboard');
         }
-        
+
         const fetchTop = async () => {
             try {
                 const res = await userService.getTopRestaurants();
@@ -38,241 +61,436 @@ const LandingPage = () => {
             }
         };
         fetchTop();
+
+        return () => window.removeEventListener('scroll', handleScroll);
     }, [user, role, navigate]);
 
+    const fadeInUp = {
+        initial: { opacity: 0, y: 20 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true },
+        transition: { duration: 0.6 }
+    };
+
+    const stagger = {
+        whileInView: {
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
     return (
-        <div className="bg-[#fafafa] min-h-screen font-inter selection:bg-orange-100 selection:text-[#ff5e00] relative" ref={containerRef}>
-            {/* Minimal Floating Elements - No Navbar */}
-            <div className="absolute top-10 left-10 z-50 flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/landing')}>
-                <div className="w-8 h-8 bg-[#ff5e00] rounded-sm flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-200">R</div>
-                <span className="text-xl font-black text-gray-900 font-outfit tracking-tighter uppercase">RESTAURENTO</span>
-            </div>
-
-            <div className="absolute top-10 right-10 z-50 flex items-center gap-8">
-                <Link to="/login" className="text-[10px] font-black tracking-[0.4em] text-gray-400 hover:text-[#ff5e00] uppercase transition-colors">Login</Link>
-                <Link to="/signup" className="text-[10px] font-black tracking-[0.4em] px-6 py-2 border-b border-[#ff5e00] text-[#ff5e00] hover:text-[#e05200] hover:border-[#e05200] transition-all uppercase">Get Started</Link>
-            </div>
-
-            {/* Premium Minimal Hero */}
-            <main>
-                <section className="min-h-[90vh] flex flex-col md:flex-row items-center px-10 gap-0 border-b border-gray-100">
-                    <div className="flex-1 relative h-[80vh] w-full overflow-hidden bg-gray-50 border-r border-gray-100">
-                        <motion.div style={{ y: backgroundY }} className="h-full w-full">
-                            <motion.img 
-                                initial={{ scale: 1.1, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ duration: 2, ease: "easeOut" }}
-                                src="/restaurant_hero_bg.png" 
-                                className="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-1000"
-                                alt="Luxury Dining"
-                            />
-                        </motion.div>
-                    </div>
-
-                    <div className="flex-1 pl-20 py-20">
-                        <motion.div
-                            initial={{ x: 30, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 1.2, delay: 0.3 }}
-                        >
-                            <span className="text-[10px] font-black tracking-[0.4em] text-gray-300 uppercase mb-8 block">EST. 2026</span>
-                            <h1 className="text-7xl md:text-9xl font-black text-gray-900 font-outfit leading-[0.85] mb-12 tracking-tighter uppercase">
-                                TABLE <br />
-                                READY.
-                            </h1>
-                            <p className="text-gray-400 text-lg font-medium leading-relaxed mb-16 max-w-md">
-                                A curated dining standard for those who value time and taste equally. Minimal wait, maximum flavor.
-                            </p>
-                            
-                            <div className="flex flex-col md:flex-row items-center gap-16">
-                                <button 
-                                    onClick={() => navigate('/')}
-                                    className="group flex items-center gap-6 text-[10px] font-black tracking-[0.4em] text-[#ff5e00] uppercase hover:text-[#e05200] transition-colors"
-                                >
-                                    <span className="h-[1px] w-16 bg-[#ff5e00] group-hover:bg-[#e05200] transition-colors"></span>
-                                    EXPLORE DINING
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                </section>
-
-                {/* Minimal Feature Bar */}
-                <section className="py-24 px-10 flex flex-col md:flex-row gap-0 border-b border-gray-100">
-                    {[
-                        { title: "ADVANCED BOOKING", desc: "RESERVE UP TO 5 DAYS AHEAD" },
-                        { title: "SMART PRE-ORDER", desc: "MENU SELECTED BEFORE ARRIVAL" },
-                        { title: "INTEGRATED WALLET", desc: "INSTANT REWARDS & CASHBACK" }
-                    ].map((feat, i) => (
-                        <div key={i} className={`flex-1 flex flex-col gap-3 py-10 md:py-0 ${i !== 2 ? 'md:border-r border-gray-100' : ''} md:px-10`}>
-                            <span className="text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase">{feat.title}</span>
-                            <span className="text-[9px] font-bold text-gray-400 tracking-[0.2em] uppercase">{feat.desc}</span>
+        <div className="bg-white min-h-screen font-inter selection:bg-orange-100 selection:text-[#ff5e00] overflow-x-hidden" ref={containerRef}>
+            {/* Professional Navigation Bar */}
+            <nav className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-500 px-6 md:px-12 py-5 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <Link to="/landing" className="flex items-center gap-2 group">
+                        <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                            <Utensils size={20} />
                         </div>
-                    ))}
-                </section>
-                {/* Philosophy Section - About Us */}
-                <section className="py-32 px-10 border-b border-gray-100 bg-[#fafafa]">
-                    <div className="flex flex-col md:flex-row items-center gap-24">
-                        <div className="flex-1 space-y-12">
-                            <div className="space-y-4">
-                                <span className="text-[10px] font-black tracking-[0.4em] text-[#ff5e00] uppercase">OUR PHILOSOPHY</span>
-                                <h2 className="text-5xl font-black text-gray-900 font-outfit uppercase tracking-tighter leading-[0.9]">Beyond the reservation.</h2>
-                            </div>
-                            <div className="space-y-8 max-w-lg">
-                                <p className="text-lg font-bold text-gray-900 leading-relaxed">
-                                    RESTAURENTO was born out of a simple belief: dining should be seamless, curated, and intentional. 
-                                </p>
-                                <p className="text-sm font-medium text-gray-500 leading-relaxed">
-                                    We partner with only the finest establishments to ensure that every table we provide is a stage for connection. From our smart pre-ordering system that respects your time, to our integrated wallet that rewards your loyalty, we are redefining the luxury of choice.
-                                </p>
-                                <div className="pt-8 grid grid-cols-2 gap-12">
-                                    <div className="space-y-2">
-                                        <span className="text-2xl font-black text-[#ff5e00]">500+</span>
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Partnered Chefs</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <span className="text-2xl font-black text-[#ff5e00]">20+</span>
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cities Covered</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex-1 w-full bg-gray-50 border border-gray-100 overflow-hidden relative group">
-                            <motion.img 
-                                whileHover={{ scale: 1.05 }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                                src="/about-us-img.png" 
-                                className="w-full h-[600px] object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-1000"
-                                alt="Philosophy"
-                            />
-                            <div className="absolute inset-0 bg-gray-900/5 pointer-events-none" />
-                        </div>
-                    </div>
-                </section>
+                        <span className={`text-xl font-black font-outfit tracking-tighter uppercase transition-colors ${isScrolled ? 'text-gray-900' : 'text-white'}`}>RESTAURENTO</span>
+                    </Link>
 
-                {/* Curated Grid - Even more minimal */}
-                {topRestaurants.length > 0 && (
-                    <section id="trending-section" className="py-24 px-10 bg-white">
-                        <div className="flex justify-between items-end mb-24">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black tracking-[0.4em] text-gray-300 uppercase mb-4 text-center md:text-left">Selected Picks</span>
-                                <h2 className="text-5xl font-black text-gray-900 font-outfit uppercase tracking-tighter text-center md:text-left">Trending Now</h2>
-                            </div>
-                            <button 
-                                onClick={() => navigate('/')}
-                                className="hidden md:block text-[10px] font-black tracking-[0.4em] text-gray-400 hover:text-[#ff5e00] uppercase underline underline-offset-8"
+                    {/* Desktop Links */}
+                    <div className="hidden md:flex items-center gap-10">
+                        {['Features', 'Philosophy', 'Trending', 'Partner'].map((item) => (
+                            <button
+                                key={item}
+                                onClick={() => {
+                                    const element = document.getElementById(item.toLowerCase());
+                                    element?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className={`text-[10px] font-black tracking-[0.3em] uppercase transition-colors ${isScrolled ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}
                             >
-                                View All
+                                {item}
                             </button>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Link to="/login" className={`hidden sm:block text-[10px] font-black tracking-[0.3em] uppercase transition-colors px-6 py-2 ${isScrolled ? 'text-gray-700 hover:text-[#ff5e00]' : 'text-white/80 hover:text-white'}`}>
+                            Login
+                        </Link>
+                        <Link to="/signup" className="flex items-center gap-2 bg-[#ff5e00] text-white px-8 py-3 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase hover:bg-black transition-colors">
+                            Get Started
+                            <ArrowRight size={14} />
+                        </Link>
+                        <button className="md:hidden text-gray-900" onClick={() => setIsMobileNavOpen(true)}>
+                            <Menu size={24} />
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            {/* In-Depth Mobile Nav */}
+            <AnimatePresence>
+                {isMobileNavOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: '100%' }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: '100%' }}
+                        className="fixed inset-0 bg-white z-[2000] p-10 flex flex-col items-center justify-center gap-8"
+                    >
+                        <button className="absolute top-10 right-10 text-gray-900" onClick={() => setIsMobileNavOpen(false)}>
+                            <X size={32} />
+                        </button>
+                        {['Features', 'Philosophy', 'Trending', 'Partner'].map((item) => (
+                            <button
+                                key={item}
+                                onClick={() => {
+                                    setIsMobileNavOpen(false);
+                                    document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className="text-2xl font-black text-gray-900 uppercase tracking-tighter"
+                            >
+                                {item}
+                            </button>
+                        ))}
+                        <Link to="/login" className="text-2xl font-black text-[#ff5e00] uppercase tracking-tighter">Login</Link>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Immersive Hero Section */}
+            <header className="relative h-screen min-h-[800px] flex items-center justify-center overflow-hidden bg-gray-900">
+                <motion.div style={{ scale: backgroundScale }} className="absolute inset-0 z-0">
+                    <img
+                        src="/restaurant_hero_bg.png"
+                        className="w-full h-full object-cover opacity-40 grayscale"
+                        alt="Hero"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-gray-900/80 via-gray-900/40 to-gray-900/90" />
+                </motion.div>
+
+                <motion.div
+                    style={{ opacity: heroOpacity, y: heroTranslateY }}
+                    className="relative z-10 w-full max-w-7xl mx-auto px-6 text-center"
+                >
+
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
+                        className="text-7xl md:text-[160px] font-black text-white leading-[0.85] tracking-tighter uppercase mb-12"
+                    >
+                        TABLE <br className="hidden md:block" /> WITHOUT <br className="hidden md:block" /> THE WAIT.
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1, delay: 0.8 }}
+                        className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-16 font-medium leading-relaxed"
+                    >
+                        Redefining the standard of convenience in fine dining.
+                        A curated ecosystem for those who value every second.
+                    </motion.p>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 1 }}
+                        className="flex flex-col sm:flex-row items-center justify-center gap-8"
+                    >
+                        <button onClick={() => navigate('/')} className="px-12 py-5 bg-[#ff5e00] text-white rounded-xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-gray-900 transition-colors shadow-2xl shadow-orange-500/20">
+                            Explore Collections
+                        </button>
+                        <Link to="/restaurant/signup" className="group flex items-center gap-3 text-[10px] font-black tracking-[0.3em] text-white uppercase hover:text-orange-400 transition-colors">
+                            For Partners
+                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    </motion.div>
+                </motion.div>
+
+                {/* Vertical Text Scroller */}
+                <div className="absolute right-12 bottom-24 hidden lg:flex flex-col items-center gap-12 group">
+                    <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.8em] vertical-text">Scroll to Dive</span>
+                    <div className="w-[1px] h-32 bg-gradient-to-b from-white/20 to-transparent relative">
+                        <motion.div
+                            animate={{ y: [0, 80, 0] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            className="absolute top-0 left-[-1.5px] w-[4px] h-[4px] bg-[#ff5e00] rounded-full shadow-[0_0_8px_#ff5e00]"
+                        />
+                    </div>
+                </div>
+            </header>
+
+            {/* Smart Experience Section */}
+            <section id="features" className="py-40 bg-white relative">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+                        <motion.div
+                            initial="initial"
+                            whileInView="whileInView"
+                            variants={stagger}
+                            className="space-y-16"
+                        >
+                            <div className="space-y-6">
+                                <span className="text-[10px] font-black tracking-[0.5em] text-[#ff5e00] uppercase">The Experience</span>
+                                <h2 className="text-6xl font-black text-gray-900 leading-[0.9] tracking-tighter uppercase font-outfit">Built for the <br /> modern diner.</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-16">
+                                {[
+                                    { icon: <Clock />, title: "Instant Access", desc: "Book curated tables in under 30 seconds." },
+                                    { icon: <Zap />, title: "Smart Pre-Order", desc: "Select your menu before checking in." },
+                                    { icon: <Wallet />, title: "Digital Wallet", desc: "Secure payments with instant cashback." },
+                                    { icon: <CheckCircle />, title: "Quality Check", desc: "Only the highest-rated partners admitted." }
+                                ].map((item, i) => (
+                                    <motion.div key={i} variants={fadeInUp} className="group cursor-default">
+                                        <div className="w-14 h-14 bg-gray-50 flex items-center justify-center text-[#ff5e00] rounded-2xl mb-6 transition-all duration-300 group-hover:bg-[#ff5e00] group-hover:text-white shadow-sm border border-gray-100">
+                                            {React.cloneElement(item.icon, { size: 24 })}
+                                        </div>
+                                        <h3 className="text-xs font-black tracking-[0.2em] uppercase text-gray-900 mb-3">{item.title}</h3>
+                                        <p className="text-sm font-medium text-gray-400 leading-relaxed">{item.desc}</p>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 1 }}
+                            className="relative"
+                        >
+                            <div className="aspect-[4/5] bg-gray-100 rounded-[64px] overflow-hidden shadow-2xl relative z-10">
+                                <img
+                                    src="/about-us-img.png"
+                                    className="w-full h-full object-cover grayscale-[0.2]"
+                                    alt="Feature"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent" />
+                            </div>
+                            {/* Accent Boxes */}
+                            <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-orange-100 rounded-[32px] -z-0 opacity-50" />
+                            <div className="absolute top-20 -right-10 w-64 h-32 bg-[#ff5e00] rounded-[32px] -z-0 opacity-10 blur-3xl" />
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Philosophy Block */}
+            <section id="philosophy" className="py-40 bg-gray-900 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-full h-full opacity-5 pointer-events-none">
+                    <div className="grid grid-cols-6 gap-20">
+                        {Array.from({ length: 36 }).map((_, i) => (
+                            <div key={i} className="w-20 h-20 border border-white/20 rounded-full" />
+                        ))}
+                    </div>
+                </div>
+
+                <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+                    <motion.div {...fadeInUp} className="space-y-12">
+                        <span className="text-[10px] font-black tracking-[0.8em] text-white/40 uppercase">Beyond Reservations</span>
+                        <h2 className="text-5xl md:text-8xl font-black font-outfit uppercase tracking-tighter leading-[0.9]">
+                            We believe in the luxury <br className="hidden md:block" /> of <span className="text-[#ff5e00]">undivided attention.</span>
+                        </h2>
+                        <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
+                            Restaurento was built to dissolve the friction between craving and creation.
+                            We automate the logistics so you can savor the connection.
+                        </p>
+                        <div className="flex justify-center pt-8">
+                            <div className="w-20 h-px bg-[#ff5e00]" />
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* Curated Grid Section */}
+            {topRestaurants.length > 0 && (
+                <section id="trending" className="py-40 bg-white">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12 text-center md:text-left">
+                            <div className="space-y-4 flex-1">
+                                <span className="text-[10px] font-black tracking-[0.5em] text-gray-300 uppercase">Season 2026</span>
+                                <h2 className="text-6xl font-black text-gray-900 font-outfit tracking-tighter uppercase whitespace-nowrap">Selected <br className="hidden md:block" /> Collections.</h2>
+                            </div>
+                            <p className="flex-1 text-gray-400 font-medium max-w-sm mb-2 text-sm leading-relaxed">
+                                Our curators spend thousands of hours selecting the city's finest dining stages. Only the top 5% of establishments make the final cut.
+                            </p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-y-20 gap-x-12">
                             {topRestaurants.map((res, idx) => (
-                                <motion.div 
+                                <motion.div
                                     key={res._id}
-                                    initial={{ opacity: 0, y: 10 }}
+                                    initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: idx * 0.1 }}
                                     onClick={() => navigate(`/restaurants/${res._id}`)}
                                     className="group cursor-pointer"
                                 >
-                                    <div className="relative aspect-[4/5] overflow-hidden mb-8 bg-gray-50 rounded-lg shadow-sm group-hover:shadow-xl transition-all duration-500">
-                                        <img 
-                                            src={res.images?.[0] || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4'} 
-                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                                            alt={res.restaurantName} 
+                                    <div className="relative aspect-[4/5] rounded-[32px] overflow-hidden mb-8 shadow-sm group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-700 bg-gray-50">
+                                        <img
+                                            src={res.images?.[0] || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4'}
+                                            className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
+                                            alt={res.restaurantName}
                                         />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
                                         {res.bestOffer && (
-                                            <div className="absolute top-4 right-4 text-[9px] font-black bg-gray-900 px-3 py-1.5 text-white tracking-widest uppercase rounded-sm">
+                                            <div className="absolute top-6 right-6 bg-[#ff5e00] text-white px-4 py-2 rounded-full text-[9px] font-black tracking-widest uppercase shadow-xl transform transition-transform group-hover:scale-110">
                                                 -{res.bestOffer.discountValue}%
                                             </div>
                                         )}
+
+                                        <div className="absolute bottom-10 left-10 right-10 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                                            <div className="flex items-center gap-2 text-[8px] font-black tracking-widest uppercase mb-2">
+                                                <Utensils size={10} />
+                                                {res.tags?.[0]}
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest block underline underline-offset-4">Book Table</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.1em] mb-2 group-hover:text-[#ff5e00] transition-colors">{res.restaurantName}</h3>
-                                        <div className="flex justify-between items-center opacity-60">
-                                            <span className="text-[9px] font-bold tracking-[0.15em] uppercase">{res.tags?.[0]}</span>
+                                    <div className="px-2">
+                                        <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] mb-2 group-hover:text-[#ff5e00] transition-colors duration-300">{res.restaurantName}</h3>
+                                        <div className="flex items-center gap-2 text-[9px] font-bold text-gray-300 tracking-[0.1em] uppercase">
+                                            <span>{res.address?.city || 'Selected Venue'}</span>
+                                            <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                                            <span>{res.ratingStats?.average || '4.5'}+ / 5</span>
                                         </div>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
-                    </section>
-                )}
-
-                {/* Vertical CTA - Ultimate Minimalism */}
-                <section className="py-32 px-10 text-center border-t border-gray-100">
-                    <motion.div 
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        className="max-w-3xl mx-auto"
-                    >
-                        <span className="text-[10px] font-black tracking-[0.5em] text-gray-300 uppercase mb-8 block">Final Chapter</span>
-                        <h2 className="text-6xl md:text-8xl font-black text-gray-900 font-outfit leading-none mb-16 tracking-tighter uppercase">
-                            EVERY SECOND <br />
-                            COUNTS.
-                        </h2>
-                        <button 
-                            onClick={() => navigate('/')}
-                            className="text-[10px] font-black tracking-[0.5em] text-[#ff5e00] hover:text-gray-900 transition-colors uppercase border-b border-[#ff5e00] pb-4"
-                        >
-                            Explore Restaurants
-                        </button>
-                    </motion.div>
+                    </div>
                 </section>
-            </main>
+            )}
+
+            {/* Professional CTA Section */}
+            <section id="partner" className="py-40 bg-gray-50 border-y border-gray-100">
+                <div className="max-w-7xl mx-auto px-6 block md:flex items-center gap-32">
+                    <motion.div {...fadeInUp} className="flex-1 space-y-12 text-center md:text-left">
+                        <div className="space-y-6">
+                            <span className="text-[10px] font-black tracking-[0.5em] text-[#ff5e00] uppercase">Partner with us</span>
+                            <h2 className="text-6xl font-black text-gray-900 font-outfit uppercase tracking-tighter leading-[0.9]">Transform your <br /> establishment.</h2>
+                        </div>
+                        <p className="text-gray-500 font-medium text-lg leading-relaxed max-w-lg mx-auto md:mx-0">
+                            Join over 500 premium establishments using Restaurento to streamline their bookings and pre-order systems. Increase table turnover and guest satisfaction today.
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center gap-8 justify-center md:justify-start pt-6">
+                            <Link to="/restaurant/signup" className="px-10 py-5 bg-[#ff5e00] text-white rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-gray-900 transition-colors">
+                                Become a Partner
+                            </Link>
+                            <Link to="/restaurant/login" className="text-[10px] font-black tracking-[0.3em] text-gray-400 hover:text-gray-900 uppercase transition-colors">
+                                Dashboard Login
+                            </Link>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="flex-1 mt-20 md:mt-0 hidden md:block"
+                    >
+                        <div className="bg-white p-12 rounded-[48px] border border-gray-100 shadow-sm">
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center text-green-500">
+                                        <CheckCircle size={32} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-gray-900 uppercase tracking-widest">30% Efficiency Gain</h4>
+                                        <p className="text-xs text-gray-400 font-medium">Average increase in table rotation</p>
+                                    </div>
+                                </div>
+                                <div className="h-px bg-gray-100" />
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500">
+                                        <ShoppingBag size={32} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-gray-900 uppercase tracking-widest">Seamless Ordering</h4>
+                                        <p className="text-xs text-gray-400 font-medium">Zero-friction pre-order management</p>
+                                    </div>
+                                </div>
+                                <div className="h-px bg-gray-100" />
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500">
+                                        <Wallet size={32} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-gray-900 uppercase tracking-widest">Direct Payments</h4>
+                                        <p className="text-xs text-gray-400 font-medium">Automated settlement cycles</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
 
             {/* Designer Footer */}
-            <footer className="pt-24 pb-20 px-10 bg-white border-t border-gray-100">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-20 mb-16">
-                    <div className="flex flex-col gap-8">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gray-900 rounded-sm flex items-center justify-center text-white font-black text-lg">R</div>
-                            <span className="text-xl font-black text-gray-900 font-outfit tracking-tighter uppercase">RESTAURENTO</span>
+            <footer className="pt-40 pb-20 px-6 md:px-12 bg-white relative overflow-hidden">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-20 mb-32">
+                        <div className="lg:col-span-2 space-y-12">
+                            <Link to="/landing" className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gray-900 text-white rounded-lg flex items-center justify-center font-black text-xl">R</div>
+                                <span className="text-2xl font-black text-gray-900 font-outfit tracking-tighter uppercase whitespace-nowrap">RESTAURENTO</span>
+                            </Link>
+                            <p className="text-gray-400 font-medium max-w-sm leading-relaxed">
+                                Curating the world's finest dining experiences through seamless technology and intentional design.
+                                Join our network today.
+                            </p>
+                            <div className="flex gap-8">
+                                <a href="#" className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-[#ff5e00] hover:text-white transition-all shadow-sm"><Instagram size={20} /></a>
+                                <a href="#" className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-[#ff5e00] hover:text-white transition-all shadow-sm"><Twitter size={20} /></a>
+                                <a href="#" className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-[#ff5e00] hover:text-white transition-all shadow-sm"><Zap size={20} /></a>
+                            </div>
                         </div>
-                        <p className="text-[10px] font-bold text-gray-400 leading-relaxed tracking-widest uppercase">
-                            Redefining the dining standard. <br />
-                            Experience flavor, skip the wait.
-                        </p>
+
+                        <div className="space-y-10">
+                            <h5 className="text-[10px] font-black text-gray-900 tracking-[0.5em] uppercase">Navigation</h5>
+                            <ul className="space-y-6">
+                                {['All Restaurants', 'Top Trending', 'Featured Chefs', 'Cities'].map(item => (
+                                    <li key={item}><Link to="/" className="text-[11px] font-bold text-gray-400 hover:text-[#ff5e00] tracking-widest uppercase transition-colors">{item}</Link></li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="space-y-10">
+                            <h5 className="text-[10px] font-black text-gray-900 tracking-[0.5em] uppercase">Partners</h5>
+                            <ul className="space-y-6">
+                                {['Business Support', 'Partner Login', 'Enrollment', 'Dashboard'].map(item => (
+                                    <li key={item}><Link to="/restaurant/login" className="text-[11px] font-bold text-gray-400 hover:text-[#ff5e00] tracking-widest uppercase transition-colors">{item}</Link></li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="space-y-10">
+                            <h5 className="text-[10px] font-black text-gray-900 tracking-[0.5em] uppercase">Contact</h5>
+                            <ul className="space-y-6">
+                                <li className="text-[11px] font-bold text-gray-900 tracking-widest uppercase">support@restaurento.com</li>
+                                <li className="text-[11px] font-bold text-gray-400 tracking-widest uppercase">Mumbai, India</li>
+                                <li className="text-[11px] font-bold text-gray-400 tracking-widest uppercase">+91 (22) 4200 6800</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col gap-6">
-                        <span className="text-[11px] font-black text-gray-900 tracking-[0.4em] uppercase mb-2">Explore</span>
-                        <Link to="/" className="text-[10px] font-bold text-gray-400 hover:text-[#ff5e00] tracking-widest uppercase transition-colors">All Restaurants</Link>
-                        <button 
-                            onClick={() => document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="text-[10px] text-left font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors"
-                        >
-                            Top Trending
-                        </button>
-                    </div>
-
-                    <div className="flex flex-col gap-6">
-                        <span className="text-[11px] font-black text-gray-900 tracking-[0.4em] uppercase mb-2">Account</span>
-                        <Link to="/login" className="text-[10px] font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors">User Login</Link>
-                        <Link to="/restaurant/login" className="text-[10px] font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors">Restaurant Login</Link>
-                    </div>
-
-                    <div className="flex flex-col gap-6">
-                        <span className="text-[11px] font-black text-gray-900 tracking-[0.4em] uppercase mb-2">Partners</span>
-                        <Link to="/restaurant/signup" className="text-[10px] font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors">Join as a Restaurant</Link>
-                        <Link to="/restaurant/login" className="text-[10px] font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors">Partner Dashboard</Link>
-                        <a href="mailto:support@restaurento.com" className="text-[10px] font-bold text-gray-400 hover:text-gray-900 tracking-widest uppercase transition-colors">Partner Support</a>
-                    </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row justify-between items-center pt-20 border-t border-gray-50 gap-10">
-                    <div className="flex gap-12 text-[10px] font-black tracking-[0.4em] text-gray-400">
-                        <a href="#" className="hover:text-gray-900 transition-colors uppercase">Instagram</a>
-                        <a href="#" className="hover:text-gray-900 transition-colors uppercase">Twitter</a>
-                        <a href="#" className="hover:text-gray-900 transition-colors uppercase">Behance</a>
-                    </div>
-                    <div className="text-[9px] font-bold text-gray-300 tracking-[0.3em] uppercase">
-                        &copy; 2026 RESTAURENTO. PROUDLY DESIGNED FOR THE MODERN DINER.
+                    <div className="flex flex-col md:flex-row justify-between items-center pt-20 border-t border-gray-100 gap-10">
+                        <div className="text-[9px] font-bold text-gray-300 tracking-[0.4em] uppercase text-center md:text-left">
+                            &copy; 2026 RESTAURENTO. ALL RIGHTS RESERVED. <br className="md:hidden" /> DESIGNED FOR EXCELLENCE.
+                        </div>
+                        <div className="flex gap-12 text-[9px] font-black tracking-[0.4em] text-gray-400 uppercase">
+                            <a href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</a>
+                            <a href="#" className="hover:text-gray-900 transition-colors">Terms of Service</a>
+                        </div>
                     </div>
                 </div>
             </footer>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .vertical-text {
+                    writing-mode: vertical-rl;
+                    text-orientation: mixed;
+                }
+            `}} />
         </div>
     );
 };

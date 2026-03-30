@@ -11,6 +11,7 @@ import { initExpiryListener } from "./services/expiryListener.js";
 import { seedAdmin } from "./utils/seedAdmin.js";
 import { env } from "./config/env.config.js";
 import { setupNotifications } from "./socket/notificationSocket.js";
+import { globalLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 connectDB();
 seedAdmin();
@@ -36,6 +37,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(globalLimiter);
 
 app.use(allRoutes);
 

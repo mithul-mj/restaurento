@@ -54,8 +54,8 @@ const AdminFinance = () => {
         autoTable(doc, {
             startY: 40,
             body: [
-                ["Commission Earnings:", `INR ${stats.commissionEarnings?.toLocaleString() || 0}`],
-                ["Monthly Revenue:", `INR ${stats.monthlyRevenue?.toLocaleString() || 0}`],
+                ["Commission Earnings:", `Rs. ${(stats.commissionEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                ["Monthly Revenue:", `Rs. ${(stats.monthlyRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
                 ["Total Transactions:", stats.totalTransactions?.toString() || "0"]
             ],
             theme: 'plain',
@@ -77,9 +77,9 @@ const AdminFinance = () => {
         const tableRows = transactions.map(tx => [
             dayjs(tx.date).format('DD/MM/YYYY'),
             tx.transactionId?.toUpperCase() || 'N/A',
-            tx.restaurant,
-            `INR ${tx.orderTotal.toLocaleString()}`,
-            `INR ${tx.commissionEarned.toLocaleString()}`,
+            String(tx.restaurant),
+            `${tx.orderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+            `${tx.commissionEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
             tx.paymentStatus.toUpperCase()
         ]);
 

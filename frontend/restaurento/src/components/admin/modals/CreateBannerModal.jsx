@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, CloudUpload } from "lucide-react";
 import ImageCropper from "../../common/ImageCropper";
+import { showToast } from "../../../utils/alert";
 import { bannerSchema } from "../../../schemas/bannerSchema";
 
 const CreateBannerModal = ({ isOpen, onClose, onCreate, isCreating, initialData }) => {
@@ -49,6 +50,20 @@ const CreateBannerModal = ({ isOpen, onClose, onCreate, isCreating, initialData 
 
     const handleFileSelect = (file) => {
         if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showToast("Please upload a valid image file.", "error");
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                return;
+            }
+
+            // Validate size
+            if (file.size > 5 * 1024 * 1024) {
+                showToast("Banner image must be under 5MB.", "error");
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                return;
+            }
+
             setTempImageSrc(URL.createObjectURL(file));
             setCropperOpen(true);
         }

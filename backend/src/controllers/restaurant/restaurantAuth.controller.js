@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {
   registerRestaurantService,
   loginRestaurantService,
@@ -8,6 +9,7 @@ import { Restaurant } from "../../models/Restaurant.model.js";
 import { createAccount } from "../../services/commonAuth.service.js";
 import { env } from "../../config/env.config.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
+import { sendAuthResponse, clearAuthCookies } from "../../utils/auth.util.js";
 
 
 export const registerRestaurant = async (req, res, next) => {
@@ -35,38 +37,9 @@ export const loginRestaurant = async (req, res, next) => {
       req.body
     );
 
-    res.cookie("restaurant_accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie("restaurant_refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/api/v1/auth/refresh-token",
-    });
-
-    return res.status(STATUS_CODES.OK).json({
-      success: true,
-      message: "Restaurant logged in successfully",
-      restaurant: {
-        _id: account._id,
-        fullName: account.fullName,
-        email: account.email,
-        role: ROLES.RESTAURANT,
-        status: account.status,
-        isOnboardingCompleted: account.isOnboardingCompleted,
-        verificationStatus: account.verificationStatus,
-      },
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
+    return sendAuthResponse(res, ROLES.RESTAURANT, account, "Restaurant logged in successfully", {
+      accessToken,
+      refreshToken
     });
   } catch (error) {
     next(error);
@@ -103,7 +76,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
         fullName: name,
         email,
         isEmailVerified: true,
-        password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
+        password: crypto.randomBytes(16).toString("hex"),
         role: ROLES.RESTAURANT,
       });
     }
@@ -111,38 +84,9 @@ export const googleAuthRestaurant = async (req, res, next) => {
     const accessToken = restaurant.generateAccessToken();
     const refreshToken = restaurant.generateRefreshToken();
 
-    res.cookie("restaurant_accessToken", accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      maxAge: env.ACCESS_TOKEN_MAX_AGE,
-      path: "/",
-    });
-
-    res.cookie("restaurant_refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: env.REFRESH_TOKEN_MAX_AGE,
-      path: "/api/v1/auth/refresh-token",
-    });
-
-    return res.status(STATUS_CODES.OK).json({
-      success: true,
-      message: "Restaurant logged in successfully",
-      restaurant: {
-        _id: restaurant._id,
-        fullName: restaurant.fullName,
-        email: restaurant.email,
-        role: ROLES.RESTAURANT,
-        status: restaurant.status,
-        isOnboardingCompleted: restaurant.isOnboardingCompleted,
-        verificationStatus: restaurant.verificationStatus,
-      },
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
+    return sendAuthResponse(res, ROLES.RESTAURANT, restaurant, "Restaurant logged in successfully", {
+      accessToken,
+      refreshToken
     });
   } catch (error) {
     console.error("Google Auth Restaurant Error:", error);
@@ -153,18 +97,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.clearCookie("restaurant_accessToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      path: "/",
-    });
-    res.clearCookie("restaurant_refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax", // Protects against CSRF
-      path: "/api/v1/auth/refresh-token",
-    });
+    clearAuthCookies(res, "RESTAURANT");
     return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
   } catch (error) {
     next(error);

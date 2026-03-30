@@ -33,10 +33,10 @@ const RestaurantLogin = () => {
     const onSubmit = async (data) => {
         try {
             setServerError("");
-            const response = await authService.restaurantLogin(data);
+            const response = await authService.login(data, 'RESTAURANT');
 
             dispatch(setCredentials({
-                user: response.data.restaurant,
+                user: response.data.user,
                 role: 'RESTAURANT'
             }));
 
@@ -50,7 +50,7 @@ const RestaurantLogin = () => {
         try {
             const response = await authService.googleLogin(tokenResponse.access_token, 'RESTAURANT');
             dispatch(setCredentials({
-                user: response.data.user || response.data.restaurant,
+                user: response.data.user,
                 role: 'RESTAURANT'
             }));
         } catch (error) {

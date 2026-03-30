@@ -80,7 +80,7 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
 
     const modalContent = (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-6 border-b flex justify-between items-center bg-white">
                     <h2 className="text-xl font-bold text-gray-900 w-full text-center">
                         {initialData ? 'Edit Dish' : 'Add New Dish to Your Menu'}

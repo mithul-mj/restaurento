@@ -109,7 +109,7 @@ const UserNavbar = () => {
 
     return (
         <nav className="sticky top-0 z-[100] bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between relative">
                 <Link to="/" className="flex items-center gap-2 group">
                     <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center group-hover:bg-[#e05200] transition-colors">
                         <svg
@@ -166,7 +166,7 @@ const UserNavbar = () => {
                             ))}
                         </div>
 
-                        <div className="hidden md:flex items-center gap-4 relative">
+                        <div className="hidden md:flex items-center gap-4">
                             <button
                                 onClick={handleBellClick}
                                 className="relative text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -178,19 +178,6 @@ const UserNavbar = () => {
                                     </span>
                                 )}
                             </button>
-
-                            <NotificationModal
-                                isOpen={isModalOpen}
-                                onClose={() => setIsModalOpen(false)}
-                                notifications={notifications}
-                                unreadCount={unreadCount}
-                                onMarkAsRead={handleMarkAsRead}
-                                onMarkAllAsRead={handleMarkAllAsRead}
-                                hasNextPage={hasNextPage}
-                                onLoadMore={handleLoadMore}
-                            />
-
-
 
                             <Link to="/wishlist" className="text-gray-500 hover:text-[#ff5e00] transition-colors">
                                 <Heart size={20} />
@@ -221,12 +208,39 @@ const UserNavbar = () => {
                     </div>
                 )}
 
-                {/* Mobile Menu Toggle */}
-                <button
-                    className="md:hidden text-gray-500"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                {/* Mobile Icons + Toggle */}
+                <div className="flex items-center gap-2 md:hidden">
+                    {user && (
+                        <button
+                            onClick={handleBellClick}
+                            className="relative text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <Bell size={22} />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    )}
+                    <button
+                        className="text-gray-500 p-1"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                        {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+                    </button>
+                </div>
+
+                {/* Notification Modal placed for both desktop/mobile positioning */}
+                <NotificationModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    notifications={notifications}
+                    unreadCount={unreadCount}
+                    onMarkAsRead={handleMarkAsRead}
+                    onMarkAllAsRead={handleMarkAllAsRead}
+                    hasNextPage={hasNextPage}
+                    onLoadMore={handleLoadMore}
+                />
             </div>
 
             {/* Mobile Menu */}
