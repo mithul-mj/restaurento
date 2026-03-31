@@ -8,7 +8,8 @@ const __dirname = path.dirname(__filename);
 
 let nodeEnv = process.env.nodeEnv;
 if (!nodeEnv) {
-  nodeEnv = "development";
+  // nodeEnv = "development";
+  nodeEnv = "production";
   process.env.NODE_ENV = nodeEnv;
 }
 

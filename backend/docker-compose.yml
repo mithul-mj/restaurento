@@ -1,10 +1,31 @@
 services:
+  # 1. Your Backend (The one you pull from Docker Hub)
   backend:
-    build: .
+    image: mithulmj/restaurento-backend:latest 
     container_name: restaurento-backend
-    ports:
-      - "3000:3000"
+    restart: always
     env_file:
       - .env.production
     environment:
       - nodeEnv=production
+    networks:
+      - app-network
+
+  # 2. Nginx (to handle your domain and SSL)
+  nginx:
+    image: nginx:alpine
+    container_name: restaurento-nginx
+    ports:
+      - "80:80"     # For normal HTTP
+      - "443:443"   # For Secure HTTPS
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro # For SSL Certificates
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -332,10 +332,9 @@ const Home = () => {
                     top: 0,
                     left: 0,
                     width: "100%",
-                    height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}>
-                  <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+                  <div className="max-w-7xl mx-auto px-4 md:px-8 py-2">
                     <div
                       className="grid gap-6 md:gap-8"
                       style={{
@@ -359,10 +358,9 @@ const Home = () => {
                     top: 0,
                     left: 0,
                     width: "100%",
-                    height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}>
-                  <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+                  <div className="max-w-7xl mx-auto px-4 md:px-8 py-2">
                     <div
                       className="grid gap-6 md:gap-8"
                       style={{

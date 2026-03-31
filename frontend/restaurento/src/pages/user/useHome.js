@@ -177,7 +177,7 @@ const useHome = () => {
     const rowVirtualizer = useVirtualizer({
         count: hasNextPage ? rows.length + 1 : rows.length,
         getScrollElement: () => parentRef.current,
-        estimateSize: (index) => (index === 0 ? 650 : 480),
+        estimateSize: (index) => (index === 0 ? 650 : 440),
         overscan: 3,
     });
 
