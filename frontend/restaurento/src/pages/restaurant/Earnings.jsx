@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { showLoading, toast } from '../../utils/alert';
 import {
     Search,
     ChevronLeft,
@@ -26,6 +27,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import { useEarnings } from '../../hooks/useEarnings';
+import restaurantService from '../../services/restaurant.service';
 import useDebounce from '../../hooks/useDebounce';
 import PageLoader from "../../components/PageLoader";
 
@@ -58,94 +60,132 @@ const Earnings = () => {
         setPage(1);
     }, [debouncedSearch, status, date, startDate, endDate]);
 
-    const handleExportPDF = () => {
-        const doc = new jsPDF();
-        doc.setFontSize(22);
-        doc.setTextColor(255, 94, 0);
-        doc.text("Earnings Report - Restaurento", 14, 22);
+    const handleExportPDF = async () => {
+        const toastId = showLoading("Fetching transaction history...");
+        try {
+            // Fetch ALL data for export
+            const res = await restaurantService.getEarnings({
+                status,
+                search: debouncedSearch,
+                date,
+                startDate,
+                endDate,
+                all: 'true'
+            });
 
-        doc.setFontSize(14);
-        doc.setTextColor(40, 40, 40);
-        doc.text("Business Summary", 14, 35);
+            const allTransactions = res.data?.transactions || [];
 
-        autoTable(doc, {
-            startY: 40,
-            body: [
-                ["Total Earnings:", `Rs. ${(earnings.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-                ["Successful Bookings:", earnings.successfulBookings?.toString() || "0"],
-                ["Net Payout:", `Rs. ${(earnings.netPayout || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]
-            ],
-            theme: 'plain',
-            styles: { fontSize: 10, cellPadding: 2, textColor: [60, 60, 60] },
-            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
-        });
+            const doc = new jsPDF();
+            doc.setFontSize(22);
+            doc.setTextColor(255, 94, 0);
+            doc.text("Earnings Report - Restaurento", 14, 22);
 
-        const finalY = doc.lastAutoTable.finalY || 60;
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.text("Business Summary", 14, 35);
 
-        const dateLabel = date === 'thisWeek' ? 'This Week' :
-            date === 'thisMonth' ? 'This Month' :
-                date === 'thisYear' ? 'This Year' :
-                    date === 'custom' ? `Custom (${startDate} to ${endDate})` : 'All Time';
+            autoTable(doc, {
+                startY: 40,
+                body: [
+                    ["Total Earnings:", `Rs. ${(earnings.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                    ["Successful Bookings:", earnings.successfulBookings?.toString() || "0"],
+                    ["Net Payout:", `Rs. ${(earnings.netPayout || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]
+                ],
+                theme: 'plain',
+                styles: { fontSize: 10, cellPadding: 2, textColor: [60, 60, 60] },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
+            });
 
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Generated on: ${dayjs().format('DD MMM YYYY, hh:mm A')}`, 14, finalY + 10);
-        doc.text(`Filter Applied: Status=${status.toUpperCase()}, View=${dateLabel}`, 14, finalY + 15);
+            const finalY = doc.lastAutoTable.finalY || 60;
 
-        const tableColumn = ["Order ID", "Date", "Customer", "Amount", "Fees", "Net", "Status"];
-        const tableRows = transactions.map(tx => [
-            tx.orderId,
-            dayjs(tx.date).format('DD/MM/YYYY'),
-            String(tx.customer),
-            `${tx.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
-            `${tx.fees.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
-            `${tx.netEarning.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
-            tx.status.toUpperCase()
-        ]);
+            const dateLabel = date === 'thisWeek' ? 'This Week' :
+                date === 'thisMonth' ? 'This Month' :
+                    date === 'thisYear' ? 'This Year' :
+                        date === 'custom' ? `Custom (${startDate} to ${endDate})` : 'All Time';
 
-        autoTable(doc, {
-            head: [tableColumn],
-            body: tableRows,
-            startY: finalY + 25,
-            theme: 'grid',
-            headStyles: { fillColor: [255, 94, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
-            styles: { fontSize: 8, cellPadding: 3 },
-            alternateRowStyles: { fillColor: [250, 250, 250] },
-        });
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${dayjs().format('DD MMM YYYY, hh:mm A')}`, 14, finalY + 10);
+            doc.text(`Filter Applied: Status=${status.toUpperCase()}, View=${dateLabel}`, 14, finalY + 15);
 
-        doc.save(`Restaurento_Earnings_${dayjs().format('YYYY-MM-DD')}.pdf`);
+            const tableColumn = ["Order ID", "Date", "Customer", "Amount", "Fees", "Net", "Status"];
+            const tableRows = allTransactions.map(tx => [
+                tx.orderId,
+                dayjs(tx.date).format('DD/MM/YYYY'),
+                String(tx.customer),
+                `${tx.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+                `${tx.fees.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+                `${tx.netEarning.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+                tx.status.toUpperCase()
+            ]);
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: finalY + 25,
+                theme: 'grid',
+                headStyles: { fillColor: [255, 94, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 3 },
+                alternateRowStyles: { fillColor: [250, 250, 250] },
+            });
+
+            doc.save(`Restaurento_Earnings_${dayjs().format('YYYY-MM-DD')}.pdf`);
+            toast.success("PDF Downloaded successfully", { id: toastId });
+        } catch (error) {
+            console.error("Export Failed", error);
+            toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+        }
     };
 
-    const handleExportExcel = () => {
-        const dateLabel = date === 'thisWeek' ? 'This Week' :
-            date === 'thisMonth' ? 'This Month' :
-                date === 'thisYear' ? 'This Year' :
-                    date === 'custom' ? `${startDate} to ${endDate}` : 'All Time';
+    const handleExportExcel = async () => {
+        const toastId = showLoading("Generating spreadsheet...");
+        try {
+            // Fetch ALL data for export
+            const res = await restaurantService.getEarnings({
+                status,
+                search: debouncedSearch,
+                date,
+                startDate,
+                endDate,
+                all: 'true'
+            });
 
-        const summaryData = [
-            { "Metric": "Report Type", "Value": "Earnings Report" },
-            { "Metric": "Timeframe", "Value": dateLabel },
-            { "Metric": "Status Filter", "Value": status.toUpperCase() },
-            { "Metric": "Total Earnings", "Value": earnings.totalEarnings || 0 },
-            { "Metric": "Successful Bookings", "Value": earnings.successfulBookings || 0 },
-            { "Metric": "Net Payout", "Value": earnings.netPayout || 0 },
-            { "Metric": "Generated On", "Value": dayjs().format('DD MMM YYYY, hh:mm A') }
-        ];
+            const allTransactions = res.data?.transactions || [];
 
-        const txData = transactions.map(tx => ({
-            "Order ID": tx.orderId,
-            "Date": dayjs(tx.date).format('DD MMM YYYY'),
-            "Customer": tx.customer,
-            "Amount (INR)": tx.amount,
-            "Fees (INR)": tx.fees,
-            "Net Earning (INR)": tx.netEarning,
-            "Status": tx.status
-        }));
+            const dateLabel = date === 'thisWeek' ? 'This Week' :
+                date === 'thisMonth' ? 'This Month' :
+                    date === 'thisYear' ? 'This Year' :
+                        date === 'custom' ? `${startDate} to ${endDate}` : 'All Time';
 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryData), "Summary");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txData), "Transactions");
-        XLSX.writeFile(wb, `Restaurento_Earnings_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+            const summaryData = [
+                { "Metric": "Report Type", "Value": "Earnings Report" },
+                { "Metric": "Timeframe", "Value": dateLabel },
+                { "Metric": "Status Filter", "Value": status.toUpperCase() },
+                { "Metric": "Total Earnings", "Value": earnings.totalEarnings || 0 },
+                { "Metric": "Successful Bookings", "Value": earnings.successfulBookings || 0 },
+                { "Metric": "Net Payout", "Value": earnings.netPayout || 0 },
+                { "Metric": "Generated On", "Value": dayjs().format('DD MMM YYYY, hh:mm A') }
+            ];
+
+            const txData = allTransactions.map(tx => ({
+                "Order ID": tx.orderId,
+                "Date": dayjs(tx.date).format('DD MMM YYYY'),
+                "Customer": tx.customer,
+                "Amount (INR)": tx.amount,
+                "Fees (INR)": tx.fees,
+                "Net Earning (INR)": tx.netEarning,
+                "Status": tx.status
+            }));
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryData), "Summary");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txData), "Transactions");
+            XLSX.writeFile(wb, `Restaurento_Earnings_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+            toast.success("Excel sheet Downloaded successfully", { id: toastId });
+        } catch (error) {
+            console.error("Export Failed", error);
+            toast.error("Failed to generate Excel. Please try again.", { id: toastId });
+        }
     };
 
     const formatCurrency = (val) => {

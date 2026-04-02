@@ -85,6 +85,7 @@ function WishlistCard({ restaurant, onRemove }) {
                     <Link
                         to={`/restaurants/${restaurant.restaurantId}`}
                         state={{
+                            prefilledMealType: restaurant.mealType,
                             prefilledCart: restaurant.items.reduce((acc, curr) => {
                                 const isAvailable = curr.dishDetails && !curr.dishDetails.isDeleted && curr.dishDetails.isAvailable;
                                 if (isAvailable) {

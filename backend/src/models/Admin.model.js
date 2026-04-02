@@ -8,7 +8,7 @@ const adminSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      maxlength: [30, "Admin email must be under 30 characters"]
+      maxlength: [60, "Admin email must be under 60 characters"]
     },
     password: {
       type: String,

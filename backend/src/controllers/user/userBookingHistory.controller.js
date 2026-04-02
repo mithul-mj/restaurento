@@ -148,6 +148,17 @@ export const getBookingDetails = async (req, res, next) => {
                 }
             },
             {
+                $addFields: {
+                    checkInToken: { 
+                        $cond: { 
+                            if: { $eq: ["$status", "approved"] }, 
+                            then: "$checkInToken", 
+                            else: "$$REMOVE" 
+                        } 
+                    }
+                }
+            },
+            {
                 $project: {
                     restaurantId: 0,
                     userId: 0,

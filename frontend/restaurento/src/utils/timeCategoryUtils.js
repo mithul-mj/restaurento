@@ -1,3 +1,12 @@
+export const getCategoryFromMinutes = (minutes) => {
+    if (minutes === undefined || minutes === null || isNaN(Number(minutes))) return null;
+    const hour = Math.floor(Number(minutes) / 60);
+
+    if (hour < 11) return "Breakfast";
+    if (hour < 16) return "Lunch";
+    return "Dinner";
+};
+
 export const getCategoryFromTimeSlot = (timeSlot) => {
     if (!timeSlot) return null;
     const timeParts = timeSlot.match(/(\d+):(\d+)\s(AM|PM)/);

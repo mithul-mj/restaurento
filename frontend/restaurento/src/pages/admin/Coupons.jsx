@@ -96,7 +96,7 @@ const Coupons = () => {
                             <Ticket size={24} />
                         </div>
                         <div className="bg-green-50 text-green-600 text-xs font-semibold px-2.5 py-1 rounded-full">
-                            +2% this week
+                            Currently Live
                         </div>
                     </div>
                     <div className="mt-auto">
@@ -115,7 +115,7 @@ const Coupons = () => {
                             <Timer size={24} />
                         </div>
                         <div className="bg-red-50 text-red-600 text-xs font-semibold px-2.5 py-1 rounded-full">
-                            5 expiring soon
+                            {stats.expiringThisWeek} expiring soon
                         </div>
                     </div>
                     <div className="mt-auto">

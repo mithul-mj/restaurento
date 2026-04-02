@@ -89,3 +89,13 @@ export const showToast = (message, type = "success") => {
             toast(message);
     }
 };
+
+export const showLoading = (message) => {
+    return toast.loading(message);
+};
+
+export const dismissToast = (toastId) => {
+    toast.dismiss(toastId);
+};
+
+export { toast };

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Booking } from '../../models/Booking.model.js';
+import { Restaurant } from '../../models/Restaurant.model.js';
 import { WalletTransaction } from '../../models/WalletTransaction.model.js';
 import { User } from '../../models/User.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
@@ -30,12 +31,15 @@ export const BookingRestaurant = async (req, res, next) => {
 
         // 2. Pricing & Verification (dishes, coupons, offers)
         const pricing = await bookingService.calculateBookingFinals(
-            restaurant, preOrderItems, guests, activeSchedule.slotPrice, appliedCouponId, appliedOfferId
+            restaurant, preOrderItems, guests, activeSchedule.slotPrice, appliedCouponId, appliedOfferId, slotTime
         );
 
         const duration = activeSchedule.slotConfig?.duration || DEFAULT_SLOT_DURATION;
         const slotEndTime = parseInt(slotTime) + duration;
-        const holdKey = `hold:${userId}:${restaurantId}:${bookingDate}:${slotTime}:seats:${guests}`;
+
+        const dStr = new Date(bookingDate);
+        const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+        const holdKey = `hold:${userId}:${restaurantId.toString()}:${formattedDate}:${slotTime}:seats:${guests}`;
 
         // 3. Wallet Logic
         let walletAmountUsed = 0;
@@ -125,16 +129,20 @@ export const checkBookingAvailability = async (req, res) => {
         const restaurant = await Restaurant.findById(booking.restaurantId).select('menuItems').lean();
         await bookingService.calculateBookingFinals(
             restaurant, booking.preOrderItems, booking.guests, booking.slotPrice, 
-            booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId
+            booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId, booking.slotTime
         );
 
         // Re-check seat capacity
+        const dStr = new Date(booking.bookingDate);
+        const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+        const holdKey = `hold:${userId}:${booking.restaurantId.toString()}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
+
         const available = await getRealTimeAvailability(booking.restaurantId, booking.bookingDate, booking.slotTime, userId);
         if (available < booking.guests) {
             return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "This slot is no longer available." });
         }
 
-        res.status(STATUS_CODES.OK).json({ success: true, message: "Available" });
+        res.status(STATUS_CODES.OK).json({ success: true, message: "Available", holdKey });
     } catch (error) {
         res.status(error.status || 500).json({ success: false, message: error.message });
     }
@@ -154,13 +162,13 @@ export const retryBookingPayment = async (req, res, next) => {
         );
         await bookingService.calculateBookingFinals(
             restaurant, booking.preOrderItems, booking.guests, booking.slotPrice,
-            booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId
+            booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId, booking.slotTime
         );
 
         // 2. Re-establish Redis Hold
         const dStr = new Date(booking.bookingDate);
         const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
-        const holdKey = `hold:${userId}:${booking.restaurantId}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
+        const holdKey = `hold:${userId}:${booking.restaurantId.toString()}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
         await redisClient.setEx(holdKey, PAYMENT_WINDOW_SECONDS, booking.guests.toString());
 
         // 3. New Razorpay Order
@@ -182,8 +190,16 @@ export const cancelBooking = async (req, res, next) => {
         const userId = req.user._id;
 
         const booking = await Booking.findOne({ _id: id, userId }).populate('restaurantId', 'restaurantName').session(session);
-        if (!booking || booking.status === 'canceled' || booking.status === 'checked-in') {
-            throw new Error("Booking not found, already canceled, or you have already checked in.");
+        if (!booking) {
+            throw new Error("Booking not found.");
+        }
+
+        if (booking.status === 'checked-in') {
+            throw new Error("Cannot cancel a booking that is already checked-in.");
+        }
+
+        if (booking.status === 'canceled') {
+            throw new Error("This booking has already been canceled.");
         }
 
         // Validity check (prevent past cancellations)

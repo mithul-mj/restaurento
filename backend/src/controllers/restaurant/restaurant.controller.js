@@ -543,22 +543,10 @@ export const verifyCheckIn = async (req, res, next) => {
             });
         }
 
-        const { bid, rid } = decoded;
-        if (!bid || !rid) {
+        const { bid } = decoded;
+        if (!bid || !mongoose.Types.ObjectId.isValid(bid)) {
             return res.status(STATUS_CODES.BAD_REQUEST).json({
                 message: "Invalid token payload"
-            });
-        }
-
-        // The token might have been generated with an object for rid (e.g. from a populated field) instead of a simple string
-        const tokenRestaurantId = typeof rid === 'object' && rid !== null && rid._id
-            ? rid._id.toString()
-            : rid.toString();
-
-        console.log("Checking Token:", { tokenRid: tokenRestaurantId, userRid: restaurantId.toString() });
-        if (tokenRestaurantId !== restaurantId.toString()) {
-            return res.status(STATUS_CODES.FORBIDDEN).json({
-                message: "Unauthorized: this booking belongs to another restaurant"
             });
         }
 
@@ -569,8 +557,23 @@ export const verifyCheckIn = async (req, res, next) => {
             });
         }
 
+        // Verify the booking belongs to the scanning restaurant
+        if (booking.restaurantId.toString() !== restaurantId.toString()) {
+            return res.status(STATUS_CODES.FORBIDDEN).json({
+                message: "Unauthorized: this booking belongs to another restaurant"
+            });
+        }
+
         if (booking.status === "checked-in") {
             return res.status(STATUS_CODES.CONFLICT).json({ message: "Guest is already checked-in" });
+        }
+
+        if (booking.status === "canceled") {
+            return res.status(STATUS_CODES.FORBIDDEN).json({ message: "This booking has been canceled" });
+        }
+
+        if (booking.status !== "approved") {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message: `Cannot check-in. Booking status is: ${booking.status}` });
         }
 
         /*
@@ -612,9 +615,17 @@ export const verifyCheckIn = async (req, res, next) => {
             message: "Check-in successful!",
             guest: {
                 name: booking.userId?.fullName || "Guest",
+                email: booking.userId?.email || "N/A",
                 guests: booking.guests,
                 totalAmount: booking.totalAmount,
-                preOrders: booking.preOrderItems || []
+                preOrders: booking.preOrderItems || [],
+                bookingDate: booking.bookingDate,
+                slotTime: booking.slotTime,
+                slotPrice: booking.slotPrice || 0,
+                tax: booking.tax || 0,
+                platformFee: booking.platformFee || 0,
+                discountAmount: (booking.appliedCoupon?.discountAmountApplied || 0) + (booking.appliedOffer?.discountValue || 0),
+                couponCode: booking.appliedCoupon?.code || null
             }
         });
     } catch (error) {
@@ -1229,12 +1240,26 @@ export const getRestaurantEarnings = async (req, res, next) => {
             });
         }
 
+        const isExport = req.query.all === 'true';
+
         const transactionsResult = await Booking.aggregate([
             ...transactionAggregate,
             {
                 $facet: {
                     metadata: [{ $count: "total" }],
-                    data: [{ $skip: skip }, { $limit: limit }]
+                    data: isExport 
+                        ? [{ $project: { 
+                            _id: 1, 
+                            userId: 1, 
+                            restaurantId: 1, 
+                            status: 1, 
+                            totalAmount: 1, 
+                            platformFee: 1, 
+                            createdAt: 1, 
+                            "customer.fullName": 1, 
+                            "customer.email": 1 
+                        } }] 
+                        : [{ $skip: skip }, { $limit: limit }]
                 }
             }
         ]);

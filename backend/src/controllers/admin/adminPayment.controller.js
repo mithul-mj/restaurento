@@ -155,13 +155,20 @@ export const getPaymentDashboard = async (req, res, next) => {
             return parseFloat(((curr - prev) / prev * 100).toFixed(1));
         };
 
+        const isExport = req.query.all === 'true';
+
         const [transactions, totalFilteredCount] = await Promise.all([
-            Booking.find(listFilter)
-                .populate("restaurantId", "restaurantName")
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .lean(),
+            isExport 
+                ? Booking.find(listFilter)
+                    .populate("restaurantId", "restaurantName")
+                    .sort({ createdAt: -1 })
+                    .lean()
+                : Booking.find(listFilter)
+                    .populate("restaurantId", "restaurantName")
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
             Booking.countDocuments(listFilter)
         ]);
 

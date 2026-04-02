@@ -17,7 +17,7 @@ import { useBookingDetails, useBookings } from "../../hooks/useBookings";
 import { formatDate, formatTime12Hour } from "../../utils/timeUtils";
 import Loader from "../../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
-import { showConfirm } from "../../utils/alert";
+import { showConfirm, showLoading, toast, showAlert, showToast } from "../../utils/alert";
 import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -103,17 +103,17 @@ const BookingDetails = () => {
                         });
 
                         if (verifyRes.success) {
-                            showConfirm("Payment Success", "Your booking has been confirmed!", "Great").then(() => {
+                            showAlert("Payment Successful!", "Your booking has been confirmed! Enjoy your meal.", "success", "Great!").then(() => {
                                 window.location.reload();
                             });
                         } else {
                             setIsRetrying(false);
-                            showConfirm("Action Required", verifyRes.message || "Please try again.", "OK");
+                            showAlert("Action Required", verifyRes.message || "Something went wrong. Please try again.", "warning", "OK");
                         }
                     } catch (err) {
                         setIsRetrying(false);
                         const errorMessage = err.response?.data?.message || "Verification failed.";
-                        showConfirm("Error", errorMessage, "OK");
+                        showAlert("Verification Error", errorMessage, "error", "OK");
                     }
                 },
                 theme: { color: "#ff5e00" }
@@ -122,14 +122,14 @@ const BookingDetails = () => {
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function () {
                 setIsRetrying(false);
-                showConfirm("Payment Failed", "The retry attempt was unsuccessful.", "OK");
+                showAlert("Payment Failed", "The transaction could not be completed. You can try again from this screen.", "error", "Retry");
             });
             rzp.open();
         } catch (error) {
             console.error("Retry error:", error);
             setIsRetrying(false);
             const msg = error.response?.data?.message || "This slot is no longer available.";
-            showConfirm("Cannot Proceed", msg, "OK");
+            showAlert("Cannot Proceed", msg, "error", "OK");
         }
     };
 
@@ -144,111 +144,126 @@ const BookingDetails = () => {
     const totalPaid = booking.totalAmount;
 
     const handleDownloadInvoice = () => {
-        const doc = new jsPDF();
-        const primaryColor = [255, 94, 0]; // Restaurento Orange
+        const toastId = showLoading("Generating your invoice...");
+        try {
+            const doc = new jsPDF();
+            const primaryColor = [255, 94, 0]; // Restaurento Orange
 
-        // Header Branding
-        doc.setFontSize(22);
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.setFont("helvetica", "bold");
-        doc.text("RESTAURENTO", 20, 20);
+            // Header Branding
+            doc.setFontSize(22);
+            doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.setFont("helvetica", "bold");
+            doc.text("RESTAURENTO", 20, 20);
 
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.setFont("helvetica", "normal");
-        doc.text("Dine-in Reservation Invoice", 20, 26);
-
-        // Restaurant Info
-        doc.setFontSize(14);
-        doc.setTextColor(0);
-        doc.setFont("helvetica", "bold");
-        doc.text(restaurant?.restaurantName || "Restaurant", 20, 40);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(80);
-        doc.text(restaurant?.address || "", 20, 45, { maxWidth: 100 });
-
-        // Invoice Meta
-        doc.setFontSize(10);
-        doc.setTextColor(0);
-        doc.setFont("helvetica", "bold");
-        doc.text("Invoice #:", 140, 20);
-        doc.text("Date:", 140, 26);
-        doc.text("Time:", 140, 32);
-        doc.text("Guests:", 140, 38);
-
-        doc.setFont("helvetica", "normal");
-        doc.text(`BK-${bookingIdShort}`, 165, 20);
-        doc.text(formatDate(booking.bookingDate), 165, 26);
-        doc.text(formatTime12Hour(booking.slotTime), 165, 32);
-        doc.text(`${booking.guests} People`, 165, 38);
-
-        // Tables Section
-        const tableBody = booking.preOrderItems.map(item => [
-            String(item.name).toUpperCase(),
-            `${item.qty} x Rs. ${item.priceAtBooking.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
-            `Rs. ${(item.priceAtBooking * item.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
-        ]);
-
-        const result = autoTable(doc, {
-            startY: 60,
-            head: [['Item Name', 'Price Details', 'Subtotal']],
-            body: tableBody,
-            headStyles: { fillColor: primaryColor, textColor: 255 },
-            alternateRowStyles: { fillColor: [248, 248, 248] },
-            margin: { left: 20, right: 20 },
-            styles: { fontSize: 8, font: "helvetica" }
-        });
-
-        // Summary Calculations - Robust positioning
-        const finalY = (result?.finalY || doc.lastAutoTable?.finalY || 120) + 12;
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(50);
-
-        const summaryData = [
-            [`Booking Fee (${booking.guests} x Rs. ${slotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}):`, `Rs. ${bookingFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-            ["Food & Beverages Subtotal:", `Rs. ${preOrderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-            ["Goods & Service Tax (5%):", `Rs. ${tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-            ["Platform Handling Fee (5%):", `Rs. ${platformFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-        ];
-
-        if (booking.appliedCoupon?.discountAmountApplied) {
-            summaryData.push([`Coupon Discount (${booking.appliedCoupon.code}):`, `- Rs. ${booking.appliedCoupon.discountAmountApplied.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]);
-        }
-        if (booking.appliedOffer?.discountValue) {
-            summaryData.push(["Restaurant Promotional Offer:", `- Rs. ${booking.appliedOffer.discountValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]);
-        }
-
-        let currentY = finalY;
-        summaryData.forEach(row => {
-            doc.text(String(row[0]), 20, currentY);
-            doc.text(String(row[1]), 190, currentY, { align: "right" });
-            currentY += 7;
-        });
-
-        doc.setLineWidth(0.3);
-        doc.setDrawColor(230);
-        doc.line(20, currentY + 1, 190, currentY + 1);
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(0);
-        doc.text("GRAND TOTAL (PAID):", 20, currentY + 10);
-        doc.text(`${totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`, 190, currentY + 10, { align: "right" });
-
-        if (booking.walletAmountUsed > 0) {
-            doc.setFontSize(8);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
             doc.setFont("helvetica", "normal");
-            doc.text(`(${booking.walletAmountUsed.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR paid via wallet)`, 190, currentY + 15, { align: "right" });
+            doc.text("Dine-in Reservation Invoice", 20, 26);
+
+            // Restaurant Info
+            doc.setFontSize(14);
+            doc.setTextColor(0);
+            doc.setFont("helvetica", "bold");
+            doc.text(restaurant?.restaurantName || "Restaurant", 20, 40);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(80);
+            doc.text(restaurant?.address || "", 20, 45, { maxWidth: 100 });
+
+            // Invoice Meta
+            doc.setFontSize(10);
+            doc.setTextColor(0);
+            doc.setFont("helvetica", "bold");
+            doc.text("Invoice #:", 140, 20);
+            doc.text("Date:", 140, 26);
+            doc.text("Time:", 140, 32);
+            doc.text("Guests:", 140, 38);
+            doc.text("Status:", 140, 44);
+
+            doc.setFont("helvetica", "normal");
+            doc.text(`BK-${bookingIdShort}`, 165, 20);
+            doc.text(formatDate(booking.bookingDate), 165, 26);
+            doc.text(formatTime12Hour(booking.slotTime), 165, 32);
+            doc.text(`${booking.guests} People`, 165, 38);
+
+            // Simple Text Status
+            const statusText = (booking.status || "Approved").toUpperCase();
+            const statusColor = booking.status === 'checked-in' ? [16, 185, 129] : [255, 94, 0];
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+            doc.setFont("helvetica", "bold");
+            doc.text(statusText, 165, 44);
+
+            // Tables Section
+            const tableBody = booking.preOrderItems.map(item => [
+                String(item.name).toUpperCase(),
+                `${item.qty} x Rs. ${item.priceAtBooking.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+                `Rs. ${(item.priceAtBooking * item.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+            ]);
+
+            const result = autoTable(doc, {
+                startY: 60,
+                head: [['Item Name', 'Price Details', 'Subtotal']],
+                body: tableBody,
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                alternateRowStyles: { fillColor: [248, 248, 248] },
+                margin: { left: 20, right: 20 },
+                styles: { fontSize: 8, font: "helvetica" }
+            });
+
+            // Summary Calculations - Robust positioning
+            const finalY = (result?.finalY || doc.lastAutoTable?.finalY || 120) + 12;
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(50);
+
+            const summaryData = [
+                [`Booking Fee (${booking.guests} x Rs. ${slotPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}):`, `Rs. ${bookingFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                ["Food & Beverages Subtotal:", `Rs. ${preOrderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                ["Goods & Service Tax (5%):", `Rs. ${tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                ["Platform Handling Fee (5%):", `Rs. ${platformFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+            ];
+
+            if (booking.appliedCoupon?.discountAmountApplied) {
+                summaryData.push([`Coupon Discount (${booking.appliedCoupon.code}):`, `- Rs. ${booking.appliedCoupon.discountAmountApplied.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]);
+            }
+            if (booking.appliedOffer?.discountValue) {
+                summaryData.push(["Restaurant Promotional Offer:", `- Rs. ${booking.appliedOffer.discountValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]);
+            }
+
+            let currentY = finalY;
+            summaryData.forEach(row => {
+                doc.text(String(row[0]), 20, currentY);
+                doc.text(String(row[1]), 190, currentY, { align: "right" });
+                currentY += 7;
+            });
+
+            doc.setLineWidth(0.3);
+            doc.setDrawColor(230);
+            doc.line(20, currentY + 1, 190, currentY + 1);
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.setTextColor(0);
+            doc.text("GRAND TOTAL (PAID):", 20, currentY + 10);
+            doc.text(`${totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`, 190, currentY + 10, { align: "right" });
+
+            if (booking.walletAmountUsed > 0) {
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "normal");
+                doc.text(`(${booking.walletAmountUsed.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR paid via wallet)`, 190, currentY + 15, { align: "right" });
+            }
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Thank you for choosing Restaurento. Please arrive on time.", 105, 280, { align: "center" });
+
+            doc.save(`Restaurento_Invoice_${bookingIdShort}.pdf`);
+            toast.success("Invoice downloaded!", { id: toastId });
+        } catch (error) {
+            console.error("Invoice Error", error);
+            toast.error("Failed to generate invoice.", { id: toastId });
         }
-
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.text("Thank you for choosing Restaurento. Please arrive on time.", 105, 280, { align: "center" });
-
-        doc.save(`Invoice_BK_${bookingIdShort}.pdf`);
     };
 
     return (
@@ -459,7 +474,7 @@ const BookingDetails = () => {
                                             <QRCodeSVG
                                                 value={booking.checkInToken || ""}
                                                 size={200}
-                                                level={"H"}
+                                                level={"L"}
                                                 includeMargin={false}
                                             />
                                         </div>
@@ -528,7 +543,7 @@ const BookingDetails = () => {
                                     Get Directions
                                 </a>
 
-                                {!isCanceled && !isPast && booking.status !== 'pending-payment' && (
+                                {!isCanceled && !isPast && booking.status !== 'pending-payment' && booking.status !== 'checked-in' && (
                                     <button
                                         onClick={handleCancel}
                                         disabled={isCanceling}
@@ -581,17 +596,17 @@ const BookingDetails = () => {
                     </div>
                 </div>
 
-                {/* Sublte Footer ID */}
-                <div className="mt-12 text-center">
-                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em] mb-1">
-                        Booking Reference
-                    </p>
-                    <p className="text-[11px] font-medium text-gray-400">
-                        #BK{bookingIdShort} • Please quote this ID for support inquiries
-                    </p>
-                </div>
-            </main>
-        </div>
+                {/* Sublte Footer ID */ }
+    <div className="mt-12 text-center">
+        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em] mb-1">
+            Booking Reference
+        </p>
+        <p className="text-[11px] font-medium text-gray-400">
+            #BK{bookingIdShort} • Please quote this ID for support inquiries
+        </p>
+    </div>
+            </main >
+        </div >
     );
 };
 

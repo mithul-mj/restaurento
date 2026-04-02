@@ -125,8 +125,6 @@ bookingSchema.pre('save', function () {
     if (this.status === 'approved' && !this.checkInToken) {
         const payload = {
             bid: this._id.toString(),
-            rid: this.restaurantId.toString(),
-            uid: this.userId.toString(),
             exp: Math.floor(new Date(this.bookingDate).getTime() / 1000) + (this.slotEndTime * 60)
         };
         this.checkInToken = jwt.sign(payload, env.QR_CODE_SECRET);

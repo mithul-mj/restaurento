@@ -358,19 +358,7 @@ const RestaurantDetails = () => {
         </div>
 
         <div className="col-span-12 lg:col-span-4 space-y-6">
-          <div className="bg-orange-50 border border-orange-100 p-5 rounded-2xl flex items-start space-x-4">
-            <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
-              <AlertTriangle size={20} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-orange-900">
-                2 Active User Reports
-              </h4>
-              <p className="text-xs text-orange-700 mt-1 leading-relaxed">
-                Pending reports require your immediate attention.
-              </p>
-            </div>
-          </div>
+
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">

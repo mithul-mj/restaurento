@@ -85,6 +85,7 @@ export const getWishlists = async (req, res, next) => {
                                                     name: "$$filteredDish.name",
                                                     price: "$$filteredDish.price",
                                                     image: "$$filteredDish.image",
+                                                    categories: "$$filteredDish.categories",
                                                     isAvailable: "$$filteredDish.isAvailable",
                                                     isDeleted: { $ifNull: ["$$filteredDish.isDeleted", false] }
                                                 }

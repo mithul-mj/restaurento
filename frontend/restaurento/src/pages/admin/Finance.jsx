@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { showLoading, toast } from '../../utils/alert';
 import { Search, Filter, Eye, ArrowUpRight, ArrowDownRight, DollarSign, PieChart, Activity, Calendar, X } from 'lucide-react';
 import { usePayments } from '../../hooks/usePayments';
+import adminService from '../../services/admin.service';
 import useDebounce from '../../hooks/useDebounce';
 import dayjs from 'dayjs';
 import TransactionDetailsModal from '../../components/admin/modals/TransactionDetailsModal';
@@ -38,113 +40,148 @@ const AdminFinance = () => {
     }, [debouncedSearch, date, status, startDate, endDate]);
 
 
-    const handleExportPDF = () => {
-        const doc = new jsPDF();
+    const handleExportPDF = async () => {
+        const toastId = showLoading("Fetching all financial records...");
+        try {
+            const res = await adminService.fetchPayments({
+                search: debouncedSearch,
+                date,
+                status,
+                startDate,
+                endDate,
+                all: 'true'
+            });
 
-        // Add Title
-        doc.setFontSize(22);
-        doc.setTextColor(255, 94, 0); // Primary Brand Color
-        doc.text("Financial Report - Restaurento", 14, 22);
+            const allTransactions = res.data || [];
+            const doc = new jsPDF();
 
-        // Add Executive Summary Section
-        doc.setFontSize(14);
-        doc.setTextColor(40, 40, 40);
-        doc.text("Executive Summary", 14, 35);
+            // Add Title
+            doc.setFontSize(22);
+            doc.setTextColor(255, 94, 0); // Primary Brand Color
+            doc.text("Financial Report - Restaurento", 14, 22);
 
-        autoTable(doc, {
-            startY: 40,
-            body: [
-                ["Commission Earnings:", `Rs. ${(stats.commissionEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-                ["Monthly Revenue:", `Rs. ${(stats.monthlyRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
-                ["Total Transactions:", stats.totalTransactions?.toString() || "0"]
-            ],
-            theme: 'plain',
-            styles: { fontSize: 10, cellPadding: 2, textColor: [60, 60, 60] },
-            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
-        });
+            // Add Executive Summary Section
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.text("Executive Summary", 14, 35);
 
-        const finalY = doc.lastAutoTable.finalY || 60;
+            autoTable(doc, {
+                startY: 40,
+                body: [
+                    ["Commission Earnings:", `Rs. ${(stats.commissionEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                    ["Monthly Revenue:", `Rs. ${(stats.monthlyRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`],
+                    ["Total Transactions:", stats.totalTransactions?.toString() || "0"]
+                ],
+                theme: 'plain',
+                styles: { fontSize: 10, cellPadding: 2, textColor: [60, 60, 60] },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
+            });
 
-        // Add Date & Filter details
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Generated on: ${dayjs().format('DD MMM YYYY, hh:mm A')}`, 14, finalY + 10);
-        doc.text(`Date Filter: ${date.charAt(0).toUpperCase() + date.slice(1)}`, 14, finalY + 15);
-        doc.text(`Status Filter: ${status.charAt(0).toUpperCase() + status.slice(1)}`, 14, finalY + 20);
+            const finalY = doc.lastAutoTable.finalY || 60;
 
-        // Define main table columns
-        const tableColumn = ["Date", "Transaction ID", "Restaurant", "Total Amount", "Commission", "Status"];
-        const tableRows = transactions.map(tx => [
-            dayjs(tx.date).format('DD/MM/YYYY'),
-            tx.transactionId?.toUpperCase() || 'N/A',
-            String(tx.restaurant),
-            `${tx.orderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
-            `${tx.commissionEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
-            tx.paymentStatus.toUpperCase()
-        ]);
+            // Add Date & Filter details
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${dayjs().format('DD MMM YYYY, hh:mm A')}`, 14, finalY + 10);
+            doc.text(`Date Filter: ${date.charAt(0).toUpperCase() + date.slice(1)}`, 14, finalY + 15);
+            doc.text(`Status Filter: ${status.charAt(0).toUpperCase() + status.slice(1)}`, 14, finalY + 20);
 
-        // Generate Transaction Table
-        autoTable(doc, {
-            head: [tableColumn],
-            body: tableRows,
-            startY: finalY + 30,
-            theme: 'grid',
-            headStyles: { fillColor: [255, 94, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
-            styles: { fontSize: 9, cellPadding: 3 },
-            alternateRowStyles: { fillColor: [250, 250, 250] },
-        });
+            // Define main table columns
+            const tableColumn = ["Date", "Transaction ID", "Restaurant", "Total Amount", "Commission", "Status"];
+            const tableRows = allTransactions.map(tx => [
+                dayjs(tx.date).format('DD/MM/YYYY'),
+                tx.transactionId?.toUpperCase() || 'N/A',
+                String(tx.restaurant),
+                `${tx.orderTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+                `${tx.commissionEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR`,
+                tx.paymentStatus.toUpperCase()
+            ]);
 
-        doc.save(`Restaurento_Finance_Report_${dayjs().format('YYYY-MM-DD')}.pdf`);
+            // Generate Transaction Table
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: finalY + 30,
+                theme: 'grid',
+                headStyles: { fillColor: [255, 94, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 3 },
+                alternateRowStyles: { fillColor: [250, 250, 250] },
+            });
+
+            doc.save(`Restaurento_Finance_Report_${dayjs().format('YYYY-MM-DD')}.pdf`);
+            toast.success("PDF Downloaded successfully", { id: toastId });
+        } catch (error) {
+            console.error("Export Failed", error);
+            toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+        }
     };
 
-    const handleExportExcel = () => {
-        // 1. Prepare Financial Summary sheet data
-        const summaryData = [
-            { "Metric": "Commission Earnings", "Value": stats.commissionEarnings || 0, "Unit": "INR" },
-            { "Metric": "Monthly Revenue", "Value": stats.monthlyRevenue || 0, "Unit": "INR" },
-            { "Metric": "Total Transactions", "Value": stats.totalTransactions || 0, "Unit": "Count" },
-            { "Metric": "Report Generated", "Value": dayjs().format('DD MMM YYYY, hh:mm A'), "Unit": "-" },
-            { "Metric": "Date Filter", "Value": date, "Unit": "-" },
-            { "Metric": "Status Filter", "Value": status, "Unit": "-" }
-        ];
+    const handleExportExcel = async () => {
+        const toastId = showLoading("Compiling Excel data...");
+        try {
+            const res = await adminService.fetchPayments({
+                search: debouncedSearch,
+                date,
+                status,
+                startDate,
+                endDate,
+                all: 'true'
+            });
 
-        // 2. Prepare Transaction Details sheet data
-        const txData = transactions.map(tx => ({
-            "Date": dayjs(tx.date).format('DD MMM YYYY, hh:mm A'),
-            "Transaction ID": tx.transactionId?.toUpperCase() || 'N/A',
-            "Restaurant": tx.restaurant,
-            "Order Total (INR)": tx.orderTotal,
-            "Commission Earned (INR)": tx.commissionEarned,
-            "Payment Status": tx.paymentStatus.toUpperCase()
-        }));
+            const allTransactions = res.data || [];
 
-        const wb = XLSX.utils.book_new();
+            // 1. Prepare Financial Summary sheet data
+            const summaryData = [
+                { "Metric": "Commission Earnings", "Value": stats.commissionEarnings || 0, "Unit": "INR" },
+                { "Metric": "Monthly Revenue", "Value": stats.monthlyRevenue || 0, "Unit": "INR" },
+                { "Metric": "Total Transactions", "Value": stats.totalTransactions || 0, "Unit": "Count" },
+                { "Metric": "Report Generated", "Value": dayjs().format('DD MMM YYYY, hh:mm A'), "Unit": "-" },
+                { "Metric": "Date Filter", "Value": date, "Unit": "-" },
+                { "Metric": "Status Filter", "Value": status, "Unit": "-" }
+            ];
 
-        // Add Summary Sheet
-        const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(wb, wsSummary, "Financial Summary");
+            // 2. Prepare Transaction Details sheet data
+            const txData = allTransactions.map(tx => ({
+                "Date": dayjs(tx.date).format('DD MMM YYYY, hh:mm A'),
+                "Transaction ID": tx.transactionId?.toUpperCase() || 'N/A',
+                "Restaurant": tx.restaurant,
+                "Order Total (INR)": tx.orderTotal,
+                "Commission Earned (INR)": tx.commissionEarned,
+                "Payment Status": tx.paymentStatus.toUpperCase()
+            }));
 
-        // Add Transaction Sheet
-        const wsTransactions = XLSX.utils.json_to_sheet(txData);
-        XLSX.utils.book_append_sheet(wb, wsTransactions, "Transaction Details");
+            const wb = XLSX.utils.book_new();
 
-        // Set column widths for better readability
-        wsTransactions['!cols'] = [
-            { wch: 25 }, // Date
-            { wch: 20 }, // Tx ID
-            { wch: 30 }, // Restaurant
-            { wch: 18 }, // Total
-            { wch: 18 }, // Commission
-            { wch: 15 }  // Status
-        ];
+            // Add Summary Sheet
+            const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Financial Summary");
 
-        wsSummary['!cols'] = [
-            { wch: 25 }, // Metric
-            { wch: 25 }, // Value
-            { wch: 10 }  // Unit
-        ];
+            // Add Transaction Sheet
+            const wsTransactions = XLSX.utils.json_to_sheet(txData);
+            XLSX.utils.book_append_sheet(wb, wsTransactions, "Transaction Details");
 
-        XLSX.writeFile(wb, `Restaurento_Finance_Report_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+            // Set column widths for better readability
+            wsTransactions['!cols'] = [
+                { wch: 25 }, // Date
+                { wch: 20 }, // Tx ID
+                { wch: 30 }, // Restaurant
+                { wch: 18 }, // Total
+                { wch: 18 }, // Commission
+                { wch: 15 }  // Status
+            ];
+
+            wsSummary['!cols'] = [
+                { wch: 25 }, // Metric
+                { wch: 25 }, // Value
+                { wch: 10 }  // Unit
+            ];
+
+            XLSX.writeFile(wb, `Restaurento_Finance_Report_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+            toast.success("Excel sheet Downloaded successfully", { id: toastId });
+        } catch (error) {
+            console.error("Export Failed", error);
+            toast.error("Failed to generate Excel. Please try again.", { id: toastId });
+        }
     };
 
 

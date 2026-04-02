@@ -9,6 +9,7 @@ import { WalletTransaction } from '../../models/WalletTransaction.model.js';
 import { getRealTimeAvailability } from '../inventory.service.js';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from '../../constants/constants.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
+import { getCategoryFromMinutes } from '../../utils/timeCategoryUtils.js';
 import Razorpay from 'razorpay';
 import { env } from '../../config/env.config.js';
 
@@ -79,20 +80,34 @@ export const validateBookingBasics = async (restaurantId, bookingDate, slotTime,
 /**
  * Calculates pricing including dishes, coupons, and offers
  */
-export const calculateBookingFinals = async (restaurant, preOrderItems, guests, slotPrice, couponId, offerId) => {
+export const calculateBookingFinals = async (restaurant, preOrderItems, guests, slotPrice, couponId, offerId, slotTime) => {
     let itemTotal = 0;
     const verifiedPreOrderItems = [];
+    const currentCategory = getCategoryFromMinutes(slotTime);
 
-    // 1. Dish Verification
+    // 1. Dish Verification & Category Matching
     if (preOrderItems && preOrderItems.length > 0) {
         for (const item of preOrderItems) {
-            const dbDish = restaurant.menuItems.find(m => m._id.toString() === item.dishId);
-            
+            const dbDish = restaurant.menuItems.find(m => m._id.toString() === item.dishId.toString());
+
             if (!dbDish || dbDish.isDeleted || !dbDish.isAvailable) {
-                throw { 
-                    status: STATUS_CODES.BAD_REQUEST, 
-                    message: `Item "${dbDish?.name || 'Unknown Item'}" is no longer available. Please update your cart.` 
+                throw {
+                    status: STATUS_CODES.BAD_REQUEST,
+                    message: `Item "${dbDish?.name || 'Unknown Item'}" is no longer available. Please update your cart.`
                 };
+            }
+
+            // Category Validation: Ensure item is available for the selected time slot (Case-Insensitive)
+            if (dbDish.categories && dbDish.categories.length > 0) {
+                const itemCategories = dbDish.categories.map(c => c.toLowerCase());
+                const categoryToMatch = currentCategory.toLowerCase();
+
+                if (!itemCategories.includes(categoryToMatch)) {
+                    throw {
+                        status: STATUS_CODES.BAD_REQUEST,
+                        message: `Item "${dbDish.name}" is only available for: ${dbDish.categories.join(', ')}. Your slot is categorized as ${currentCategory}.`
+                    };
+                }
             }
 
             itemTotal += (dbDish.price * item.qty);

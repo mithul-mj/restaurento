@@ -284,7 +284,7 @@ export const getRestaurantDetails = async (req, res, next) => {
     // Get restaurant info, current schedule, and all active offers in parallel
     const [restaurant, ReviewData, activeSchedule, availableOffers] = await Promise.all([
       Restaurant.findOne({ _id: id, status: "active" })
-        .select("-documents -onboardingStep -submissionAttempts -verificationStatus -isOnboardingCompleted -ownerId -menuItems -__v")
+        .select("-documents -onboardingStep -submissionAttempts -verificationStatus -isOnboardingCompleted -ownerId -__v")
         .lean(),
       Review.aggregate([
         { $match: { restaurantId: new mongoose.Types.ObjectId(id) } },

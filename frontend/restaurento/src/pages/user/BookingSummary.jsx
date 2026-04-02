@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate } from '../../utils/timeUtils';
-import { getCategoryFromTimeSlot } from '../../utils/timeCategoryUtils';
-import { showToast, showConfirm } from '../../utils/alert';
+import { getCategoryFromTimeSlot, getCategoryFromMinutes } from '../../utils/timeCategoryUtils';
+import { showToast, showConfirm, showAlert } from '../../utils/alert';
 import userService from '../../services/user.service';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_HOLD_TIME_SECONDS } from '../../constants/constants';
 
@@ -20,6 +20,7 @@ const BookingSummary = () => {
     const navigate = useNavigate();
 
     const initialData = location.state || {};
+    const { restaurant, partySize, date, timeSlot, timeSlotMinutes } = initialData;
     const [cart, setCart] = useState(initialData.cart || {});
     const [isPoliciesOpen, setIsPoliciesOpen] = useState(false);
 
@@ -44,12 +45,32 @@ const BookingSummary = () => {
     const socket = useSocket();
     const user = useSelector((state) => state.auth.user);
 
+    const currentSlotMinutes = Number(initialData.timeSlotMinutes ?? 0);
+    const currentSlotCategory = getCategoryFromMinutes(currentSlotMinutes);
+
+    const cartItems = Object.entries(cart).map(([id, item]) => {
+        const dbDish = initialData.restaurant?.menuItems?.find(m => m._id?.toString() === id?.toString());
+
+        // Case-insensitive category check
+        const itemCategories = (dbDish?.categories || []).map(c => c.toLowerCase());
+        const matchCat = (currentSlotCategory || "").toLowerCase();
+        const isCategoryMismatch = currentSlotCategory && itemCategories.length > 0 && !itemCategories.includes(matchCat);
+
+        return {
+            ...item,
+            _id: id,
+            isUnavailable: !dbDish || dbDish.isDeleted || !dbDish.isAvailable || isCategoryMismatch,
+            isCategoryMismatch,
+            allowedCategories: dbDish?.categories || []
+        };
+    });
+
     const handleBookingRequest = async () => {
         setIsSubmitting(true);
         try {
             const bookingData = {
-                restaurantId: restaurant._id,
-                bookingDate: date,
+                restaurantId: initialData.restaurant._id,
+                bookingDate: initialData.date,
                 slotTime: Number(initialData.timeSlotMinutes ?? 0),
                 guests: Number(partySize),
                 useWallet,
@@ -106,12 +127,12 @@ const BookingSummary = () => {
 
                             if (verifyRes.success) {
                                 setIsBookingConfirmed(true);
-                                showConfirm("Payment Successful!", "Your booking is now confirmed. Enjoy!", "Sweet!").then(() => {
+                                showAlert("Payment Successful!", "Your booking is now confirmed. Enjoy!", "success", "Great!").then(() => {
                                     if (socket && user) {
                                         socket.emit("confirm_booking", {
                                             restaurantId: restaurant._id,
                                             date: date,
-                                            slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                                            slotMinutes: timeSlotMinutes,
                                             seats: partySize,
                                             userId: user._id || user.id,
                                             bookingId: bookingId
@@ -138,8 +159,9 @@ const BookingSummary = () => {
                 };
 
                 const rzp = new window.Razorpay(options);
-                rzp.on('payment.failed', function () {
-                    showConfirm("Payment Failed", "The transaction could not be completed.", "Try Again").then(() => {
+                rzp.on('payment.failed', function (response) {
+                    setIsSubmitting(false);
+                    showAlert("Payment Failed", "Something went wrong with the transaction. Your seats are still held - you can retry from your bookings.", "error", "Retry").then(() => {
                         navigate(`/my-bookings/${bookingId}`, { replace: true });
                     });
                 });
@@ -151,7 +173,6 @@ const BookingSummary = () => {
                 ? error.response.data.errors.map(err => `${err.field}: ${err.message}`).join(", ")
                 : error.response?.data?.message || "Failed to submit booking request.";
             showToast(errorMsg, "error");
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -173,12 +194,8 @@ const BookingSummary = () => {
         );
     }
 
-    const { restaurant, partySize, date, timeSlot } = initialData;
-    const mealType = getCategoryFromTimeSlot(timeSlot);
-
-    const cartItems = Object.values(cart);
     const foodTotal = cartItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const seatPrice = (restaurant.slotPrice || 0) * partySize;
+    const seatPrice = (restaurant?.slotPrice || 0) * (partySize || 1);
 
     // Calculate final pricing to match the backend
     const subtotal = foodTotal + seatPrice;
@@ -196,11 +213,12 @@ const BookingSummary = () => {
 
     // Live calculate best available offer (Auto-applied)
     const availableOffers = restaurant?.offers || [];
-    const qualifyingOffer = availableOffers
+    const qualifyingOfferLookup = availableOffers
         .filter(offer => subtotal >= (offer.minOrderValue || 0))
         .sort((a, b) => b.discountValue - a.discountValue)[0];
 
-    const offerDiscount = qualifyingOffer ? qualifyingOffer.discountValue : 0;
+    const offerDiscount = qualifyingOfferLookup ? qualifyingOfferLookup.discountValue : 0;
+    const qualifyingOffer = qualifyingOfferLookup; // For consistency with other parts of the code
 
     const totalAmount = subtotal + tax + platformFee - amountSaved - offerDiscount;
     const walletAmountToUse = useWallet ? Math.min(walletBalance, totalAmount) : 0;
@@ -258,7 +276,7 @@ const BookingSummary = () => {
                 socket.emit("release_hold", {
                     restaurantId: restaurant._id,
                     date: date,
-                    slotMinutes: initialData.timeSlotMinutes || timeSlot,
+                    slotMinutes: timeSlotMinutes,
                     seats: partySize,
                     userId: user._id || user.id
                 });
@@ -305,10 +323,12 @@ const BookingSummary = () => {
                                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                                 <span className="text-gray-500">{restaurant.tags?.join(", ") || "General Cuisine"}</span>
                                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="flex items-center gap-1.5">
-                                    <Star size={16} className="fill-[#ff9500] text-[#ff9500]" />
-                                    <span className="font-bold text-gray-900">{restaurant.ratingStats?.average || "4.5"}</span>
-                                </div>
+                                {restaurant.ratingStats?.count > 0 && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Star size={16} className="fill-[#ff9500] text-[#ff9500]" />
+                                        <span className="font-bold text-gray-900">{restaurant.ratingStats.average}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -323,7 +343,7 @@ const BookingSummary = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-gray-900">{formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                                            <p className="text-sm text-gray-500 mt-0.5">{timeSlot} ({mealType} Slot)</p>
+                                            <p className="text-sm text-gray-500 mt-0.5">{timeSlot} ({currentSlotCategory} Slot)</p>
                                         </div>
                                     </div>
                                     <div className="bg-green-100/50 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shrink-0 border border-green-200">
@@ -349,13 +369,13 @@ const BookingSummary = () => {
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="relative z-10">
 
-                                {/* Stock Warning */}
+                                {/* Stock & Category Warning */}
                                 {cartItems.some(i => i.isUnavailable) && (
                                     <div className="bg-[#fff8e6] border border-[#ffebcc] rounded-2xl p-4 flex gap-3 mb-6">
                                         <AlertCircle size={20} className="text-[#ff9500] shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-[#b36b00]">Some items are unavailable</p>
-                                            <p className="text-xs text-[#b36b00]/80 mt-0.5">Please remove unavailable items to proceed.</p>
+                                            <p className="text-sm font-bold text-[#b36b00]">Issue with some items</p>
+                                            <p className="text-xs text-[#b36b00]/80 mt-0.5">Please remove items that are unavailable or don't match your booking time (<b>{currentSlotCategory}</b>).</p>
                                         </div>
                                     </div>
                                 )}
@@ -366,8 +386,12 @@ const BookingSummary = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-bold text-gray-900">{item.name}</p>
-                                                    {item.isUnavailable && (
-                                                        <span className="text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">Unavailable</span>
+                                                    {item.isCategoryMismatch ? (
+                                                        <span className="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border border-amber-100 flex items-center gap-1">
+                                                            <Clock size={10} /> {item.allowedCategories.join(' & ')} Only
+                                                        </span>
+                                                    ) : item.isUnavailable && (
+                                                        <span className="text-[9px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border border-red-100">Unavailable</span>
                                                     )}
                                                 </div>
                                                 <p className="text-xs text-gray-400 mt-1 font-semibold">
@@ -586,7 +610,8 @@ const BookingSummary = () => {
                                             </div>
                                             <button
                                                 onClick={() => setUseWallet(!useWallet)}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useWallet ? 'bg-[#ff5e00]' : 'bg-gray-200'}`}
+                                                disabled={walletBalance <= 0}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${useWallet ? 'bg-[#ff5e00]' : 'bg-gray-200'} ${walletBalance <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 <span
                                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useWallet ? 'translate-x-6' : 'translate-x-1'}`}

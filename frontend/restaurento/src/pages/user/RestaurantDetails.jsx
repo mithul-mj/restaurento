@@ -319,15 +319,19 @@ const RestaurantDetails = () => {
                                 {restaurant.restaurantName}
                             </h1>
                             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1.5 font-bold text-gray-900">
-                                    <Star size={18} className="fill-[#ff9500] text-[#ff9500]" />
-                                    <span>{restaurant.ratingStats?.average || "4.5"}</span>
-                                </div>
-                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <span className="underline decoration-gray-300 decoration-1 underline-offset-2">
-                                    {restaurant.ratingStats?.count || "1,204"} reviews
-                                </span>
-                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                                {restaurant.ratingStats?.count > 0 && (
+                                    <>
+                                        <div className="flex items-center gap-1.5 font-bold text-gray-900">
+                                            <Star size={18} className="fill-[#ff9500] text-[#ff9500]" />
+                                            <span>{restaurant.ratingStats.average}</span>
+                                        </div>
+                                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                                        <span className="underline decoration-gray-300 decoration-1 underline-offset-2">
+                                            {restaurant.ratingStats.count} reviews
+                                        </span>
+                                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                                    </>
+                                )}
                                 <span>₹{pricePerPerson.toFixed(2)} per person</span>
                             </div>
                         </div>

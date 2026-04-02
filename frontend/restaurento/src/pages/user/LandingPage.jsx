@@ -350,7 +350,7 @@ const LandingPage = () => {
                                         <div className="flex items-center gap-2 text-[9px] font-bold text-gray-300 tracking-[0.1em] uppercase">
                                             <span>{res.address?.city || 'Selected Venue'}</span>
                                             <span className="w-1 h-1 bg-gray-200 rounded-full" />
-                                            <span>{res.ratingStats?.average || '4.5'}+ / 5</span>
+                                            <span>{res.ratingStats?.count > 0 ? `${res.ratingStats.average}+ / 5` : 'New'}</span>
                                         </div>
                                     </div>
                                 </motion.div>

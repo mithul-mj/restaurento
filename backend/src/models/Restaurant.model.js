@@ -40,7 +40,7 @@ const restaurantSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      maxlength: [30, "Business email must be under 30 characters"]
+      maxlength: [60, "Business email must be under 60 characters"]
     },
     password: {
       type: String,
