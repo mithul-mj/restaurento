@@ -46,22 +46,13 @@ const BookingSummary = () => {
     const user = useSelector((state) => state.auth.user);
 
     const currentSlotMinutes = Number(initialData.timeSlotMinutes ?? 0);
-    const currentSlotCategory = getCategoryFromMinutes(currentSlotMinutes);
-
     const cartItems = Object.entries(cart).map(([id, item]) => {
         const dbDish = initialData.restaurant?.menuItems?.find(m => m._id?.toString() === id?.toString());
-
-        // Case-insensitive category check
-        const itemCategories = (dbDish?.categories || []).map(c => c.toLowerCase());
-        const matchCat = (currentSlotCategory || "").toLowerCase();
-        const isCategoryMismatch = currentSlotCategory && itemCategories.length > 0 && !itemCategories.includes(matchCat);
 
         return {
             ...item,
             _id: id,
-            isUnavailable: !dbDish || dbDish.isDeleted || !dbDish.isAvailable || isCategoryMismatch,
-            isCategoryMismatch,
-            allowedCategories: dbDish?.categories || []
+            isUnavailable: !dbDish || dbDish.isDeleted || !dbDish.isAvailable
         };
     });
 
