@@ -3,14 +3,13 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useSocket } from '../../context/SocketContext';
 import {
-    ArrowLeft, Calendar, Clock, Users,
-    Trash2, ChevronDown, Star, Copy,
+    ArrowLeft, Calendar, Users,
+    Trash2, ChevronDown, Star,
     CheckCircle, AlertCircle, Timer, Wallet, X,
     Ticket, Tag, Percent
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate } from '../../utils/timeUtils';
-import { getCategoryFromTimeSlot, getCategoryFromMinutes } from '../../utils/timeCategoryUtils';
 import { showToast, showConfirm, showAlert } from '../../utils/alert';
 import userService from '../../services/user.service';
 import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_HOLD_TIME_SECONDS } from '../../constants/constants';
@@ -45,7 +44,6 @@ const BookingSummary = () => {
     const socket = useSocket();
     const user = useSelector((state) => state.auth.user);
 
-    const currentSlotMinutes = Number(initialData.timeSlotMinutes ?? 0);
     const cartItems = Object.entries(cart).map(([id, item]) => {
         const dbDish = initialData.restaurant?.menuItems?.find(m => m._id?.toString() === id?.toString());
 
@@ -334,7 +332,7 @@ const BookingSummary = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-gray-900">{formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                                            <p className="text-sm text-gray-500 mt-0.5">{timeSlot} ({currentSlotCategory} Slot)</p>
+                                            <p className="text-sm text-gray-500 mt-0.5">{timeSlot}</p>
                                         </div>
                                     </div>
                                     <div className="bg-green-100/50 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shrink-0 border border-green-200">
@@ -366,7 +364,7 @@ const BookingSummary = () => {
                                         <AlertCircle size={20} className="text-[#ff9500] shrink-0" />
                                         <div>
                                             <p className="text-sm font-bold text-[#b36b00]">Issue with some items</p>
-                                            <p className="text-xs text-[#b36b00]/80 mt-0.5">Please remove items that are unavailable or don't match your booking time (<b>{currentSlotCategory}</b>).</p>
+                                            <p className="text-xs text-[#b36b00]/80 mt-0.5">Please remove items that are unavailable.</p>
                                         </div>
                                     </div>
                                 )}
@@ -377,11 +375,7 @@ const BookingSummary = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-bold text-gray-900">{item.name}</p>
-                                                    {item.isCategoryMismatch ? (
-                                                        <span className="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border border-amber-100 flex items-center gap-1">
-                                                            <Clock size={10} /> {item.allowedCategories.join(' & ')} Only
-                                                        </span>
-                                                    ) : item.isUnavailable && (
+                                                    {item.isUnavailable && (
                                                         <span className="text-[9px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border border-red-100">Unavailable</span>
                                                     )}
                                                 </div>
