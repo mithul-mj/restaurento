@@ -15,14 +15,14 @@ const BannerCarousel = ({ banners, isLoading }) => {
     }, [banners]);
 
     if (isLoading) {
-        return <div className="w-full h-64 md:h-auto md:aspect-[16/5] rounded-2xl bg-gray-200 animate-pulse mb-4" />;
+        return <div className="w-full h-auto aspect-[16/5] rounded-b-[1rem] md:rounded-2xl bg-gray-200 animate-pulse mb-0" />;
     }
 
     const defaultBannerUrl = "https://res.cloudinary.com/dqswnl59e/image/upload/v1771654542/restaurento/onboading/qyihqvrcshwfiiwdbxlb.jpg";
 
     if (!banners || banners.length === 0) {
         return (
-            <div className="relative w-full h-64 md:h-auto md:aspect-[16/5] rounded-2xl overflow-hidden mb-4 bg-gray-100">
+            <div className="relative w-full h-auto aspect-[16/5] rounded-b-[1rem] md:rounded-2xl overflow-hidden mb-0 bg-gray-100">
                 <img
                     src={defaultBannerUrl}
                     className="w-full h-full object-cover"
@@ -33,9 +33,9 @@ const BannerCarousel = ({ banners, isLoading }) => {
     }
 
     return (
-        <div className="relative w-full h-64 md:h-auto md:aspect-[16/5] rounded-2xl overflow-hidden mb-4 bg-gray-100">
+        <div className="relative w-full h-auto aspect-[16/5] rounded-b-[1rem] md:rounded-2xl overflow-hidden mb-0 bg-gray-100">
             {/* Banner Images */}
-            {banners.map((banner, i) => (
+            {banners.map((banner, i) => banner && (
                 <a
                     key={banner._id || i}
                     href={banner.targetLink}

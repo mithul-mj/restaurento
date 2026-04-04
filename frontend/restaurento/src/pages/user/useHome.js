@@ -6,6 +6,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import userService from "../../services/user.service";
 import useDebounce from "../../hooks/useDebounce";
 import { showError } from "../../utils/alert";
+import { useLocation } from "../../context/LocationContext";
 
 const useHome = () => {
     const { register, watch, setValue } = useForm();
@@ -20,15 +21,10 @@ const useHome = () => {
         cost: [],
     });
     const filters = ["Filters", "Open Now"];
+    const { selectedCoordinates } = useLocation();
 
-    const [placeholderText, setPlaceholderText] = useState("Search or Detect location..");
-    const [recentLocations, setRecentLocations] = useState([]);
-    const [locationQuery, setLocationQuery] = useState("");
-    const [locationSuggestions, setLocationSuggestions] = useState([]);
-    const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-    const [selectedCoordinates, setSelectedCoordinates] = useState(null);
     const locationWrapperRef = useRef(null);
-    const debouncedLocationQuery = useDebounce(locationQuery, 400);
+    const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
     const { data: bannersData, isLoading: isLoadingBanners } = useQuery({
         queryKey: ["active-banners"],
@@ -36,89 +32,6 @@ const useHome = () => {
     })
 
     const activeBanners = bannersData?.data || [];
-
-
-    const handleDetectLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log("Detected:", latitude, longitude);
-                setSelectedCoordinates({ lat: latitude, lon: longitude });
-                setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
-
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                    const data = await res.json();
-                    setPlaceholderText(data.display_name);
-                } catch (error) {
-                    setPlaceholderText("Current Location");
-                }
-                setLocationQuery("");
-                setShowLocationDropdown(false);
-            }, (error) => {
-                console.error("Error detecting location", error);
-                showError("Geolocation error", "Unable to detect location.");
-            });
-        } else {
-            showError("Geolocation error", "Geolocation is not supported by this browser.");
-        }
-    };
-
-    useEffect(() => {
-        const saved = localStorage.getItem("recentLocations");
-        if (saved) {
-            setRecentLocations(JSON.parse(saved));
-        }
-
-        const handleClickOutside = (event) => {
-            if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target)) {
-                setShowLocationDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        const fetchLocations = async () => {
-            if (debouncedLocationQuery && debouncedLocationQuery.length > 2) {
-                try {
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(debouncedLocationQuery)}&limit=5&addressdetails=1`
-                    );
-                    const data = await response.json();
-                    setLocationSuggestions(data);
-                    setShowLocationDropdown(true);
-                } catch (error) {
-                    console.error("Error fetching locations:", error);
-                }
-            } else {
-                setLocationSuggestions([]);
-
-            }
-        };
-
-        fetchLocations();
-    }, [debouncedLocationQuery]);
-
-
-    const handleLocationSelect = (place) => {
-        setPlaceholderText(place.display_name)
-        setLocationQuery('');
-        setShowLocationDropdown(false);
-        setSelectedCoordinates({ lat: place.lat, lon: place.lon });
-
-        setAppliedFilters(prev => ({ ...prev, sort: "distance" }));
-
-        const newRecent = [
-            place,
-            ...recentLocations.filter((p) => p.display_name !== place.display_name)
-        ].slice(0, 5);
-        setRecentLocations(newRecent);
-        localStorage.setItem('recentLocations', JSON.stringify(newRecent));
-
-        console.log("Selected Location:", { lat: place.lat, lon: place.lon });
-    };
 
     const [columns, setColumns] = useState(3);
     const parentRef = useRef(null);
@@ -131,7 +44,19 @@ const useHome = () => {
         };
         handleResize();
         window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
+
+        const handleClickOutside = (event) => {
+            if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target)) {
+                setShowLocationDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
     }, []);
 
     const {
@@ -209,17 +134,9 @@ const useHome = () => {
         appliedFilters,
         setAppliedFilters,
         filters,
-        placeholderText,
-        recentLocations,
-        locationQuery,
-        setLocationQuery,
-        locationSuggestions,
         showLocationDropdown,
         setShowLocationDropdown,
-        selectedCoordinates,
         locationWrapperRef,
-        handleDetectLocation,
-        handleLocationSelect,
         columns,
         parentRef,
         rowVirtualizer,

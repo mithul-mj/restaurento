@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Bell, Heart, Menu, X } from "lucide-react";
+import { Bell, Heart, Menu, X, ChevronDown, MapPin } from "lucide-react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { useSocket } from "../../context/SocketContext";
+import { useLocation } from "../../context/LocationContext";
 import notificationService from "../../services/notification.service";
 import NotificationModal from "../../pages/user/NotificationModal";
 
@@ -19,6 +20,7 @@ const UserNavbar = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [hasNextPage, setHasNextPage] = useState(false);
     const socket = useSocket();
+    const { placeholderText, setIsLocationModalOpen } = useLocation();
 
 
 
@@ -143,6 +145,7 @@ const UserNavbar = () => {
                         ))}
                     </motion.div>
                 </Link>
+
                 {user ? (
                     <>
                         <div className="hidden md:flex items-center gap-8">
@@ -199,10 +202,15 @@ const UserNavbar = () => {
                         </div>
                     </>
                 ) : (
-                    <div className="hidden md:block">
+                    <div className="hidden md:flex items-center gap-3">
+                        <Link
+                            to="/login"
+                            className="border-2 border-[#ff5e00] text-[#ff5e00] hover:bg-orange-50 hover:shadow-lg hover:shadow-orange-100 hover:-translate-y-0.5 active:translate-y-0 px-6 py-2 rounded-full font-bold text-sm transition-all duration-300">
+                            Log In
+                        </Link>
                         <Link
                             to="/signup"
-                            className="bg-[#ff5e00] hover:bg-[#e05200] text-white px-5 py-2 rounded-full font-medium text-sm transition-colors shadow-md shadow-orange-100">
+                            className="bg-[#ff5e00] hover:bg-[#e05200] text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-lg shadow-orange-100 hover:shadow-orange-200 hover:-translate-y-0.5 active:translate-y-0">
                             Sign Up
                         </Link>
                     </div>
@@ -289,26 +297,42 @@ const UserNavbar = () => {
                             </div>
                         </>
                     ) : (
-                        <div className="py-2">
+                        <div className="py-2 space-y-3">
+                            <Link
+                                to="/login"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center justify-center w-full border-2 border-[#ff5e00] text-[#ff5e00] bg-white px-5 py-3 rounded-2xl font-bold transition-all active:scale-[0.98]">
+                                Log In
+                            </Link>
                             <Link
                                 to="/signup"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="flex items-center justify-center w-full bg-[#ff5e00] text-white px-5 py-2.5 rounded-xl font-bold shadow-md shadow-orange-100">
+                                className="flex items-center justify-center w-full bg-[#ff5e00] text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-orange-100 transition-all hover:bg-[#e05200] active:scale-[0.98]">
                                 Sign Up
                             </Link>
-                            <div className="mt-3 text-center">
-                                <Link
-                                    to="/login"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="text-sm text-gray-500 font-medium"
-                                >
-                                    Already have an account? <span className="text-[#ff5e00]">Log in</span>
-                                </Link>
-                            </div>
                         </div>
                     )}
                 </div>
             )}
+
+            {/* Dedicated Mobile Location Row */}
+            <div 
+                onClick={() => setIsLocationModalOpen(true)}
+                className="md:hidden mt-3 pt-3 border-t border-gray-50 flex items-center gap-2 group cursor-pointer active:opacity-70 transition-opacity"
+            >
+                <div className="text-[#ff5e00] shrink-0">
+                    <MapPin size={16} />
+                </div>
+                <div className="flex-1 min-w-0 pr-4">
+                    <div className="text-[9px] uppercase font-semibold text-gray-400 flex items-center gap-1 leading-none mb-0.5 tracking-wider">
+                        Selected Location
+                        <ChevronDown size={10} className="text-[#ff5e00] opacity-40" />
+                    </div>
+                    <div className="text-gray-900 font-semibold text-[13px] truncate tracking-tight">
+                        {placeholderText}
+                    </div>
+                </div>
+            </div>
         </nav>
     );
 };

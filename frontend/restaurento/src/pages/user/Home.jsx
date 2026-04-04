@@ -14,6 +14,8 @@ import RestaurantCard from "../../components/user/RestaurantCard";
 import SkeletonCard from "../../components/user/SkeletonCard";
 import BannerCarousel from "../../components/user/BannerCarousel";
 import useHome from "./useHome";
+import { useLocation } from "../../context/LocationContext";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 const Home = () => {
   const {
@@ -27,17 +29,9 @@ const Home = () => {
     appliedFilters,
     setAppliedFilters,
     filters,
-    placeholderText,
-    recentLocations,
-    locationQuery,
-    setLocationQuery,
-    locationSuggestions,
     showLocationDropdown,
     setShowLocationDropdown,
-    selectedCoordinates,
     locationWrapperRef,
-    handleDetectLocation,
-    handleLocationSelect,
     columns,
     parentRef,
     rowVirtualizer,
@@ -48,6 +42,21 @@ const Home = () => {
     activeBanners,
     isLoadingBanners,
   } = useHome();
+
+  const {
+    locationQuery,
+    setLocationQuery,
+    locationSuggestions,
+    isLocationModalOpen,
+    setIsLocationModalOpen,
+    selectedCoordinates,
+    handleDetectLocation,
+    handleLocationSelect,
+    recentLocations,
+    placeholderText,
+  } = useLocation();
+
+  const dragControls = useDragControls();
 
   return (
     <div className="h-full flex flex-col bg-[#fcfcfc] overflow-hidden">
@@ -77,233 +86,175 @@ const Home = () => {
                     left: 0,
                     width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
-                    zIndex: 50, // Keep header above rows for dropdown
+                    zIndex: 50,
                   }}>
-                  <main className="max-w-7xl mx-auto px-4 md:px-8 pt-1 pb-6">
-                    <BannerCarousel
-                      banners={activeBanners}
-                      isLoading={isLoadingBanners}
-                    />
+                  <main className="max-w-7xl mx-auto px-4 md:px-8 pt-1 pb-1">
+                    <div className="-mx-4 md:mx-0">
+                      <BannerCarousel
+                        banners={activeBanners}
+                        isLoading={isLoadingBanners}
+                      />
+                    </div>
 
-                    <div className="w-full max-w-4xl mx-auto -mt-14 relative z-10 mb-4 px-2">
-                      <div
-                        className="relative flex flex-col md:flex-row shadow-xl shadow-gray-200/50 rounded-xl bg-white max-w-4xl mx-auto border border-gray-100"
-                        style={{ zIndex: 50 }}>
+                    <div className="sticky top-0 md:relative z-30 bg-[#fcfcfc]/95 backdrop-blur-lg -mx-4 px-4 pt-2 md:pt-0 md:bg-transparent md:backdrop-blur-none transition-all duration-300">
+                      <div className="w-full max-w-4xl mx-auto mt-2 md:-mt-14 relative z-10 mb-4 md:px-2">
                         <div
-                          ref={locationWrapperRef}
-                          className="relative flex items-center md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 px-4 py-3 md:py-4 transition-colors rounded-l-xl z-20">
-                          <MapPin
-                            className="text-[#ff9500] mr-3 shrink-0"
-                            size={22}
-                          />
-                          <input
-                            type="text"
-                            placeholder={placeholderText}
-                            value={locationQuery}
-                            onChange={(e) => {
-                              setLocationQuery(e.target.value);
-                              if (e.target.value.length === 0)
-                                setShowLocationDropdown(true);
-                            }}
-                            onFocus={() => {
-                              setShowLocationDropdown(true);
-                            }}
-                            className="w-full bg-transparent focus:outline-none text-gray-700 font-medium placeholder-gray-400 text-base"
-                          />
-                          <ChevronDown
-                            className="text-gray-400 ml-2 shrink-0 cursor-pointer"
-                            size={16}
-                            onClick={() =>
-                              setShowLocationDropdown(!showLocationDropdown)
-                            }
-                          />
+                          className="relative flex flex-col md:flex-row shadow-xl shadow-gray-200/50 rounded-xl bg-white max-w-4xl mx-auto border border-gray-100"
+                          style={{ zIndex: 50 }}>
+                          {/* Desktop Location Input */}
+                          <div
+                            ref={locationWrapperRef}
+                            className="hidden md:flex relative items-center md:w-1/3 border-r border-gray-100 px-4 py-4 transition-colors rounded-l-xl z-20">
+                            <MapPin className="text-[#ff9500] mr-3 shrink-0" size={22} />
+                            <input
+                              type="text"
+                              placeholder={placeholderText}
+                              value={locationQuery}
+                              onFocus={() => setShowLocationDropdown(true)}
+                              onChange={(e) => {
+                                setLocationQuery(e.target.value);
+                                if (!showLocationDropdown) setShowLocationDropdown(true);
+                              }}
+                              className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400 text-base"
+                            />
+                            <ChevronDown
+                              size={16}
+                              className={`text-gray-400 ml-1 transition-transform duration-200 cursor-pointer ${showLocationDropdown ? "rotate-180" : ""}`}
+                              onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                            />
 
-                          {showLocationDropdown && (
-                            <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
-                              <div className="absolute -top-1.5 right-4 w-3 h-3 bg-white border-l border-t border-gray-100 rotate-45 z-10 hidden md:block"></div>
-
-                              <div className="p-0 relative z-20 bg-white">
+                            {showLocationDropdown && (
+                              <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden z-50 py-1 min-w-[280px]">
                                 <button
-                                  type="button"
-                                  onClick={handleDetectLocation}
-                                  className="w-full text-left px-4 py-4 hover:bg-gray-50 flex items-start gap-4 transition-colors group border-b border-gray-50">
-                                  <div className="mt-0.5 text-red-500">
-                                    <LocateFixed
-                                      className="fill-transparent"
-                                      size={18}
-                                      style={{ strokeWidth: 2.5 }}
-                                    />
+                                  onClick={() => {
+                                    handleDetectLocation();
+                                    setShowLocationDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left group border-b border-gray-50">
+                                  <div className="text-red-500 group-hover:scale-110 transition-transform">
+                                    <LocateFixed size={18} />
                                   </div>
                                   <div>
-                                    <div className="text-red-500 font-medium text-[15px]">
-                                      Detect current location
-                                    </div>
-                                    <div className="text-xs text-gray-400 mt-0.5">
-                                      Using GPS
-                                    </div>
+                                    <div className="text-red-500 font-semibold text-sm">Detect current location</div>
+                                    <div className="text-[10px] text-gray-400">Using GPS</div>
                                   </div>
                                 </button>
 
-                                {locationSuggestions.length > 0 && (
+                                {locationSuggestions.length > 0 ? (
                                   <>
-                                    <div className="text-xs font-semibold text-gray-400 px-3 py-2 uppercase tracking-wider mt-2 border-t border-gray-50 pt-2">
-                                      Suggested Locations
+                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2 flex items-center gap-2">
+                                      <span className="w-4 h-[1px] bg-gray-100"></span>
+                                      Suggestions
                                     </div>
-                                    {locationSuggestions.map((place, index) => (
+                                    {locationSuggestions.map((place) => (
                                       <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() =>
-                                          handleLocationSelect(place)
-                                        }
-                                        className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group">
-                                        <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
-                                          <MapPin size={14} />
+                                        key={place.place_id}
+                                        onClick={() => {
+                                          handleLocationSelect(place);
+                                          setShowLocationDropdown(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-4 transition-colors group">
+                                        <div className="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center shrink-0 group-hover:bg-orange-50 transition-colors">
+                                          <MapPin size={16} className="text-gray-400 group-hover:text-[#ff9500]" />
                                         </div>
-                                        <div>
-                                          <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                            {place.display_name.split(",")[0]}
-                                          </div>
-                                          <div className="text-xs text-gray-400 line-clamp-1 mt-0.5">
-                                            {place.display_name}
-                                          </div>
+                                        <div className="overflow-hidden">
+                                          <div className="font-semibold text-gray-800 text-sm mb-0.5 truncate">{place.display_name.split(",")[0]}</div>
+                                          <div className="text-[11px] text-gray-400 truncate">{place.display_name}</div>
                                         </div>
                                       </button>
                                     ))}
                                   </>
-                                )}
-
-                                {locationSuggestions.length === 0 &&
+                                ) : (
                                   recentLocations.length > 0 && (
                                     <>
-                                      <div className="text-xs font-semibold text-gray-400 px-3 py-2 uppercase tracking-wider mt-2 border-t border-gray-50 pt-2">
+                                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2 flex items-center gap-2">
+                                        <span className="w-4 h-[1px] bg-gray-100"></span>
                                         Recent Locations
                                       </div>
                                       {recentLocations.map((place, index) => (
                                         <button
                                           key={index}
-                                          type="button"
-                                          onClick={() =>
-                                            handleLocationSelect(place)
-                                          }
-                                          className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg flex items-start gap-3 transition-colors group">
-                                          <div className="mt-1 p-1.5 bg-gray-100 text-gray-400 rounded-full group-hover:bg-orange-100 group-hover:text-[#ff9500] transition-colors">
-                                            <History
-                                              size={14}
-                                              strokeWidth={2.5}
-                                            />
+                                          onClick={() => {
+                                            handleLocationSelect(place);
+                                            setShowLocationDropdown(false);
+                                          }}
+                                          className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-4 transition-colors group">
+                                          <div className="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center shrink-0 group-hover:bg-orange-50 transition-colors">
+                                            <History size={16} className="text-gray-400 group-hover:text-[#ff9500]" />
                                           </div>
-                                          <div>
-                                            <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                                              {place.display_name.split(",")[0]}
-                                            </div>
-                                            <div className="text-xs text-gray-400 line-clamp-1 mt-0.5">
-                                              {place.display_name}
-                                            </div>
+                                          <div className="overflow-hidden">
+                                            <div className="font-semibold text-gray-800 text-sm mb-0.5 truncate">{place.display_name.split(",")[0]}</div>
+                                            <div className="text-[11px] text-gray-400 truncate">{place.display_name}</div>
                                           </div>
                                         </button>
                                       ))}
                                     </>
-                                  )}
+                                  )
+                                )}
                               </div>
+                            )}
+                          </div>
+
+                          {/* Search Input */}
+                          <div className="flex-1 flex items-center px-4 py-2 md:py-4 relative z-0">
+                            <Search className="md:hidden text-[#ff5e00] mr-2" size={18} />
+                            <input
+                              type="text"
+                              placeholder="Search for restaurant, cuisine.."
+                              className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400 text-sm md:text-base py-1"
+                              {...register("query")}
+                            />
+                            <div className="flex items-center gap-2">
+                              {watch("query") && (
+                                <button type="button" onClick={() => setValue("query", "")} className="p-1.5 text-gray-400 hover:text-gray-600">
+                                  <X size={18} />
+                                </button>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          </div>
 
-                        <div className="flex-1 flex items-center px-4 py-3 md:py-4 relative z-0">
-                          <input
-                            type="text"
-                            placeholder="Search for restaurant, cuisine or a dish"
-                            className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400 text-base"
-                            {...register("query")}
-                          />
-                          {watch("query") && (
+                          <button type="submit" className="hidden md:flex px-6 py-3 md:py-4 items-center justify-center text-gray-400 hover:text-[#ff9500]">
+                            <Search size={22} className="stroke-[2.5px]" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Filters */}
+                      <div className="flex items-center gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                        {filters.map((filter) => {
+                          let count = 0;
+                          if (filter === "Filters") {
+                            if (appliedFilters.sort && appliedFilters.sort !== "rating_high_low") count++;
+                            if (appliedFilters.rating && appliedFilters.rating !== "Any") count++;
+                            if (appliedFilters.cost && appliedFilters.cost.length > 0) count += appliedFilters.cost.length;
+                          }
+                          return (
                             <button
-                              type="button"
-                              onClick={() => {
-                                setValue("query", "");
-                              }}
-                              className="ml-2 text-gray-400 hover:text-gray-600 transition-colors">
-                              <X size={18} />
+                              key={filter}
+                              onClick={() => filter === "Filters" ? setIsFilterModalOpen(true) : setActiveFilter((prev) => prev === filter ? null : filter)}
+                              className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all border flex items-center gap-1.5 ${activeFilter === filter ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00] shadow-sm" : "bg-white text-gray-600 border-gray-100 hover:bg-gray-200"
+                                }`}>
+                              {filter === "Filters" && <Filter size={14} className="inline mr-0.5" />}
+                              {filter}
+                              {filter === "Filters" && count > 0 && (
+                                <span className="flex items-center justify-center w-5 h-5 ml-1 text-[10px] font-bold text-white bg-[#ff5e00] rounded-full">{count}</span>
+                              )}
                             </button>
-                          )}
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="hidden md:flex px-6 py-3 md:py-4 transition-colors items-center justify-center text-gray-400 hover:text-[#ff9500]">
-                          <Search size={22} className="stroke-[2.5px]" />
-                        </button>
-                        <button
-                          type="submit"
-                          className="md:hidden w-full bg-[#ff5e00] text-white py-3 font-bold text-sm tracking-wide hover:bg-[#e05200] transition-colors rounded-b-xl">
-                          Search
-                        </button>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-                      {filters.map((filter) => {
-                        let count = 0;
-                        if (filter === "Filters") {
-                          if (
-                            appliedFilters.sort &&
-                            appliedFilters.sort !== "rating_high_low"
-                          )
-                            count++;
-                          if (
-                            appliedFilters.rating &&
-                            appliedFilters.rating !== "Any"
-                          )
-                            count++;
-                          if (
-                            appliedFilters.cost &&
-                            appliedFilters.cost.length > 0
-                          )
-                            count += appliedFilters.cost.length;
-                        }
-
-                        return (
-                          <button
-                            key={filter}
-                            onClick={() => {
-                              if (filter === "Filters") {
-                                setIsFilterModalOpen(true);
-                              } else {
-                                setActiveFilter((prev) =>
-                                  prev === filter ? null : filter,
-                                );
-                              }
-                            }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border flex items-center gap-1.5
-                                          ${activeFilter === filter
-                                ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00]"
-                                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                              }
-                                      `}>
-                            {filter === "Filters" && (
-                              <Filter size={14} className="inline mr-0.5" />
-                            )}
-                            {filter}
-                            {filter === "Filters" && count > 0 && (
-                              <span className="flex items-center justify-center w-5 h-5 ml-1 text-xs font-bold text-white bg-[#ff5e00] rounded-full">
-                                {count}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                      Restaurants Near You
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-1 flex items-center gap-2">
+                      {selectedCoordinates ? "Restaurants Near You" : "All Restaurants"}
                     </h3>
                   </main>
                 </div>
               );
-            } else if (isLoader) {
-              if (isLoadingInitial) return null;
+            }
 
+            if (isLoader) {
+              if (isLoadingInitial) return null;
               return (
                 <div
                   key={virtualRow.key}
@@ -321,79 +272,158 @@ const Home = () => {
                   <Loader size="small" showText={true} text="Loading more" />
                 </div>
               );
-            } else if (rowItems === "SKELETON") {
-              return (
-                <div
-                  key={virtualRow.key}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}>
-                  <div className="max-w-7xl mx-auto px-4 md:px-8 py-2">
-                    <div
-                      className="grid gap-6 md:gap-8"
-                      style={{
-                        gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                      }}>
-                      {Array.from({ length: columns }).map((_, idx) => (
-                        <SkeletonCard key={idx} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            } else {
-              return (
-                <div
-                  key={virtualRow.key}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}>
-                  <div className="max-w-7xl mx-auto px-4 md:px-8 py-2">
-                    <div
-                      className="grid gap-6 md:gap-8"
-                      style={{
-                        gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                      }}>
-                      {Array.isArray(rowItems) &&
-                        rowItems.map((item) => (
-                          <RestaurantCard key={item._id} item={item} />
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              );
             }
+
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+                className="py-1 md:py-2">
+                <main className="max-w-7xl mx-auto px-4 md:px-8">
+                  <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+                    {rowItems === "SKELETON"
+                      ? Array.from({ length: columns }).map((_, i) => <SkeletonCard key={i} />)
+                      : rowItems.map((restaurant) => restaurant && <RestaurantCard key={restaurant._id} item={restaurant} />)}
+                  </div>
+                </main>
+              </div>
+            );
           })}
         </div>
-        {!isLoadingInitial && allRestaurants.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            No restaurants found.
-          </div>
-        )}
       </div>
 
-      <FilterModal
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        filters={appliedFilters}
+      <FilterModal 
+        isOpen={isFilterModalOpen} 
+        onClose={() => setIsFilterModalOpen(false)} 
+        filters={appliedFilters} 
+        onApply={setAppliedFilters}
         hasLocation={!!selectedCoordinates}
-        onApply={(filters) => {
-          setAppliedFilters(filters);
-          setIsFilterModalOpen(false);
-        }}
       />
+
+      <AnimatePresence>
+        {isLocationModalOpen && (
+          <div className="fixed inset-0 z-[200] md:hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsLocationModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+            <motion.div
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100) setIsLocationModalOpen(false);
+              }}
+              dragControls={dragControls}
+              dragListener={false}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl overflow-hidden h-[85vh] flex flex-col">
+              <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 shrink-0 cursor-grab active:cursor-grabbing" onPointerDown={(e) => dragControls.start(e)} />
+
+              <div className="flex items-center justify-between mb-6 shrink-0" onPointerDown={(e) => dragControls.start(e)}>
+                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Your Location</h2>
+                <button onClick={() => setIsLocationModalOpen(false)} className="bg-gray-100 p-2 rounded-full text-gray-500 active:bg-gray-200 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="relative mb-6 shrink-0">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff9500]">
+                  <Search size={22} />
+                </div>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Search for area, street name.."
+                  value={locationQuery}
+                  onChange={(e) => setLocationQuery(e.target.value)}
+                  className="w-full bg-gray-50 border-2 border-gray-50 focus:border-[#ff9500]/20 focus:bg-white px-12 py-4 rounded-2xl outline-none text-gray-900 font-medium placeholder-gray-400 transition-all text-[15px]"
+                />
+                {locationQuery && (
+                  <button onClick={() => setLocationQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-200 p-1 rounded-full text-gray-500 hover:text-gray-700">
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-y-auto no-scrollbar pb-4">
+                <button
+                  onClick={handleDetectLocation}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-orange-50 transition-colors text-left group mb-2 border border-gray-50 bg-white shadow-sm active:scale-[0.98]">
+                  <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:scale-110 transition-transform">
+                    <LocateFixed size={20} />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-800 text-[15px]">Detect current location</div>
+                    <div className="text-xs text-gray-400">Using GPS for more accurate results</div>
+                  </div>
+                </button>
+
+                <div className="space-y-1 mt-4">
+                  {locationSuggestions.length > 0 ? (
+                    <>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span className="w-8 h-[1px] bg-gray-100"></span>
+                        Suggestions
+                      </div>
+                      {locationSuggestions.map((place) => (
+                        <button
+                          key={place.place_id}
+                          onClick={() => handleLocationSelect(place)}
+                          className="w-full flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors text-left group">
+                          <div className="text-gray-400 group-hover:text-[#ff9500] transition-colors shrink-0">
+                            <MapPin size={18} />
+                          </div>
+                          <div className="overflow-hidden">
+                            <div className="font-semibold text-gray-800 mb-0.5 truncate">{place.display_name.split(",")[0]}</div>
+                            <div className="text-sm text-gray-400 line-clamp-1">{place.display_name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  ) : recentLocations.length > 0 ? (
+                    <>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span className="w-8 h-[1px] bg-gray-100"></span>
+                        Recent Locations
+                      </div>
+                      {recentLocations.map((place, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleLocationSelect(place)}
+                          className="w-full flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors text-left group">
+                          <div className="text-gray-400 group-hover:text-[#ff9500] transition-colors shrink-0">
+                            <History size={18} />
+                          </div>
+                          <div className="overflow-hidden">
+                            <div className="font-semibold text-gray-800 mb-0.5 truncate">{place.display_name.split(",")[0]}</div>
+                            <div className="text-sm text-gray-400 line-clamp-1">{place.display_name}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <MapPin size={32} className="text-gray-200" />
+                      </div>
+                      <p className="text-gray-400 text-sm">Search for your city or area to see restaurants nearby</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

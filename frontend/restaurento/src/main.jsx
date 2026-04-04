@@ -9,6 +9,7 @@ import { store } from "./redux/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { SocketProvider } from "./context/SocketContext.jsx";
+import { LocationProvider } from "./context/LocationContext";
 import { showToast } from "./utils/alert.js";
 import STATUS_CODES from "./constants/statusCodes.js";
 
@@ -40,13 +41,15 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <SocketProvider>
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-          <QueryClientProvider client={queryClient}>
-            <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-              <App />
-            </ErrorBoundary>
-          </QueryClientProvider>
-        </GoogleOAuthProvider>
+        <LocationProvider>
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+            <QueryClientProvider client={queryClient}>
+              <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+                <App />
+              </ErrorBoundary>
+            </QueryClientProvider>
+          </GoogleOAuthProvider>
+        </LocationProvider>
       </SocketProvider>
     </Provider>
   </StrictMode>

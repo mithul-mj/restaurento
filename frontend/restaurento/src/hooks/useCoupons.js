@@ -1,14 +1,45 @@
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import couponService from "../services/coupon.service";
 import { showToast, showError } from "../utils/alert";
 
-export const useCoupons = ({ page = 1, limit = 10, search = "", status = "All", sortBy = "Newest" } = {}) => {
+export const useCoupons = ({
+  page = 1,
+  limit = 10,
+  search = "",
+  status = "All",
+  sortBy = "Newest",
+  startDate = null,
+  endDate = null,
+} = {}) => {
   const queryClient = useQueryClient();
-  const queryKey = ["coupons", page, limit, search, status, sortBy];
+  const queryKey = [
+    "coupons",
+    page,
+    limit,
+    search,
+    status,
+    sortBy,
+    startDate,
+    endDate,
+  ];
 
   const query = useQuery({
     queryKey,
-    queryFn: () => couponService.getCoupons({ page, limit, search, status, sortBy }),
+    queryFn: () =>
+      couponService.getCoupons({
+        page,
+        limit,
+        search,
+        status,
+        sortBy,
+        startDate,
+        endDate,
+      }),
     placeholderData: keepPreviousData,
   });
 
@@ -19,18 +50,25 @@ export const useCoupons = ({ page = 1, limit = 10, search = "", status = "All", 
       showToast("Coupon created successfully", "success");
     },
     onError: (err) => {
-      showError("Creation Failed", err.response?.data?.message || err.message || "Failed to create coupon");
+      showError(
+        "Creation Failed",
+        err.response?.data?.message || err.message || "Failed to create coupon",
+      );
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, couponData }) => couponService.updateCoupon(id, couponData),
+    mutationFn: ({ id, couponData }) =>
+      couponService.updateCoupon(id, couponData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coupons"] });
       showToast("Coupon updated successfully", "success");
     },
     onError: (err) => {
-      showError("Update Failed", err.response?.data?.message || err.message || "Failed to update coupon");
+      showError(
+        "Update Failed",
+        err.response?.data?.message || err.message || "Failed to update coupon",
+      );
     },
   });
 
@@ -41,7 +79,10 @@ export const useCoupons = ({ page = 1, limit = 10, search = "", status = "All", 
       showToast("Coupon deleted successfully", "success");
     },
     onError: (err) => {
-      showError("Delete Failed", err.response?.data?.message || err.message || "Failed to delete coupon");
+      showError(
+        "Delete Failed",
+        err.response?.data?.message || err.message || "Failed to delete coupon",
+      );
     },
   });
 
