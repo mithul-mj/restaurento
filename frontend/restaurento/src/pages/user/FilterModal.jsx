@@ -160,7 +160,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                         exit={window.innerWidth < 768 ? { y: "100%" } : { scale: 0.95, opacity: 0 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white md:rounded-[2.5rem] rounded-t-[2.5rem] w-full md:max-w-xl h-[85vh] md:h-[550px] overflow-hidden shadow-2xl relative z-10 flex flex-col mt-auto md:mt-0"
+                        className="bg-white md:rounded-[2.5rem] rounded-t-[2.5rem] w-full md:max-w-xl h-[80vh] md:h-[550px] overflow-hidden shadow-2xl relative z-10 flex flex-col mt-auto md:mt-0"
                     >
                         {/* Mobile Pull Handle */}
                         <div

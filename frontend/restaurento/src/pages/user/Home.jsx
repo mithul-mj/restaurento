@@ -325,7 +325,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl overflow-hidden h-[85vh] flex flex-col">
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2.5rem] p-6 pb-12 shadow-2xl overflow-hidden h-[80vh] flex flex-col">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 shrink-0 cursor-grab active:cursor-grabbing" onPointerDown={(e) => dragControls.start(e)} />
 
               <div className="flex items-center justify-between mb-6 shrink-0" onPointerDown={(e) => dragControls.start(e)}>
