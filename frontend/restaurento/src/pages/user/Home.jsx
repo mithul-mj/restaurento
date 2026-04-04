@@ -60,6 +60,24 @@ const Home = () => {
 
   return (
     <div className="h-full flex flex-col bg-[#fcfcfc] overflow-hidden">
+      {/* Mobile Fixed Location Header */}
+      <div 
+        onClick={() => setIsLocationModalOpen(true)}
+        className="md:hidden sticky top-0 z-[120] bg-white/95 backdrop-blur-md border-b border-gray-100 px-5 py-2 flex items-center gap-3 active:opacity-80 transition-all cursor-pointer shadow-sm shadow-gray-50/50">
+        <div className="text-[#ff5e00] shrink-0">
+          <MapPin size={18} strokeWidth={2.5} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="text-[10px] uppercase font-extrabold text-gray-400 tracking-wider leading-none">Your Location</span>
+            <ChevronDown size={11} className="text-[#ff5e00] opacity-50" />
+          </div>
+          <div className="text-gray-900 font-bold text-[13px] truncate tracking-tight pr-4">
+            {placeholderText}
+          </div>
+        </div>
+      </div>
+
       <div ref={parentRef} className="flex-1 overflow-y-auto">
         <div
           style={{
@@ -71,9 +89,9 @@ const Home = () => {
             const isHeader = virtualRow.index === 0;
             const isLoader = virtualRow.index === rows.length;
             const rowItems = rows[virtualRow.index];
-
+ 
             if (!rowItems && !isLoader) return null;
-
+ 
             if (isHeader) {
               return (
                 <div
@@ -95,8 +113,8 @@ const Home = () => {
                         isLoading={isLoadingBanners}
                       />
                     </div>
-
-                    <div className="sticky top-0 md:relative z-30 bg-[#fcfcfc]/95 backdrop-blur-lg -mx-4 px-4 pt-2 md:pt-0 md:bg-transparent md:backdrop-blur-none transition-all duration-300">
+ 
+                    <div className="sticky top-[50px] md:top-0 md:relative z-30 bg-[#fcfcfc]/95 backdrop-blur-lg -mx-4 px-4 pt-2 md:pt-0 md:bg-transparent md:backdrop-blur-none transition-all duration-300">
                       <div className="w-full max-w-4xl mx-auto mt-2 md:-mt-14 relative z-10 mb-4 md:px-2">
                         <div
                           className="relative flex flex-col md:flex-row shadow-xl shadow-gray-200/50 rounded-xl bg-white max-w-4xl mx-auto border border-gray-100"

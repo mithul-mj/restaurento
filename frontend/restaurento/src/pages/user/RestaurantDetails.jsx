@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Star, 
+    Star,
     MapPin, Clock, Phone, Heart, ChevronRight, ChevronDown, Minus, Plus, Calendar, Check, AlertTriangle, Armchair, Tag, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
