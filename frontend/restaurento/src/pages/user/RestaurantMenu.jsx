@@ -92,15 +92,15 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                 })()}
             </AnimatePresence>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-3 md:mb-8">
+                <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
                     {["All", "Breakfast", "Lunch", "Dinner"].map((cat) => (
                         <button
                             key={cat}
                             onClick={() => setCategory(cat)}
-                            className={`px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${category === cat
+                            className={`px-4 py-2 md:px-6 md:py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${category === cat
                                 ? "bg-[#ff5e00] text-white shadow-md shadow-orange-200"
-                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                                 }`}
                         >
                             {cat}
@@ -108,27 +108,19 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                     ))}
                 </div>
                 <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                     <input
                         type="text"
                         placeholder={`Search in ${category} menu...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-full pl-10 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff5e00]/20 focus:border-[#ff5e00] transition-all"
+                        className="w-full bg-gray-100/50 border border-transparent md:border-gray-100 rounded-xl pl-9 pr-9 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#ff5e00]/10 focus:bg-white transition-all"
                     />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery("")}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                            <X size={14} />
-                        </button>
-                    )}
                 </div>
             </div>
 
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 h-fit">
                 {menuItems.length === 0 ? (
                     <div className="col-span-full text-center py-12 text-gray-400">
                         No items found in this category.
@@ -153,11 +145,11 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                         const isDisabled = !isAvailable || isMismatch;
 
                         return (
-                            <div key={item._id} className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 transition-all group h-fit ${!isAvailable ? 'opacity-60 grayscale' : ''} ${!isDisabled ? 'hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : ''}`}>
-                                <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100">
+                            <div key={item._id} className={`bg-white border md:border-gray-100 border-gray-50 rounded-2xl md:rounded-2xl p-2.5 md:p-4 flex gap-3 md:gap-4 transition-all group h-fit ${!isAvailable ? 'opacity-60 grayscale' : ''} ${!isDisabled ? 'hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]' : ''}`}>
+                                <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100">
                                     <img loading="lazy" src={imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                 </div>
-                                <div className="flex-1 flex flex-col justify-between">
+                                <div className="flex-1 flex flex-col justify-between py-0.5">
                                     <div>
                                         <div className="flex justify-between items-start">
                                             <h4 className="font-bold text-gray-900 line-clamp-1">{item.name}</h4>
@@ -170,9 +162,9 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                                         </p>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-3">
-                                        <span className={`font-bold ${isMismatch ? 'text-gray-500' : 'text-[#ff5e00]'}`}>
-                                            ₹{typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
+                                    <div className="flex items-center justify-between mt-1.5 md:mt-3">
+                                        <span className={`text-sm md:text-base font-bold ${isMismatch ? 'text-gray-500' : 'text-[#ff5e00]'}`}>
+                                            ₹{typeof item.price === 'number' ? item.price.toFixed(0) : item.price}
                                         </span>
 
                                         {!isDisabled ? (

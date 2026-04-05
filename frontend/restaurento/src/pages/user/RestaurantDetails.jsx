@@ -32,6 +32,14 @@ const RestaurantDetails = () => {
     const [isBooking, setIsBooking] = useState(false);
     const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
 
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         if (location.state?.prefilledCart || location.state?.prefilledGuests) {
             const newState = { ...location.state };
@@ -293,7 +301,27 @@ const RestaurantDetails = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fcfcfc] pb-20">
+        <div className="min-h-screen bg-[#fcfcfc] pb-32">
+            {/* Mobile Bottom Booking Bar */}
+            {isMobile && cartItems.length > 0 && activeTab !== "book-a-seat" && (
+                <motion.div 
+                    initial={{ y: 100 }}
+                    animate={{ y: 0 }}
+                    className="fixed bottom-6 left-4 right-4 z-50 bg-[#1a1a1a] text-white p-4 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/20"
+                >
+                    <div>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">{cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'}</p>
+                        <p className="text-lg font-black tracking-tight">₹{finalTotal.toFixed(2)}</p>
+                    </div>
+                    <button 
+                        onClick={() => setActiveTab("book-a-seat")}
+                        className="bg-[#ff5e00] px-6 py-2.5 rounded-xl font-black text-sm flex items-center gap-2 active:scale-95 transition-transform"
+                    >
+                        Review Booking <ChevronRight size={16} strokeWidth={3} />
+                    </button>
+                </motion.div>
+            )}
+
             <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
 
 
@@ -314,41 +342,77 @@ const RestaurantDetails = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
                     <div className="lg:col-span-2">
-                        <div className="mb-8">
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                        <div className="mb-4">
+                             <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2.5 tracking-tight">
                                 {restaurant.restaurantName}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <div className="flex flex-wrap items-center gap-3 text-sm">
                                 {restaurant.ratingStats?.count > 0 && (
-                                    <>
-                                        <div className="flex items-center gap-1.5 font-bold text-gray-900">
-                                            <Star size={18} className="fill-[#ff9500] text-[#ff9500]" />
-                                            <span>{restaurant.ratingStats.average}</span>
-                                        </div>
-                                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                        <span className="underline decoration-gray-300 decoration-1 underline-offset-2">
-                                            {restaurant.ratingStats.count} reviews
-                                        </span>
-                                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                    </>
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full font-bold">
+                                        <Star size={14} className="fill-green-700" />
+                                        <span>{restaurant.ratingStats.average}</span>
+                                    </div>
                                 )}
-                                <span>₹{pricePerPerson.toFixed(2)} per person</span>
+                                <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
+                                    <span>{restaurant.ratingStats.count || 0} reviews</span>
+                                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
+                                    <span className="text-[#ff5e00] font-bold">₹{pricePerPerson.toFixed(0)} per head</span>
+                                </div>
                             </div>
                         </div>
 
+                         {/* Mobile-only Premium Offers Section */}
+                        {isMobile && restaurant.offers && restaurant.offers.length > 0 && (
+                            <div className="mb-8 -mx-4 px-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Active Offers</h3>
+                                    <div className="flex gap-2 text-[#ff5e00]">
+                                        <Tag size={14} />
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                                    {restaurant.offers.map((offer, idx) => (
+                                        <div 
+                                            key={offer._id || idx}
+                                            className="min-w-[calc(100vw-64px)] bg-gradient-to-br from-[#ff5e00] to-[#ff9100] p-5 rounded-2xl text-white relative overflow-hidden group shadow-lg shadow-orange-100/50"
+                                        >
+                                            <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full transition-transform group-hover:scale-125"></div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-start justify-between mb-1">
+                                                    <p className="text-2xl font-black">₹{offer.discountValue} OFF</p>
+                                                    <span className="bg-white/20 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase">PROMO</span>
+                                                </div>
+                                                <p className="text-white/90 text-xs font-medium mb-2">
+                                                    {offer.minOrderValue > 0 ? `Orders above ₹${offer.minOrderValue}` : 'Flat discount on any order'}
+                                                </p>
+                                                <div className="flex items-center gap-1 text-[10px] bg-black/10 w-fit px-2 py-1 rounded-md">
+                                                    <Check size={10} strokeWidth={4} />
+                                                    <span className="font-bold">APPLIED AT CHECKOUT</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                        <div className="flex items-center gap-8 border-b border-gray-100 mb-8 overflow-x-auto">
-                            {["About", "Menu", "Reviews"].map((tab) => (
+
+                        <div className="sticky top-0 z-[40] bg-[#fcfcfc] flex items-center justify-between md:justify-start md:gap-8 border-b border-gray-100 mb-8 overflow-x-auto no-scrollbar pt-2">
+                            {(isMobile 
+                                ? ["About", "Menu", "Reviews", "Book a seat"] 
+                                : ["About", "Menu", "Reviews"]
+                            ).map((tab) => (
                                 <button
                                     key={tab}
-                                    onClick={() => setActiveTab(tab.toLowerCase())}
-                                    className={`relative pb-4 text-base font-medium transition-colors whitespace-nowrap ${activeTab === tab.toLowerCase()
+                                    onClick={() => setActiveTab(tab.toLowerCase().replace(/ /g, '-'))}
+                                    className={`relative flex-1 md:flex-none pb-4 text-xs md:text-base font-medium transition-colors whitespace-nowrap ${activeTab === tab.toLowerCase().replace(/ /g, '-')
                                         ? "text-[#ff5e00]"
                                         : "text-gray-500 hover:text-gray-800"
                                         }`}
                                 >
                                     {tab}
-                                    {activeTab === tab.toLowerCase() && (
+                                    {activeTab === tab.toLowerCase().replace(/ /g, '-') && (
                                         <motion.div
                                             layoutId="activeTab"
                                             className="absolute bottom-0 left-0 w-full h-0.5 bg-[#ff5e00] rounded-full"
@@ -477,13 +541,230 @@ const RestaurantDetails = () => {
                                     <RestaurantReviews restaurantId={id} />
                                 </motion.div>
                             )}
+
+                            {activeTab === "book-a-seat" && (
+                                <motion.div
+                                    key="book-a-seat"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="lg:hidden"
+                                >
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-6">Complete Your Booking</h3>
+                                        {/* Scheduling Section for Mobile Tab */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Date</label>
+                                                <div className="relative">
+                                                     <button
+                                                        onClick={() => setIsDateOpen(!isDateOpen)}
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 h-[46px] text-sm font-medium flex items-center gap-2"
+                                                    >
+                                                        <Calendar size={16} className="text-[#ff5e00]" />
+                                                        <span className="flex-1 text-left text-gray-900">
+                                                            {dateOptions.find(d => d.value === selectedDate)?.label || selectedDate}
+                                                        </span>
+                                                        <ChevronDown size={16} className={`text-gray-400 transition-transform ${isDateOpen ? 'rotate-180' : ''}`} />
+                                                    </button>
+                                                    {isDateOpen && (
+                                                        <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-[60] overflow-hidden">
+                                                            {dateOptions.map((option) => (
+                                                                <button
+                                                                    key={option.value}
+                                                                    onClick={() => {
+                                                                        setSelectedDate(option.value);
+                                                                        setIsDateOpen(false);
+                                                                    }}
+                                                                    className={`w-full px-4 py-3 text-sm text-left hover:bg-orange-50 ${selectedDate === option.value ? 'bg-orange-50 text-[#ff5e00] font-bold' : 'text-gray-600'}`}
+                                                                >
+                                                                    {option.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Party Size</label>
+                                                <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-2xl p-1 h-[48px]">
+                                                    <motion.button
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={() => setPartySize(Math.max(1, Number(partySize) - 1))}
+                                                        disabled={partySize <= 1}
+                                                        className="w-9 h-full flex items-center justify-center bg-white rounded-xl text-gray-500 shadow-sm hover:text-[#ff5e00] disabled:opacity-50 disabled:shadow-none transition-colors"
+                                                        type="button"
+                                                    >
+                                                        <Minus size={16} strokeWidth={2.5} />
+                                                    </motion.button>
+                                                    
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-sm font-black text-gray-900 leading-none">{partySize}</span>
+                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">Guests</span>
+                                                    </div>
+
+                                                    {(() => {
+                                                        const selectedSlotIndex = availableLabels.indexOf(selectedTimeSlot);
+                                                        const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
+                                                        const liveAvailableSeats = selectedSlotMinutes !== null && liveSlotAvailability[selectedSlotMinutes] !== undefined
+                                                            ? liveSlotAvailability[selectedSlotMinutes]
+                                                            : restaurant?.totalSeats || 10;
+
+                                                        const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 10, liveAvailableSeats));
+
+                                                        return (
+                                                            <motion.button
+                                                                whileTap={{ scale: 0.9 }}
+                                                                onClick={() => setPartySize(Math.min(maxAllowedPartySize, Number(partySize) + 1))}
+                                                                disabled={partySize >= maxAllowedPartySize}
+                                                                className="w-9 h-full flex items-center justify-center bg-white rounded-xl text-gray-500 shadow-sm hover:text-[#ff5e00] disabled:opacity-50 disabled:shadow-none transition-colors"
+                                                                type="button"
+                                                            >
+                                                                <Plus size={16} strokeWidth={2.5} />
+                                                            </motion.button>
+                                                        );
+                                                    })()}
+                                                </div>
+                                                
+                                                {/* Subtle Seat Availability UI for Mobile Tab */}
+                                                {(() => {
+                                                    const selectedSlotIndex = availableLabels.indexOf(selectedTimeSlot);
+                                                    const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
+                                                    const seatsLeft = selectedSlotMinutes !== null && liveSlotAvailability[selectedSlotMinutes] !== undefined
+                                                        ? liveSlotAvailability[selectedSlotMinutes]
+                                                        : null;
+
+                                                    if (seatsLeft === null) return null;
+
+                                                    return (
+                                                        <motion.div
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            className="mt-2 flex items-center gap-1.5 text-gray-400"
+                                                        >
+                                                            <Armchair size={13} className="text-[#ff5e00]/40" />
+                                                            <span className="text-[10px] font-bold">
+                                                                {seatsLeft} {seatsLeft === 1 ? 'seat' : 'seats'} available for this slot
+                                                            </span>
+                                                        </motion.div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-8">
+                                            <label className="block text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Select Time</label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {availableLabels.map((time) => (
+                                                    <button
+                                                        key={time}
+                                                        onClick={() => setSelectedTimeSlot(time)}
+                                                        className={`py-2 text-xs font-bold rounded-xl border transition-all ${selectedTimeSlot === time ? 'bg-[#ff5e00] text-white border-[#ff5e00]' : 'bg-white border-gray-100 text-gray-600'}`}
+                                                    >
+                                                        {time}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t border-gray-50 pt-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h4 className="font-bold text-gray-900">Order Summary</h4>
+                                                {cartItems.length > 0 && <span className="text-xs text-gray-400">{cartItems.length} items</span>}
+                                            </div>
+                                            
+                                            {cartItems.length === 0 ? (
+                                                <div className="text-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+                                                    <p className="text-sm text-gray-500 mb-3 px-6">Your order is empty. Select some delicious items to proceed.</p>
+                                                    <button 
+                                                        onClick={() => setActiveTab("menu")} 
+                                                        className="px-6 py-2 bg-white text-[#ff5e00] text-xs font-black uppercase tracking-widest rounded-full shadow-sm border border-orange-100 hover:bg-orange-50 active:scale-95 transition-all"
+                                                    >
+                                                        Add a dish
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4 mb-6">
+                                                    {cartItems.map((item) => (
+                                                        <div key={item._id} className="flex justify-between items-center">
+                                                            <div className="flex-1">
+                                                                <p className="text-sm font-bold text-gray-800">{item.name}</p>
+                                                                <p className="text-xs text-gray-400">Qty: {item.qty}</p>
+                                                            </div>
+                                                            <p className="text-sm font-bold text-gray-900">₹{(item.price * item.qty).toFixed(2)}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {(cartItems.length > 0 || selectedTimeSlot) && (
+                                                <div className="space-y-2 mb-6 pt-6 border-t border-gray-50 px-1">
+                                                    <div className="flex justify-between text-xs text-gray-500">
+                                                        <span>Booking Fee ({partySize} x ₹{pricePerPerson})</span>
+                                                        <span>₹{bookingFee.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-gray-500">
+                                                        <span>Food Total</span>
+                                                        <span>₹{itemTotal.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-gray-500">
+                                                        <span>Tax (5%)</span>
+                                                        <span>₹{tax.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-gray-500">
+                                                        <span>Platform Fee (5%)</span>
+                                                        <span>₹{platformFee.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xl font-black text-gray-900 pt-3 border-t border-gray-100 mt-3">
+                                                        <span>Total</span>
+                                                        <span>₹{finalTotal.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-3">
+                                                <button
+                                                    onClick={handleBookNow}
+                                                    disabled={isBooking || cartItems.length === 0 || !selectedTimeSlot}
+                                                    className="w-full py-4 bg-[#ff5e00] text-white rounded-2xl font-black shadow-lg shadow-orange-200 disabled:opacity-50 disabled:shadow-none active:scale-95 transition-all flex items-center justify-center gap-3"
+                                                >
+                                                    {isBooking ? (
+                                                        <>
+                                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                            <span>BOOKING...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>CONFIRM BOOKING</span>
+                                                            <ChevronRight size={18} strokeWidth={3} />
+                                                        </>
+                                                    )}
+                                                </button>
+                                                
+                                                <button
+                                                    onClick={handleSaveWishlist}
+                                                    className="w-full py-3.5 bg-orange-50 text-[#ff5e00] font-bold rounded-2xl transition-all border border-orange-100 flex items-center justify-center gap-2"
+                                                >
+                                                    <Heart size={18} className="fill-[#ff5e00]/10" />
+                                                    Wishlist for later
+                                                </button>
+                                                
+                                                <p className="text-[10px] text-center text-gray-400 mt-2 font-medium">
+                                                    Fastest booking confirmation in the city
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                         </AnimatePresence>
                     </div>
 
                     <div className="lg:col-span-1">
-                        {/* Highlights/Offers Section */}
-                        {restaurant.offers && restaurant.offers.length > 0 && (
-                            <div className="mb-6">
+                        {/* Highlights/Offers Section - HIDDEN ON MOBILE (Moved to Top) */}
+                        {!isMobile && restaurant.offers && restaurant.offers.length > 0 && (
+                            <div className="mb-6 lg:block hidden">
                                 <div className="flex items-center justify-between mb-3">
                                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Available Offers</h3>
                                     {restaurant.offers.length > 1 && (
@@ -524,7 +805,7 @@ const RestaurantDetails = () => {
                             </div>
                         )}
 
-                        <div className="sticky top-24 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                        <div className="hidden lg:block sticky top-24 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-6">Pre-Order Summary</h3>
 
                             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -768,7 +1049,9 @@ const RestaurantDetails = () => {
 
                             <div className="space-y-4 mb-6 max-h-[200px] overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar">
                                 {cartItems.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-gray-400">Cart is empty</div>
+                                    <div className="text-center py-4 text-xs text-gray-400">
+                                        no dishes added - <span onClick={() => setActiveTab("menu")} className="text-[#ff5e00] font-bold cursor-pointer hover:underline">add a dish</span>
+                                    </div>
                                 ) : (
                                     cartItems.map((item) => (
                                         <div key={item._id} className="flex items-center justify-between gap-3">
