@@ -56,7 +56,7 @@ export const validateBookingBasics = async (restaurantId, bookingDate, slotTime,
 
     if (bookingDateMidnight.getTime() === today.getTime()) {
         const now = new Date();
-        const currentMinutes = (now.getHours() * 60) + now.getMinutes();
+        const currentMinutes = (now.getUTCHours() * 60) + now.getUTCMinutes();
         if (slotTime <= currentMinutes + BOOKING_BUFFER_MINUTES) {
             throw { status: STATUS_CODES.BAD_REQUEST, message: `Slot too soon. Min ${BOOKING_BUFFER_MINUTES / 60}h buffer required.` };
         }

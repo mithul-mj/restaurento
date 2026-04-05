@@ -499,7 +499,7 @@ export const getTopRestaurants = async (req, res, next) => {
           as: "schedule"
         }
       },
-      { $unwind: { path: "$schedule", preserveNullAndEmptyArrays: true } },
+      { $unwind: "$schedule" },
       {
         $match: {
           $nor: [

@@ -224,13 +224,11 @@ export const updateRestaurantSettings = async (req, res, next) => {
                 const now = new Date();
                 const today = new Date(now);
                 today.setUTCHours(0, 0, 0, 0);
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
-                const endLimit = new Date(closedTill);
-                endLimit.setUTCHours(23, 59, 59, 999);
+                const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
                 
                 const reopeningDate = new Date(closedTill);
                 reopeningDate.setUTCHours(0, 0, 0, 0);
-                const reopeningMinutes = new Date(closedTill).getHours() * 60 + new Date(closedTill).getMinutes();
+                const reopeningMinutes = new Date(closedTill).getUTCHours() * 60 + new Date(closedTill).getUTCMinutes();
                 
                 const matchQuery = {
                     restaurantId: req.user._id,
@@ -323,14 +321,11 @@ export const getAffectedBookingsCount = async (req, res, next) => {
         const now = new Date();
         const today = new Date(now);
         today.setUTCHours(0, 0, 0, 0);
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-        const endLimit = new Date(closedTill);
-        endLimit.setUTCHours(23, 59, 59, 999); 
+        const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
 
         const reopeningDate = new Date(closedTill);
         reopeningDate.setUTCHours(0, 0, 0, 0);
-        const reopeningMinutes = new Date(closedTill).getHours() * 60 + new Date(closedTill).getMinutes();
+        const reopeningMinutes = new Date(closedTill).getUTCHours() * 60 + new Date(closedTill).getUTCMinutes();
 
         const matchQuery = {
             restaurantId: req.user._id,
