@@ -58,6 +58,10 @@ const Home = () => {
 
   const dragControls = useDragControls();
 
+  React.useEffect(() => {
+    document.title = "Discover Top Restaurants | Restaurento";
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-[#fcfcfc] overflow-hidden">
       {/* Mobile Fixed Location Header */}
