@@ -13,7 +13,8 @@ import {
     getBookingById,
     updateBookingStatus,
     getRestaurantStats,
-    getRestaurantEarnings
+    getRestaurantEarnings,
+    getAffectedBookingsCount
 } from "../../controllers/restaurant/restaurant.controller.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
@@ -32,6 +33,7 @@ router.use(verifyRole(ROLES.RESTAURANT));
 router.get("/profile", getRestaurantProfile);
 router.patch("/profile", upload.array("images", 5), updateRestaurantProfile);
 router.patch("/settings", updateRestaurantSettings);
+router.get("/settings/affected-bookings-count", getAffectedBookingsCount);
 router.get("/stats", getRestaurantStats);
 router.get("/earnings", getRestaurantEarnings);
 

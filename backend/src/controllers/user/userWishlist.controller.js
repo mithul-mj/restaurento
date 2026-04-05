@@ -45,13 +45,26 @@ export const getWishlists = async (req, res, next) => {
                     foreignField: "_id",
                     as: "restaurantInfo"
                 }
-
-            }
-            , { $unwind: "$restaurantInfo" },
+            },
+            { $unwind: "$restaurantInfo" },
+            {
+                $lookup: {
+                    from: "schedules",
+                    let: { rid: "$restaurantId" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$restaurantId", "$$rid"] }, validFrom: { $lte: new Date() } } },
+                        { $sort: { validFrom: -1 } },
+                        { $limit: 1 }
+                    ],
+                    as: "scheduleInfo"
+                }
+            },
+            { $unwind: { path: "$scheduleInfo", preserveNullAndEmptyArrays: true } },
             {
                 $project: {
                     _id: 1,
                     restaurantId: 1,
+                    closedTill: "$scheduleInfo.closedTill",
                     restaurantName: "$restaurantInfo.restaurantName",
                     restaurantAddress: "$restaurantInfo.address",
                     restaurantImage: { $arrayElemAt: ["$restaurantInfo.images", 0] },

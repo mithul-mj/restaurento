@@ -131,9 +131,10 @@ const RestaurantDetails = () => {
         });
     };
 
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError, error } = useQuery({
         queryKey: ["restaurant", id],
         queryFn: () => userService.getRestaurantDetails(id),
+        retry: false
     });
 
     const restaurant = data?.restaurant;
@@ -260,7 +261,99 @@ const RestaurantDetails = () => {
         );
     }
 
-    if (isError || !restaurant) {
+    if (isError) {
+        const isClosed = error.response?.status === 403;
+        if (isClosed) {
+            const closedTill = error.response?.data?.closedTill;
+            return (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="min-h-screen bg-[#fcfcfc] flex flex-col items-center justify-center p-6 relative overflow-hidden"
+                >
+                    {/* Decorative background elements */}
+                    <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-100/50 rounded-full blur-[120px] pointer-events-none" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-100/30 rounded-full blur-[100px] pointer-events-none" />
+
+                    <div className="relative z-10 max-w-2xl w-full text-center">
+                        <motion.div 
+                            initial={{ scale: 0.8, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="inline-flex items-center justify-center w-24 h-24 mb-10 relative"
+                        >
+                            <div className="absolute inset-0 bg-orange-500/10 rounded-3xl rotate-12 animate-pulse" />
+                            <div className="absolute inset-0 bg-orange-500/5 rounded-3xl -rotate-6" />
+                            <div className="relative bg-white shadow-xl shadow-orange-500/10 rounded-3xl p-6 border border-orange-100">
+                                <Clock size={40} className="text-[#ff5e00]" strokeWidth={2.5} />
+                            </div>
+                        </motion.div>
+
+                        <motion.h2 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter uppercase mb-6 leading-none"
+                        >
+                            Taking a <br />
+                            <span className="text-[#ff5e00] italic">Short Break</span>
+                        </motion.h2>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white/60 backdrop-blur-md border border-white/80 shadow-sm rounded-[32px] p-8 md:p-10 mb-12"
+                        >
+                            <p className="text-gray-500 text-lg md:text-xl font-medium leading-relaxed">
+                                {closedTill ? (
+                                    <>
+                                        This venue is currently undergoing some magic behind the scenes. 
+                                        They'll be back to serve you on 
+                                        <span className="block mt-4 text-3xl font-black text-gray-900 tracking-tight">
+                                            {new Date(closedTill).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                        </span>
+                                    </>
+                                ) : (
+                                    "This venue is currently taking a quick break and will be back at your service very soon!"
+                                )}
+                            </p>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            <Link 
+                                to="/" 
+                                className="inline-flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-2xl font-black text-[11px] tracking-[0.3em] uppercase hover:bg-[#ff5e00] transition-all shadow-2xl hover:shadow-orange-500/20 active:scale-95 group"
+                            >
+                                Explorer other venues
+                                <ChevronRight size={18} className="translate-y-[-1px] group-hover:translate-x-1 transition-transform" strokeWidth={3} />
+                            </Link>
+                        </motion.div>
+                    </div>
+
+                    <p className="absolute bottom-10 left-0 right-0 text-center text-[10px] font-black tracking-[0.4em] uppercase text-gray-300 pointer-events-none">
+                        Restaurento Premium Dining
+                    </p>
+                </motion.div>
+            );
+        }
+
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#fcfcfc]">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                    <AlertTriangle size={36} className="text-gray-300" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant Not Found</h2>
+                <p className="text-gray-400 font-medium mb-8">The place you're looking for doesn't seem to exist or is inactive.</p>
+                <Link to="/" className="text-[#ff5e00] font-black text-[10px] tracking-widest uppercase hover:underline">Back to Discover</Link>
+            </div>
+        );
+    }
+
+    if (!restaurant) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#fcfcfc]">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Restaurant Not Found</h2>

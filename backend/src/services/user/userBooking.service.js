@@ -35,6 +35,15 @@ export const validateBookingBasics = async (restaurantId, bookingDate, slotTime,
         throw { status: STATUS_CODES.NOT_FOUND, message: "Restaurant or Schedule not found." };
     }
 
+    // Check if temporarily closed
+    if (activeSchedule.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
+        throw { 
+            status: STATUS_CODES.FORBIDDEN, 
+            message: "Restaurant is temporarily closed. Please try again later.",
+            closedTill: activeSchedule.closedTill 
+        };
+    }
+
     // 1. Date & Buffer check
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);

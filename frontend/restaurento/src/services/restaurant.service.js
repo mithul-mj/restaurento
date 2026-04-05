@@ -21,6 +21,12 @@ const restaurantService = {
         const response = await api.patch("/restaurant/settings", data);
         return response.data;
     },
+    getAffectedBookingsCount: async (closedTill) => {
+        const response = await api.get("/restaurant/settings/affected-bookings-count", {
+            params: { closedTill }
+        });
+        return response.data;
+    },
     updateProfile: async (formData) => {
         const response = await api.patch("/restaurant/profile", formData, {
             headers: { "Content-Type": "multipart/form-data" },

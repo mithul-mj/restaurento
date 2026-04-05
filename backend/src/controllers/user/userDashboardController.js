@@ -79,6 +79,15 @@ export const getUserDashboard = async (req, res, next) => {
     ];
 
     pipeline.push(...lookupScheduleStage);
+    
+    // Filter out restaurants that are currently in a temporary closure period
+    pipeline.push({
+      $match: {
+        $nor: [
+          { "schedule.closedTill": { $gt: new Date() } }
+        ]
+      }
+    });
 
     // Get the best active offer for each restaurant
     const lookupOfferStage = [
@@ -215,7 +224,12 @@ export const getUserDashboard = async (req, res, next) => {
           $cond: {
             if: {
               $and: [
-                { $eq: ["$isTemporaryClosed", false] },
+                {
+                  $or: [
+                    { $not: ["$schedule.closedTill"] },
+                    { $lte: ["$schedule.closedTill", new Date()] }
+                  ]
+                },
                 { $eq: ["$todaySchedule.isClosed", false] },
                 { $gte: [currentMinutes, "$todaySchedule.startTime"] },
                 { $lte: [currentMinutes, "$todaySchedule.endTime"] }
@@ -325,6 +339,15 @@ export const getRestaurantDetails = async (req, res, next) => {
       return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant schedule not found" });
     }
 
+    // Check if temporarily closed
+    if (activeSchedule.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
+      return res.status(STATUS_CODES.FORBIDDEN).json({ 
+        success: false, 
+        message: "Restaurant is temporarily closed",
+        closedTill: activeSchedule.closedTill 
+      });
+    }
+
     // 2. Prepare for "Currently Open" calculation
     const now = new Date();
     const day = now.getDay();
@@ -367,6 +390,20 @@ export const getRestaurantMenu = async (req, res, next) => {
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
+    }
+
+    // Check if temporarily closed
+    const activeSchedule = await Schedule.findOne({
+      restaurantId: id,
+      validFrom: { $lte: new Date() }
+    }).sort({ validFrom: -1 }).lean();
+
+    if (activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
+      return res.status(STATUS_CODES.FORBIDDEN).json({ 
+        success: false, 
+        message: "Restaurant is temporarily closed",
+        closedTill: activeSchedule.closedTill 
+      });
     }
 
     const matchStage = { $match: { _id: new mongoose.Types.ObjectId(id), status: "active" } };
@@ -463,6 +500,13 @@ export const getTopRestaurants = async (req, res, next) => {
         }
       },
       { $unwind: { path: "$schedule", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $nor: [
+            { "schedule.closedTill": { $gt: new Date() } }
+          ]
+        }
+      },
       {
         $lookup: {
           from: "offers",

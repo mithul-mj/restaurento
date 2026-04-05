@@ -29,7 +29,8 @@ const scheduleSchema = new Schema({
         gap: { type: Number, default: 0 }
     },
     totalSeats: { type: Number },
-    slotPrice: { type: Number }
+    slotPrice: { type: Number },
+    closedTill: { type: Date }
 }, { timestamps: true });
 
 // Index for timeline queries

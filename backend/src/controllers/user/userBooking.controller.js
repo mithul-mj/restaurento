@@ -127,6 +127,18 @@ export const checkBookingAvailability = async (req, res) => {
         // Use core pricing logic to re-verify existence (dishes, coupons, offers)
         // This is a great reuse of our Service layer!
         const restaurant = await Restaurant.findById(booking.restaurantId).select('menuItems').lean();
+        const activeSchedule = await Schedule.findOne({
+            restaurantId: booking.restaurantId,
+            validFrom: { $lte: new Date() }
+        }).sort({ validFrom: -1 }).lean();
+
+        if (activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
+            return res.status(STATUS_CODES.FORBIDDEN).json({ 
+                success: false, 
+                message: "Restaurant has temporarily closed. Booking and payment are disabled." 
+            });
+        }
+
         await bookingService.calculateBookingFinals(
             restaurant, booking.preOrderItems, booking.guests, booking.slotPrice, 
             booking.appliedCoupon?.couponId, booking.appliedOffer?.offerId, booking.slotTime

@@ -95,8 +95,12 @@ export const getRestaurantProfile = async (req, res, next) => {
             return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
         }
 
+        const isTemporaryClosed = activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date();
+
         const mergedProfile = {
             ...restaurant,
+            isTemporaryClosed,
+            closedTill: activeSchedule?.closedTill || null,
             ...(activeSchedule ? {
                 openingHours: activeSchedule.openingHours,
                 slotConfig: activeSchedule.slotConfig,
@@ -197,27 +201,169 @@ export const updateRestaurantProfile = async (req, res, next) => {
 };
 
 export const updateRestaurantSettings = async (req, res, next) => {
+    const session = await mongoose.startSession();
     try {
-        const { isTemporaryClosed } = req.body;
+        session.startTransaction();
+        const { isTemporaryClosed, closedTill, shouldCancelBookings } = req.body;
 
-        if (typeof isTemporaryClosed !== 'boolean') {
-            return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Invalid status value" });
-        }
-
-        const restaurant = await Restaurant.findByIdAndUpdate(
-            req.user._id,
-            { $set: { isTemporaryClosed } },
-            { new: true }
-        );
-
+        const restaurant = await Restaurant.findById(req.user._id).session(session);
         if (!restaurant) {
+            await session.abortTransaction();
             return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
         }
 
+        if (isTemporaryClosed === true && closedTill) {
+            // CLOSING
+            await Schedule.findOneAndUpdate(
+                { restaurantId: req.user._id, validFrom: { $lte: new Date() } },
+                { $set: { closedTill: new Date(closedTill) } },
+                { sort: { validFrom: -1 }, session }
+            );
+
+            if (shouldCancelBookings) {
+                const now = new Date();
+                const today = new Date(now);
+                today.setUTCHours(0, 0, 0, 0);
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const endLimit = new Date(closedTill);
+                endLimit.setUTCHours(23, 59, 59, 999);
+                
+                const reopeningDate = new Date(closedTill);
+                reopeningDate.setUTCHours(0, 0, 0, 0);
+                const reopeningMinutes = new Date(closedTill).getHours() * 60 + new Date(closedTill).getMinutes();
+                
+                const matchQuery = {
+                    restaurantId: req.user._id,
+                    status: 'approved',
+                    $or: [
+                        // 1. Any day strictly between today and re-opening day
+                        {
+                            bookingDate: { $gt: today, $lt: reopeningDate }
+                        },
+                        // 2. Today: after now, but only if re-opening is after today
+                        {
+                            bookingDate: { $eq: today },
+                            slotEndTime: { $gt: currentMinutes },
+                            $expr: {
+                              $or: [
+                                { $gt: [reopeningDate, today] },
+                                { $lt: ["$slotTime", reopeningMinutes] }
+                              ]
+                            }
+                        },
+                        // 3. Re-opening day: only slots starting before re-opening time
+                        {
+                            bookingDate: { $eq: reopeningDate },
+                            slotTime: { $lt: reopeningMinutes }
+                        }
+                    ]
+                };
+
+                const affectedBookings = await Booking.find(matchQuery).session(session);
+
+                for (const booking of affectedBookings) {
+                    booking.status = 'canceled';
+                    booking.canceledBy = ROLES.RESTAURANT;
+                    await booking.save({ session });
+
+                    // Refund to User Wallet
+                    await User.findByIdAndUpdate(
+                        booking.userId,
+                        { $inc: { walletBalance: booking.totalAmount } },
+                        { session }
+                    );
+
+                    // Create Wallet Transaction
+                    await WalletTransaction.create([{
+                        userId: booking.userId,
+                        bookingId: booking._id,
+                        amount: booking.totalAmount,
+                        description: `Refund: Restaurant Temporary Closure (${restaurant.restaurantName})`
+                    }], { session });
+
+                    // Send Notification (Ideally async, but following existing pattern)
+                    await sendNotification(req, {
+                        recipientId: booking.userId,
+                        title: "Booking Cancelled - Restaurant Temporarily Closed",
+                        message: `Your booking at ${restaurant.restaurantName} on ${new Date(booking.bookingDate).toLocaleDateString()} was cancelled due to a temporary closure until ${new Date(closedTill).toLocaleDateString()}. ₹${booking.totalAmount} refunded to wallet.`
+                    });
+                }
+            }
+        } else if (isTemporaryClosed === false) {
+            // RE-OPENING
+            await Schedule.findOneAndUpdate(
+                { restaurantId: req.user._id },
+                { $unset: { closedTill: "" } },
+                { sort: { validFrom: -1 }, session }
+            );
+        }
+
+        await session.commitTransaction();
         return res.status(STATUS_CODES.OK).json({
             success: true,
             message: `Restaurant is now ${isTemporaryClosed ? 'closed' : 'open'} temporarily`,
-            isTemporaryClosed: restaurant.isTemporaryClosed
+            isTemporaryClosed: isTemporaryClosed,
+            closedTill: isTemporaryClosed ? closedTill : null
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        next(error);
+    } finally {
+        session.endSession();
+    }
+};
+
+export const getAffectedBookingsCount = async (req, res, next) => {
+    try {
+        const { closedTill } = req.query;
+        if (!closedTill) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Date is required" });
+        }
+
+        const now = new Date();
+        const today = new Date(now);
+        today.setUTCHours(0, 0, 0, 0);
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        const endLimit = new Date(closedTill);
+        endLimit.setUTCHours(23, 59, 59, 999); 
+
+        const reopeningDate = new Date(closedTill);
+        reopeningDate.setUTCHours(0, 0, 0, 0);
+        const reopeningMinutes = new Date(closedTill).getHours() * 60 + new Date(closedTill).getMinutes();
+
+        const matchQuery = {
+            restaurantId: req.user._id,
+            status: 'approved',
+            $or: [
+                // 1. Any day strictly between today and re-opening day
+                {
+                    bookingDate: { $gt: today, $lt: reopeningDate }
+                },
+                // 2. Today: after now, but only if re-opening is after today
+                {
+                    bookingDate: { $eq: today },
+                    slotEndTime: { $gt: currentMinutes },
+                    $expr: {
+                        $or: [
+                            { $gt: [reopeningDate, today] },
+                            { $lt: ["$slotTime", reopeningMinutes] }
+                        ]
+                    }
+                },
+                // 3. Re-opening day: only slots starting before re-opening time
+                {
+                    bookingDate: { $eq: reopeningDate },
+                    slotTime: { $lt: reopeningMinutes }
+                }
+            ]
+        };
+
+        const count = await Booking.countDocuments(matchQuery);
+
+        return res.status(STATUS_CODES.OK).json({
+            success: true,
+            count
         });
     } catch (error) {
         next(error);

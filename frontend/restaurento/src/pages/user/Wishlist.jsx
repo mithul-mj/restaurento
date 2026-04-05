@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Trash2, ArrowRight, ChevronLeft, ChevronRight, Utensils } from "lucide-react";
+import { Heart, Trash2, ArrowRight, ChevronLeft, ChevronRight, Utensils, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useWishlist } from "../../hooks/useWishlist";
 import { showConfirm, showToast } from "../../utils/alert";
@@ -15,6 +15,8 @@ function WishlistCard({ restaurant, onRemove }) {
         Dinner: "bg-[#1a1a1a] text-white",
     };
 
+    const isClosed = restaurant.closedTill && new Date(restaurant.closedTill) > new Date();
+
     return (
         <div className="group h-full bg-white rounded-[24px] border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-xl transition-all duration-300">
 
@@ -29,6 +31,19 @@ function WishlistCard({ restaurant, onRemove }) {
                     <Utensils size={12} />
                     {restaurant.mealType}
                 </div>
+
+                {isClosed && (
+                    <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-[3px] flex items-center justify-center p-6 text-center transition-all duration-500 group-hover:backdrop-blur-[5px]">
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white/90 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-white/50 flex flex-col items-center gap-1"
+                        >
+                            <Clock size={16} className="text-red-500" strokeWidth={3} />
+                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.15em]">Closed Temporarily</span>
+                        </motion.div>
+                    </div>
+                )}
             </div>
 
             <div className="p-6 flex flex-col gap-4 flex-1">
@@ -83,8 +98,8 @@ function WishlistCard({ restaurant, onRemove }) {
                         <div className="text-xs font-bold text-gray-500 mt-0.5 tracking-tight">{formatDate(restaurant.createdAt)}</div>
                     </div>
                     <Link
-                        to={`/restaurants/${restaurant.restaurantId}`}
-                        state={{
+                        to={isClosed ? "#" : `/restaurants/${restaurant.restaurantId}`}
+                        state={isClosed ? null : {
                             prefilledMealType: restaurant.mealType,
                             prefilledCart: restaurant.items.reduce((acc, curr) => {
                                 const isAvailable = curr.dishDetails && !curr.dishDetails.isDeleted && curr.dishDetails.isAvailable;
@@ -95,14 +110,19 @@ function WishlistCard({ restaurant, onRemove }) {
                             }, {})
                         }}
                         onClick={(e) => {
+                            if (isClosed) {
+                                e.preventDefault();
+                                showToast("This restaurant is temporarily closed.", "info");
+                                return;
+                            }
                             const hasUnavailable = restaurant.items.some(item => !item.dishDetails || item.dishDetails.isDeleted || !item.dishDetails.isAvailable);
                             if (hasUnavailable) {
                                 showToast("Some items from your plan are no longer available and were skipped.", "warning");
                             }
                         }}
-                        className="bg-[#f27b21] text-white text-sm font-bold px-8 py-3 rounded-2xl hover:bg-[#e06a12] transition-all shadow-lg shadow-orange-500/10 active:scale-95 text-center"
+                        className={`${isClosed ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#f27b21] text-white hover:bg-[#e06a12] shadow-orange-500/10 active:scale-95'} text-sm font-bold px-8 py-3 rounded-2xl transition-all shadow-lg text-center`}
                     >
-                        Book Now →
+                        {isClosed ? "Closed" : "Book Now →"}
                     </Link>
                 </div>
             </div>

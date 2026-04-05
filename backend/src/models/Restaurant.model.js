@@ -118,10 +118,6 @@ const restaurantSchema = new Schema(
         date: { type: Date, default: Date.now },
       },
     ],
-    isTemporaryClosed: {
-      type: Boolean,
-      default: false,
-    },
     refreshToken: {
       type: String,
     },
