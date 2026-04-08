@@ -68,7 +68,7 @@ const PreApproval = () => {
         }
     }, [user, setValue]);
 
-    const handleLocationSelect = use((loc) => {
+    const handleLocationSelect = useCallback((loc) => {
         console.log("Location Selected:", loc);
         setValue('latitude', loc.lat);
         setValue('longitude', loc.lng);
