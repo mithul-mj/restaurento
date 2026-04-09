@@ -15,6 +15,7 @@ import { globalLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 connectDB();
 seedAdmin();
+// API System Initialized
 
 const app = express();
 const server = http.createServer(app);
