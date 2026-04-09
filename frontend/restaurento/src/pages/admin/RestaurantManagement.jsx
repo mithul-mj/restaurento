@@ -174,8 +174,7 @@ const RestaurantManagement = () => {
                 <img
                   src={
                     restaurant.logo ||
-                    "https://ui-avatars.com/api/?name=" +
-                    (restaurant.restaurantName || "R")
+                    "https://ui-avatars.com/api/?name=" + (restaurant.restaurantName || "R") + "&background=ff5e00&color=fff"
                   }
                   alt={restaurant.restaurantName}
                   className="w-full h-full object-cover"

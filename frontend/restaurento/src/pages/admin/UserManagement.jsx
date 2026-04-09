@@ -172,7 +172,7 @@ const UserManagement = () => {
                 <img
                   src={
                     user.avatar ||
-                    "https://ui-avatars.com/api/?name=" + user.fullName
+                    "https://ui-avatars.com/api/?name=" + user.fullName + "&background=ff5e00&color=fff"
                   }
                   alt={user.fullName}
                   className="w-full h-full object-cover"

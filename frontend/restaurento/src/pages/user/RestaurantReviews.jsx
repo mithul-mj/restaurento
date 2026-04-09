@@ -85,7 +85,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                                 <div className="flex gap-4">
                                     <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-50 mt-0.5">
                                         <img
-                                            src={review.userId?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.userId?.fullName || "User")}&background=random`}
+                                            src={review.userId?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.userId?.fullName || "User")}&background=ff5e00&color=fff`}
                                             alt={review.userId?.fullName}
                                             className="w-full h-full object-cover"
                                         />
