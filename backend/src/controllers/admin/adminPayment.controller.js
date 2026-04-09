@@ -1,6 +1,7 @@
 import { Booking } from "../../models/Booking.model.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 export const getPaymentDashboard = async (req, res, next) => {
     try {
@@ -214,7 +215,7 @@ export const getTransactionDetails = async (req, res, next) => {
             .populate("userId", "fullName email phone");
 
         if (!booking) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Transaction not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.TRANSACTION_NOT_FOUND });
         }
 
         res.status(STATUS_CODES.OK).json({

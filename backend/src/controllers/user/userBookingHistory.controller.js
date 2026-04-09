@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Booking } from '../../models/Booking.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_LIMIT } from '../../constants/constants.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages.js';
 
 export const getMyBookings = async (req, res, next) => {
     try {
@@ -170,7 +171,7 @@ export const getBookingDetails = async (req, res, next) => {
         if (!bookings.length) {
             return res.status(STATUS_CODES.NOT_FOUND).json({
                 success: false,
-                message: "Booking not found."
+                message: ERROR_MESSAGES.BOOKING_NOT_FOUND
             });
         }
 

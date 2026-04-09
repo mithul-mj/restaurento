@@ -14,6 +14,7 @@ import STATUS_CODES from "../../constants/statusCodes.js";
 import { WalletTransaction } from "../../models/WalletTransaction.model.js";
 import { REFERRAL_REWARD_REFERRER, REFERRAL_REWARD_NEW_USER } from "../../constants/constants.js";
 import { sendAuthResponse, clearAuthCookies } from "../../utils/auth.util.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 
 export const registerUser = async (req, res, next) => {
@@ -22,7 +23,7 @@ export const registerUser = async (req, res, next) => {
 
     return res.status(STATUS_CODES.CREATED).json({
       success: true,
-      message: "User registered successfully",
+      message: SUCCESS_MESSAGES.REGISTERED,
       user: {
         _id: newUser._id,
         fullName: newUser.fullName,
@@ -45,7 +46,7 @@ export const googleAuthUser = async (req, res, next) => {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to verify Google token");
+      throw new Error(ERROR_MESSAGES.VERIFICATION_FAILED);
     }
 
     const payload = await response.json();
@@ -56,7 +57,7 @@ export const googleAuthUser = async (req, res, next) => {
     if (existingRestaurant) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        message: `Email already registered as RESTAURANT. Please login via restaurant portal.`,
+        message: ERROR_MESSAGES.EMAIL_ALREADY_EXISTS,
       });
     }
 
@@ -100,14 +101,14 @@ export const googleAuthUser = async (req, res, next) => {
     if (user.status === "suspended") {
       return res.status(STATUS_CODES.FORBIDDEN).json({
         success: false,
-        message: "Your account has been suspended. Please contact support.",
+        message: ERROR_MESSAGES.ACCOUNT_SUSPENDED,
       });
     }
 
     const accessToken = user.generateAccessToken(ROLES.USER);
     const refreshToken = user.generateRefreshToken(ROLES.USER);
 
-    return sendAuthResponse(res, ROLES.USER, user, "User logged in successfully", {
+    return sendAuthResponse(res, ROLES.USER, user, SUCCESS_MESSAGES.LOGIN_SUCCESS, {
         accessToken,
         refreshToken
     });
@@ -126,11 +127,11 @@ export const loginUser = async (req, res, next) => {
     if (account.status === "suspended") {
       return res.status(STATUS_CODES.FORBIDDEN).json({
         success: false,
-        message: "Your account has been suspended. Please contact support.",
+        message: ERROR_MESSAGES.ACCOUNT_SUSPENDED,
       });
     }
 
-    return sendAuthResponse(res, ROLES.USER, account, "User logged in successfully", {
+    return sendAuthResponse(res, ROLES.USER, account, SUCCESS_MESSAGES.LOGIN_SUCCESS, {
         accessToken,
         refreshToken
     });
@@ -144,7 +145,7 @@ export const loginUser = async (req, res, next) => {
 export const logout = async (req, res, next) => {
   try {
     clearAuthCookies(res, "USER");
-    return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
+    return res.status(STATUS_CODES.OK).json({ success: true, message: SUCCESS_MESSAGES.LOGGED_OUT });
   } catch (error) {
     next(error);
   }

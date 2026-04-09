@@ -3,7 +3,7 @@ import { Booking } from "../../models/Booking.model.js";
 import mongoose from "mongoose";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import { ApiError } from "../../utils/errors/ApiError.js";
-import { lte } from "zod";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 export const getAllCoupons = async (req, res, next) => {
   try {
@@ -132,7 +132,7 @@ export const createCoupon = async (req, res, next) => {
       code: code.toUpperCase().trim(),
     });
     if (existingCoupon) {
-      throw new ApiError(STATUS_CODES.CONFLICT, "Coupon code already exists");
+      throw new ApiError(STATUS_CODES.CONFLICT, ERROR_MESSAGES.COUPON_EXISTS);
     }
     const coupon = await Coupon.create({
       code: code.toUpperCase().trim(),
@@ -146,7 +146,7 @@ export const createCoupon = async (req, res, next) => {
     });
     res.status(STATUS_CODES.CREATED).json({
       success: true,
-      message: "Coupon created successfully",
+      message: SUCCESS_MESSAGES.COUPON_CREATED,
       data: coupon,
     });
   } catch (error) {
@@ -169,7 +169,7 @@ export const updateCoupon = async (req, res, next) => {
     } = req.body;
     const coupon = await Coupon.findById(id);
     if (!coupon) {
-      throw new ApiError(STATUS_CODES.NOT_FOUND, "Coupon not found");
+      throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.COUPON_NOT_FOUND);
     }
     // If code is being updated, check for uniqueness
     if (code && code.toUpperCase().trim() !== coupon.code) {
@@ -179,7 +179,7 @@ export const updateCoupon = async (req, res, next) => {
       if (existingCoupon) {
         throw new ApiError(
           STATUS_CODES.CONFLICT,
-          "New coupon code already exists",
+          ERROR_MESSAGES.COUPON_EXISTS,
         );
       }
       coupon.code = code.toUpperCase().trim();
@@ -194,7 +194,7 @@ export const updateCoupon = async (req, res, next) => {
     await coupon.save();
     res.status(STATUS_CODES.OK).json({
       success: true,
-      message: "Coupon updated successfully",
+      message: SUCCESS_MESSAGES.COUPON_UPDATED,
       data: coupon,
     });
   } catch (error) {
@@ -207,11 +207,11 @@ export const deleteCoupon = async (req, res, next) => {
     const { id } = req.params;
     const coupon = await Coupon.findByIdAndDelete(id);
     if (!coupon) {
-      throw new ApiError(STATUS_CODES.NOT_FOUND, "Coupon not found");
+      throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.COUPON_NOT_FOUND);
     }
     res.status(STATUS_CODES.OK).json({
       success: true,
-      message: "Coupon deleted successfully",
+      message: SUCCESS_MESSAGES.COUPON_DELETED,
     });
   } catch (error) {
     next(error);
@@ -224,7 +224,7 @@ export const getCouponById = async (req, res, next) => {
     const coupon = await Coupon.findById(id).lean();
 
     if (!coupon) {
-      throw new ApiError(STATUS_CODES.NOT_FOUND, "Coupon not found");
+      throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.COUPON_NOT_FOUND);
     }
 
     // Fetch comprehensive usage stats for this specific coupon in one go

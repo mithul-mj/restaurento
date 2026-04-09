@@ -2,6 +2,7 @@ import { Offer } from "../../models/Offer.model.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import { Booking } from "../../models/Booking.model.js";
 import mongoose from "mongoose";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 export const createOffer = async (req, res, next) => {
   try {
@@ -18,7 +19,7 @@ export const createOffer = async (req, res, next) => {
 
     res.status(STATUS_CODES.CREATED).json({
       success: true,
-      message: "Offer created successfully",
+      message: SUCCESS_MESSAGES.OFFER_CREATED,
       data: offer,
     });
   } catch (error) {
@@ -132,12 +133,12 @@ export const updateOffer = async (req, res, next) => {
     if (!offer) {
       return res
         .status(STATUS_CODES.NOT_FOUND)
-        .json({ message: "Offer not found" });
+        .json({ message: ERROR_MESSAGES.OFFER_NOT_FOUND });
     }
 
     res.status(STATUS_CODES.OK).json({
       success: true,
-      message: "Offer updated successfully",
+      message: SUCCESS_MESSAGES.OFFER_UPDATED,
       data: offer,
     });
   } catch (error) {
@@ -154,7 +155,7 @@ export const toggleOfferStatus = async (req, res, next) => {
     if (!offer) {
       return res
         .status(STATUS_CODES.NOT_FOUND)
-        .json({ message: "Offer not found" });
+        .json({ message: ERROR_MESSAGES.OFFER_NOT_FOUND });
     }
 
     // Check if offer is expired
@@ -165,7 +166,7 @@ export const toggleOfferStatus = async (req, res, next) => {
     ) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        message: "Expired offers cannot be activated or deactivated.",
+        message: ERROR_MESSAGES.EXPIRED_OFFER,
       });
     }
 
@@ -174,7 +175,7 @@ export const toggleOfferStatus = async (req, res, next) => {
 
     res.status(STATUS_CODES.OK).json({
       success: true,
-      message: `Offer ${offer.isActive ? "activated" : "deactivated"} successfully`,
+      message: offer.isActive ? SUCCESS_MESSAGES.ACTIVATED("Offer") : SUCCESS_MESSAGES.DEACTIVATED("Offer"),
       data: offer,
     });
   } catch (error) {
@@ -191,12 +192,12 @@ export const deleteOffer = async (req, res, next) => {
     if (!offer) {
       return res
         .status(STATUS_CODES.NOT_FOUND)
-        .json({ message: "Offer not found" });
+        .json({ message: ERROR_MESSAGES.OFFER_NOT_FOUND });
     }
 
     res.status(STATUS_CODES.OK).json({
       success: true,
-      message: "Offer deleted successfully",
+      message: SUCCESS_MESSAGES.OFFER_DELETED,
     });
   } catch (error) {
     next(error);

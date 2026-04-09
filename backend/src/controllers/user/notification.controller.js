@@ -1,5 +1,7 @@
 import { Notification } from '../../models/Notification.model.js'
 import STATUS_CODES from '../../constants/statusCodes.js'
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages.js';
+
 
 export const getNotifications = async (req, res) => {
     try {
@@ -29,7 +31,7 @@ export const getNotifications = async (req, res) => {
     } catch (error) {
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: "Error fetching notifications"
+            message: ERROR_MESSAGES.INTERNAL_SERVER_ERROR
         });
     }
 }
@@ -53,7 +55,7 @@ export const markOneAsRead = async (req, res) => {
     );
     res.status(STATUS_CODES.OK).json({
         success: true,
-        message: "Notification marked as read"
+        message: SUCCESS_MESSAGES.NOTIFICATION_READ
     });
 }
 
@@ -65,6 +67,6 @@ export const markAllAsRead = async (req, res) => {
     )
     res.status(STATUS_CODES.OK).json({
         success: true,
-        message: "All marked as read"
+        message: SUCCESS_MESSAGES.ALL_READ
     })
 }

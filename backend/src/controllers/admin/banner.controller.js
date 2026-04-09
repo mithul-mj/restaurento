@@ -1,6 +1,7 @@
 import { Banner } from "../../models/Banner.model.js";
 import { ApiError } from "../../utils/errors/ApiError.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 
 export const createBanner = async (req, res, next) => {
@@ -10,7 +11,7 @@ export const createBanner = async (req, res, next) => {
 
         const imageUrl = req.file?.path;
         if (!imageUrl) {
-            throw new ApiError(STATUS_CODES.BAD_REQUEST, "Banner image is required")
+            throw new ApiError(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.BANNER_REQUIRED)
         }
         const banner = await Banner.create({
             imageUrl,
@@ -19,7 +20,7 @@ export const createBanner = async (req, res, next) => {
         })
         res.status(STATUS_CODES.CREATED).json({
             succes: true,
-            message: "Banner created successfully",
+            message: SUCCESS_MESSAGES.BANNER_CREATED,
             data: banner
         })
 
@@ -65,7 +66,7 @@ export const toggleBannerStatus = async (req, res, next) => {
         const banner = await Banner.findById(id);
 
         if (!banner) {
-            throw new ApiError(STATUS_CODES.NOT_FOUND, "Banner not found");
+            throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.BANNER_NOT_FOUND);
         }
 
         banner.isActive = !banner.isActive;
@@ -73,7 +74,7 @@ export const toggleBannerStatus = async (req, res, next) => {
 
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: `Banner ${banner.isActive ? 'activated' : 'deactivated'} successfully`,
+            message: banner.isActive ? SUCCESS_MESSAGES.BANNER_ACTIVATED : SUCCESS_MESSAGES.BANNER_DEACTIVATED,
             data: banner
         });
     } catch (error) {
@@ -88,7 +89,7 @@ export const updateBanner = async (req, res, next) => {
         const banner = await Banner.findById(id);
 
         if (!banner) {
-            throw new ApiError(STATUS_CODES.NOT_FOUND, "Banner not found");
+            throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.BANNER_NOT_FOUND);
         }
 
         if (req.file) {
@@ -103,7 +104,7 @@ export const updateBanner = async (req, res, next) => {
 
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Banner updated successfully",
+            message: SUCCESS_MESSAGES.BANNER_UPDATED,
             data: banner
         });
     } catch (error) {
@@ -117,12 +118,12 @@ export const deleteBanner = async (req, res, next) => {
         const banner = await Banner.findByIdAndDelete(id);
 
         if (!banner) {
-            throw new ApiError(STATUS_CODES.NOT_FOUND, "Banner not found");
+            throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.BANNER_NOT_FOUND);
         }
 
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Banner deleted successfully"
+            message: SUCCESS_MESSAGES.BANNER_DELETED
         });
     } catch (error) {
         next(error);

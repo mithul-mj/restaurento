@@ -8,6 +8,8 @@ import { WalletTransaction } from '../../models/WalletTransaction.model.js'
 import mongoose from "mongoose";
 import { success } from "zod";
 
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
+
 export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
@@ -15,7 +17,7 @@ export const getProfile = async (req, res, next) => {
     if (!user) {
       return res
         .status(STATUS_CODES.NOT_FOUND)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
 
     return res.status(STATUS_CODES.OK).json({
@@ -41,7 +43,7 @@ export const updateProfile = async (req, res, next) => {
     if (!user) {
       return res
         .status(STATUS_CODES.NOT_FOUND)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
 
 
@@ -55,7 +57,7 @@ export const updateProfile = async (req, res, next) => {
 
     return res.status(STATUS_CODES.OK).json({
       success: true,
-      message: "Profile updated successfully",
+      message: SUCCESS_MESSAGES.PROFILE_UPDATED,
       user: {
         fullName: user.fullName,
         avatar: user.avatar,
@@ -78,12 +80,12 @@ export const changeEmail = async (req, res, next) => {
     ]);
 
     if (user || restaurant || admin) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Email already exists in our system" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.EMAIL_ALREADY_EXISTS });
     }
 
     await sendVerificationOtp(email);
 
-    return res.status(STATUS_CODES.OK).json({ success: true, message: "Verification code sent to your new email" });
+    return res.status(STATUS_CODES.OK).json({ success: true, message: SUCCESS_MESSAGES.OTP_SENT });
   } catch (error) {
     next(error);
   }
@@ -97,18 +99,18 @@ export const verifyEmailChange = async (req, res, next) => {
     const isValid = await verifyOtp(newEmail, otp);
 
     if (!isValid) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid or expired OTP" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.OTP_EXPIRED });
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "User not found" });
+    if (!user) return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.USER_NOT_FOUND });
 
     user.email = newEmail;
     await user.save();
 
     return res.status(STATUS_CODES.OK).json({
       success: true,
-      message: "Email updated successfully",
+      message: SUCCESS_MESSAGES.EMAIL_UPDATED,
       user: { email: user.email }
     });
   } catch (error) {
@@ -168,7 +170,7 @@ export const getWalletBalance = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select("walletBalance");
     if (!user) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "User not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
     return res.status(STATUS_CODES.OK).json({ success: true, walletBalance: user.walletBalance });
   } catch (error) {

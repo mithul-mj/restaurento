@@ -20,13 +20,17 @@ import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
 
 import multer from "multer";
-import { storage } from "../../config/cloudinary.config.js";
+import { storage, fileFilter } from "../../config/cloudinary.config.js";
 
 import { validate } from "../../middlewares/validate.middleware.js";
 import { menuItemSchema, updateMenuItemSchema } from "../../validators/menu.validator.js";
 
 const router = express.Router();
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 router.use(verifyRole(ROLES.RESTAURANT));
 

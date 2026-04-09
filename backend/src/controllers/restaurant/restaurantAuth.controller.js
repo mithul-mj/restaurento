@@ -10,6 +10,7 @@ import { createAccount } from "../../services/commonAuth.service.js";
 import { env } from "../../config/env.config.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import { sendAuthResponse, clearAuthCookies } from "../../utils/auth.util.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 
 export const registerRestaurant = async (req, res, next) => {
@@ -18,7 +19,7 @@ export const registerRestaurant = async (req, res, next) => {
 
     return res.status(STATUS_CODES.CREATED).json({
       success: true,
-      message: "Restaurant registered successfully",
+      message: SUCCESS_MESSAGES.REGISTERED,
       restaurant: {
         _id: newRestaurant._id,
         name: newRestaurant.fullName,
@@ -37,7 +38,7 @@ export const loginRestaurant = async (req, res, next) => {
       req.body
     );
 
-    return sendAuthResponse(res, ROLES.RESTAURANT, account, "Restaurant logged in successfully", {
+    return sendAuthResponse(res, ROLES.RESTAURANT, account, SUCCESS_MESSAGES.LOGIN_SUCCESS, {
       accessToken,
       refreshToken
     });
@@ -54,7 +55,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to verify Google token");
+      throw new Error(ERROR_MESSAGES.VERIFICATION_FAILED);
     }
 
     const payload = await response.json();
@@ -65,7 +66,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
     if (existingUser) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        message: `Email already registered as USER. Please login via user portal.`,
+        message: ERROR_MESSAGES.EMAIL_ALREADY_EXISTS,
       });
     }
 
@@ -84,7 +85,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
     const accessToken = restaurant.generateAccessToken();
     const refreshToken = restaurant.generateRefreshToken();
 
-    return sendAuthResponse(res, ROLES.RESTAURANT, restaurant, "Restaurant logged in successfully", {
+    return sendAuthResponse(res, ROLES.RESTAURANT, restaurant, SUCCESS_MESSAGES.LOGIN_SUCCESS, {
       accessToken,
       refreshToken
     });
@@ -98,7 +99,7 @@ export const googleAuthRestaurant = async (req, res, next) => {
 export const logout = async (req, res, next) => {
   try {
     clearAuthCookies(res, "RESTAURANT");
-    return res.status(STATUS_CODES.OK).json({ success: true, message: "Logged out" });
+    return res.status(STATUS_CODES.OK).json({ success: true, message: SUCCESS_MESSAGES.LOGGED_OUT });
   } catch (error) {
     next(error);
   }

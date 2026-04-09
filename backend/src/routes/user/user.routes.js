@@ -23,7 +23,7 @@ import {
 import { getUserDashboard, getRestaurantDetails, getRestaurantMenu, getTopRestaurants } from "../../controllers/user/userDashboardController.js";
 import { getAvailableCoupons } from "../../controllers/userCoupon.controller.js";
 import multer from "multer";
-import { storage } from "../../config/cloudinary.config.js";
+import { storage, fileFilter } from "../../config/cloudinary.config.js";
 import ROLES from "../../constants/roles.js";
 import { getActiveBanners } from "../../controllers/userDashboardController.js";
 
@@ -31,7 +31,11 @@ import { addToWishlist, getWishlists, removeFromWishlist } from "../../controlle
 import { getNotifications, getUnreadCount, markAllAsRead, markOneAsRead } from "../../controllers/user/notification.controller.js";
 
 
-const upload = multer({ storage });
+const upload = multer({ 
+    storage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB for profile pic
+});
 
 const router = express.Router();
 

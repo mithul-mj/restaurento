@@ -3,6 +3,7 @@ import { Booking } from '../../models/Booking.model.js';
 import { Restaurant } from '../../models/Restaurant.model.js';
 import { WalletTransaction } from '../../models/WalletTransaction.model.js';
 import { User } from '../../models/User.model.js';
+import { Schedule } from '../../models/Schedule.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
 import redisClient from '../../config/redis.js';
 import { getRealTimeAvailability } from '../../services/inventory.service.js';
@@ -15,14 +16,23 @@ import { PAYMENT_WINDOW_SECONDS, DEFAULT_SLOT_DURATION } from '../../constants/c
 
 // Service Imports
 import * as bookingService from '../../services/user/userBooking.service.js';
+import { ApiError } from '../../utils/errors/ApiError.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages.js';
 
 export const BookingRestaurant = async (req, res, next) => {
     const session = await mongoose.startSession();
     try {
         session.startTransaction();
 
-        const { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet, appliedCouponId, appliedOfferId } = req.body;
+        let { restaurantId, bookingDate, slotTime, guests, preOrderItems, useWallet, appliedCouponId, appliedOfferId } = req.body;
         const userId = req.user._id;
+
+        // 0. Sanitize IDs to avoid "input must be a 24 character hex string" error
+        if (!restaurantId || !mongoose.Types.ObjectId.isValid(restaurantId)) {
+            throw new ApiError(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.VALIDATION_FAILED);
+        }
+        if (appliedCouponId === "" || !appliedCouponId) appliedCouponId = null;
+        if (appliedOfferId === "" || !appliedOfferId) appliedOfferId = null;
 
         // 1. Basic Validations (existence, schedule, capacity)
         const { restaurant, activeSchedule } = await bookingService.validateBookingBasics(
@@ -85,8 +95,8 @@ export const BookingRestaurant = async (req, res, next) => {
             emitSlotUpdate(req, restaurantId, bookingDate, slotTime);
             sendBookingNotifications(req, booking, restaurant);
 
-            return res.status(201).json({
-                success: true, message: "Booking successful using wallet.",
+            return res.status(STATUS_CODES.CREATED).json({
+                success: true, message: SUCCESS_MESSAGES.BOOKING_SUCCESS,
                 booking, remainingAmount: 0
             });
         }
@@ -103,14 +113,14 @@ export const BookingRestaurant = async (req, res, next) => {
         await session.commitTransaction();
         await redisClient.expire(holdKey, PAYMENT_WINDOW_SECONDS);
 
-        res.status(201).json({
-            success: true, message: "Booking initiated successfully.",
+        res.status(STATUS_CODES.CREATED).json({
+            success: true, message: SUCCESS_MESSAGES.BOOKING_INITIATED,
             order, remainingAmount: amountToPay, bookingId: pendingBooking._id
         });
 
     } catch (error) {
         if (session.inTransaction()) await session.abortTransaction();
-        res.status(error.status || 500).json({ success: false, message: error.message || "Something went wrong" });
+        res.status(error.status || STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message || ERROR_MESSAGES.INTERNAL_SERVER_ERROR });
     } finally {
         session.endSession();
     }
@@ -121,7 +131,7 @@ export const checkBookingAvailability = async (req, res) => {
         const userId = req.user._id;
         const booking = await Booking.findById(req.params.id);
         if (!booking || booking.status !== 'pending-payment') {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Booking session not found or expired." });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.BOOKING_NOT_FOUND });
         }
 
         // Use core pricing logic to re-verify existence (dishes, coupons, offers)
@@ -135,7 +145,7 @@ export const checkBookingAvailability = async (req, res) => {
         if (activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
             return res.status(STATUS_CODES.FORBIDDEN).json({ 
                 success: false, 
-                message: "Restaurant has temporarily closed. Booking and payment are disabled." 
+                message: ERROR_MESSAGES.RESTAURANT_CLOSED 
             });
         }
 
@@ -151,10 +161,10 @@ export const checkBookingAvailability = async (req, res) => {
 
         const available = await getRealTimeAvailability(booking.restaurantId, booking.bookingDate, booking.slotTime, userId);
         if (available < booking.guests) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "This slot is no longer available." });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.SEATS_NOT_AVAILABLE });
         }
 
-        res.status(STATUS_CODES.OK).json({ success: true, message: "Available", holdKey });
+        res.status(STATUS_CODES.OK).json({ success: true, message: SUCCESS_MESSAGES.UPDATED("Availability"), holdKey });
     } catch (error) {
         res.status(error.status || 500).json({ success: false, message: error.message });
     }
@@ -164,8 +174,8 @@ export const retryBookingPayment = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const booking = await Booking.findOne({ _id: req.params.bookingId, userId });
-        if (!booking || booking.status === 'approved' || booking.status === 'checked-in') {
-            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid retry request." });
+        if (!booking || booking.status !== 'pending-payment') {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.VALIDATION_FAILED });
         }
 
         // 1. Re-verify everything using the Service
@@ -188,7 +198,7 @@ export const retryBookingPayment = async (req, res, next) => {
         booking.razorpayOrderId = order.id;
         await booking.save();
 
-        res.status(STATUS_CODES.OK).json({ success: true, order, message: "Retry initiated." });
+        res.status(STATUS_CODES.OK).json({ success: true, order, message: SUCCESS_MESSAGES.UPDATED("Payment retry") });
     } catch (error) {
         res.status(error.status || 500).json({ success: false, message: error.message });
     }
@@ -245,7 +255,7 @@ export const cancelBooking = async (req, res, next) => {
             link: `/my-bookings/${booking._id}`
         });
 
-        res.status(STATUS_CODES.OK).json({ success: true, message: "Booking canceled successfully.", booking });
+        res.status(STATUS_CODES.OK).json({ success: true, message: SUCCESS_MESSAGES.BOOKING_CANCELED, booking });
     } catch (error) {
         if (session.inTransaction()) await session.abortTransaction();
         next(error);

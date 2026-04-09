@@ -15,6 +15,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.config.js";
 import STATUS_CODES from "../constants/statusCodes.js";
 import { sendAuthResponse } from "../utils/auth.util.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../constants/messages.js";
 
 
 const getModelByRole = (role) => {
@@ -33,26 +34,26 @@ export const verifyEmail = async (req, res, next) => {
     if (!email || !otp || !role) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
-        .json({ message: "Email, OTP, and Role are required" });
+        .json({ message: ERROR_MESSAGES.AUTH_REQUIRED });
     }
 
     const Model = getModelByRole(role);
-    if (!Model) return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Invalid role" });
+    if (!Model) return res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERROR_MESSAGES.INVALID_ROLE });
 
     const isValid = await verifyOtp(email, otp);
     if (!isValid) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Invalid or expired OTP" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERROR_MESSAGES.OTP_EXPIRED });
     }
 
     const account = await Model.findOne({ email });
     if (!account) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Account not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.ACCOUNT_NOT_FOUND });
     }
 
     account.isEmailVerified = true;
     await account.save();
 
-    res.status(STATUS_CODES.OK).json({ message: "Email verified successfully" });
+    res.status(STATUS_CODES.OK).json({ message: SUCCESS_MESSAGES.EMAIL_VERIFIED });
   } catch (error) {
     next(error);
   }
@@ -62,10 +63,10 @@ export const resendOtp = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "Email is required" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERROR_MESSAGES.EMAIL_REQUIRED });
     }
     sendVerificationOtp(email);
-    return res.status(STATUS_CODES.OK).json({ message: "OTP sent successfully" });
+    return res.status(STATUS_CODES.OK).json({ message: SUCCESS_MESSAGES.OTP_SENT });
   } catch (error) {
     next(error);
   }
@@ -77,7 +78,7 @@ export const forgotPassword = async (req, res, next) => {
     const Model = getModelByRole(role);
     const account = await Model.findOne({ email });
 
-    if (!account) throw new ApiError(STATUS_CODES.NOT_FOUND, "Account not found");
+    if (!account) throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.ACCOUNT_NOT_FOUND);
 
     const secret = env.JWT_FORGOT_PASSWORD_SECRET + account.password;
     const token = jwt.sign({ id: account._id, role: account.role }, secret, {
@@ -91,7 +92,7 @@ export const forgotPassword = async (req, res, next) => {
 
     await sendEmail(email, subject, "Reset your password", html);
 
-    res.status(STATUS_CODES.OK).json({ message: "Reset link sent to your email" });
+    res.status(STATUS_CODES.OK).json({ message: SUCCESS_MESSAGES.RESET_LINK_SENT });
   } catch (error) {
     next(error);
   }
@@ -103,19 +104,19 @@ export const resetPasswordWithLink = async (req, res, next) => {
     const Model = getModelByRole(role);
     const account = await Model.findById(id);
 
-    if (!account) throw new ApiError(STATUS_CODES.NOT_FOUND, "Account not found");
+    if (!account) throw new ApiError(STATUS_CODES.NOT_FOUND, ERROR_MESSAGES.ACCOUNT_NOT_FOUND);
 
     const secret = env.JWT_FORGOT_PASSWORD_SECRET + account.password;
     try {
       jwt.verify(token, secret);
     } catch (err) {
-      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid or expired reset link");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.INVALID_RESET_LINK);
     }
 
     account.password = newPassword;
     await account.save();
 
-    res.status(STATUS_CODES.OK).json({ message: "Password updated successfully" });
+    res.status(STATUS_CODES.OK).json({ message: SUCCESS_MESSAGES.PASSWORD_UPDATED });
   } catch (error) {
     next(error);
   }
@@ -138,30 +139,30 @@ export const refreshAccessToken = async (req, res, next) => {
     }
 
     if (!incomingRefreshToken) {
-      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Refresh token is missing");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.REFRESH_TOKEN_MISSING);
     }
 
     let decoded;
     try {
       decoded = jwt.verify(incomingRefreshToken, env.JWT_REFRESH_SECRET);
     } catch (err) {
-      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Invalid refresh token");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
 
     if (role && decoded.role !== role) {
-      throw new ApiError(STATUS_CODES.UNAUTHORIZED, "Role mismatch during refresh");
+      throw new ApiError(STATUS_CODES.UNAUTHORIZED, ERROR_MESSAGES.ROLE_MISMATCH);
     }
     role = decoded.role;
 
     const Model = getModelByRole(role);
-    if (!Model) throw new ApiError(STATUS_CODES.BAD_REQUEST, "Invalid role");
+    if (!Model) throw new ApiError(STATUS_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_ROLE);
 
     const { account, accessToken, refreshToken } = await verifyAndRefreshToken(
       Model,
       incomingRefreshToken
     );
     
-    return sendAuthResponse(res, role, account, "Access token refreshed", {
+    return sendAuthResponse(res, role, account, SUCCESS_MESSAGES.TOKEN_REFRESHED, {
         accessToken,
         refreshToken,
     });

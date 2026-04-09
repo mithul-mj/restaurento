@@ -17,6 +17,7 @@ import redisClient from '../config/redis.js';
 
 
 
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants/messages.js';
 
 const razorpayInstance = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -43,12 +44,12 @@ export const verifyRazorpayPayment = async (req, res) => {
 
             if (!booking) {
                 await session.abortTransaction();
-                return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Booking not found or session expired." });
+                return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.BOOKING_NOT_FOUND });
             }
 
             if (booking.status !== 'pending-payment') {
                 await session.abortTransaction();
-                return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Booking is already processed." });
+                return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.ALREADY_PROCESSED });
             }
 
             // We need to double-check: does the user still have enough money?
@@ -82,7 +83,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
                     return res.status(STATUS_CODES.BAD_REQUEST).json({
                         success: false,
-                        message: "Insufficient wallet balance. Payment credited to wallet."
+                        message: ERROR_MESSAGES.INSUFFICIENT_BALANCE
                     });
                 }
             }
@@ -123,7 +124,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
                 return res.status(STATUS_CODES.BAD_REQUEST).json({
                     success: false,
-                    message: "Seats are no longer available. Refunded to wallet."
+                    message: ERROR_MESSAGES.SEATS_NOT_AVAILABLE
                 });
             }
 
@@ -131,7 +132,7 @@ export const verifyRazorpayPayment = async (req, res) => {
             // in the last 60 seconds? We shouldn't take money for something they can't cook.
             if (booking.preOrderItems && booking.preOrderItems.length > 0) {
                 const restaurantForMenu = await Restaurant.findById(booking.restaurantId._id || booking.restaurantId).session(session);
-                if (!restaurantForMenu) throw new Error("Restaurant not found during safety check.");
+                if (!restaurantForMenu) throw new Error(ERROR_MESSAGES.RESTAURANT_NOT_FOUND);
                 
                 for (const item of booking.preOrderItems) {
                     const dish = restaurantForMenu.menuItems.id(item.dishId);
@@ -158,7 +159,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
                         return res.status(STATUS_CODES.BAD_REQUEST).json({
                             success: false,
-                            message: `Some dishes are no longer available. Refunded to wallet.`,
+                            message: ERROR_MESSAGES.DISH_UNAVAILABLE,
                         });
                     }
                 }
@@ -221,21 +222,20 @@ export const verifyRazorpayPayment = async (req, res) => {
 
             res.status(STATUS_CODES.OK).json({
                 success: true,
-                message: "Payment successful!",
+                message: SUCCESS_MESSAGES.PAYMENT_SUCCESS,
                 bookingId: booking._id
             });
         } else {
             await session.abortTransaction();
-            res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Signature" });
+            res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.INVALID_SIGNATURE });
         }
     } catch (error) {
         if (session.inTransaction()) {
             await session.abortTransaction();
         }
-        console.error("Verification Error:", error);
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: error.message || "Verification failed"
+            message: error.message || ERROR_MESSAGES.VERIFICATION_FAILED
         });
     } finally {
         session.endSession();

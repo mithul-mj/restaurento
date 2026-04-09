@@ -2,6 +2,8 @@ import { Review } from "../../models/Review.model.js";
 import { Booking } from "../../models/Booking.model.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import mongoose from "mongoose";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
+
 
 export const submitReview = async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -20,12 +22,13 @@ export const submitReview = async (req, res, next) => {
         if (!hasBooking) {
             return res.status(STATUS_CODES.FORBIDDEN).json({
                 success: false,
-                message: "You can only review restaurants you've visited (checked-in required)."
+                message: ERROR_MESSAGES.REVIEW_CHECKIN_REQUIRED
             });
         }
 
         // 2. Find if existing review exists
         let existingReview = await Review.findOne({ userId, restaurantId }).session(session);
+        const isUpdate = !!existingReview;
 
         if (existingReview) {
             existingReview.rating = rating;
@@ -44,7 +47,7 @@ export const submitReview = async (req, res, next) => {
         await session.commitTransaction();
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: existingReview.isNew ? "Review submitted successfully" : "Review updated successfully",
+            message: isUpdate ? SUCCESS_MESSAGES.UPDATED("Review") : SUCCESS_MESSAGES.CREATED("Review"),
             review: existingReview
         });
 

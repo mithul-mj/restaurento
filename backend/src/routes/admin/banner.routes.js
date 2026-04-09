@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { storage } from "../../config/cloudinary.config.js";
+import { storage, bannerStorage, fileFilter } from "../../config/cloudinary.config.js";
 import { verifyRole } from "../../middlewares/auth.middleware.js";
 import ROLES from "../../constants/roles.js";
 import {
@@ -15,7 +15,11 @@ import { validate } from "../../middlewares/validate.middleware.js";
 import { bannerSchema, updateBannerSchema } from "../../validators/banner.validator.js";
 
 const router = express.Router();
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: bannerStorage,
+    fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB individual file limit
+});
 
 router.use(verifyRole(ROLES.ADMIN));
 

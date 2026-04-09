@@ -12,6 +12,7 @@ import STATUS_CODES from '../../constants/statusCodes.js';
 import { getCategoryFromMinutes } from '../../utils/timeCategoryUtils.js';
 import Razorpay from 'razorpay';
 import { env } from '../../config/env.config.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages.js';
 
 const razorpayInstance = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -32,14 +33,14 @@ export const validateBookingBasics = async (restaurantId, bookingDate, slotTime,
     ]);
 
     if (!restaurant || !activeSchedule) {
-        throw { status: STATUS_CODES.NOT_FOUND, message: "Restaurant or Schedule not found." };
+        throw { status: STATUS_CODES.NOT_FOUND, message: ERROR_MESSAGES.NOT_FOUND };
     }
 
     // Check if temporarily closed
     if (activeSchedule.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
         throw { 
             status: STATUS_CODES.FORBIDDEN, 
-            message: "Restaurant is temporarily closed. Please try again later.",
+            message: ERROR_MESSAGES.RESTAURANT_CLOSED,
             closedTill: activeSchedule.closedTill 
         };
     }
@@ -51,14 +52,14 @@ export const validateBookingBasics = async (restaurantId, bookingDate, slotTime,
     bookingDateMidnight.setUTCHours(0, 0, 0, 0);
 
     if (bookingDateMidnight < today) {
-        throw { status: STATUS_CODES.BAD_REQUEST, message: "Cannot book for a past date." };
+        throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.PAST_DATE };
     }
 
     if (bookingDateMidnight.getTime() === today.getTime()) {
         const now = new Date();
         const currentMinutes = (now.getUTCHours() * 60) + now.getUTCMinutes();
         if (slotTime <= currentMinutes + BOOKING_BUFFER_MINUTES) {
-            throw { status: STATUS_CODES.BAD_REQUEST, message: `Slot too soon. Min ${BOOKING_BUFFER_MINUTES / 60}h buffer required.` };
+            throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.BUFFER_TIME_REQUIRED };
         }
     }
 
@@ -68,19 +69,19 @@ export const validateBookingBasics = async (restaurantId, bookingDate, slotTime,
     const dayConfig = activeSchedule.openingHours?.days?.[dayIndex];
 
     if (!dayConfig || dayConfig.isClosed) {
-        throw { status: STATUS_CODES.BAD_REQUEST, message: "Restaurant is closed on this day." };
+        throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.RESTAURANT_CLOSED_DAY };
     }
 
     // 3. Slot validity check
     const isValidSlot = dayConfig.generatedSlots?.some(slot => slot.startTime === parseInt(slotTime));
     if (!isValidSlot) {
-        throw { status: STATUS_CODES.BAD_REQUEST, message: "The selected time slot is invalid." };
+        throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.INVALID_SLOT };
     }
 
     // 4. Real-time Seat Availability check
     const available = await getRealTimeAvailability(restaurantId, bookingDate, slotTime, userId);
     if (available < guests) {
-        throw { status: STATUS_CODES.BAD_REQUEST, message: "Enough seats are no longer available for this slot." };
+        throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.SEATS_NOT_AVAILABLE };
     }
 
     return { restaurant, activeSchedule };
@@ -141,13 +142,13 @@ export const calculateBookingFinals = async (restaurant, preOrderItems, guests, 
         const coupon = await Coupon.findById(couponId).lean();
         const now = new Date();
         if (!coupon || !coupon.isActive || (coupon.expiryDate && new Date(coupon.expiryDate) < now)) {
-            throw { status: STATUS_CODES.BAD_REQUEST, message: "Coupon is invalid or expired." };
+            throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.COUPON_EXPIRED };
         }
 
         if (coupon.usageLimit) {
             const usageCount = await Booking.countDocuments({ "appliedCoupon.couponId": coupon._id, status: { $ne: 'canceled' } });
             if (usageCount >= coupon.usageLimit) {
-                throw { status: STATUS_CODES.BAD_REQUEST, message: "Coupon limit reached." };
+                throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.COUPON_LIMIT_REACHED };
             }
         }
 
@@ -173,7 +174,7 @@ export const calculateBookingFinals = async (restaurant, preOrderItems, guests, 
             minOrderValue: { $lte: subtotal }
         });
         if (!offer) {
-            throw { status: STATUS_CODES.BAD_REQUEST, message: "Offer is no longer valid." };
+            throw { status: STATUS_CODES.BAD_REQUEST, message: ERROR_MESSAGES.OFFER_NOT_FOUND };
         }
         offerDiscount = offer.discountValue;
         offerDetails = { offerId: offer._id, discountValue: offerDiscount };

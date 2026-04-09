@@ -5,6 +5,7 @@ import { Offer } from "../../models/Offer.model.js";
 import { Booking } from "../../models/Booking.model.js";
 import mongoose from "mongoose";
 import STATUS_CODES from "../../constants/statusCodes.js";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 
 export const getUserDashboard = async (req, res, next) => {
@@ -292,7 +293,7 @@ export const getRestaurantDetails = async (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.VALIDATION_FAILED });
     }
 
     // Get restaurant info, current schedule, and all active offers in parallel
@@ -332,18 +333,18 @@ export const getRestaurantDetails = async (req, res, next) => {
     if (ratingStats.average) ratingStats.average = parseFloat(ratingStats.average.toFixed(1));
 
     if (!restaurant) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
     }
 
     if (!activeSchedule) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: "Restaurant schedule not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.NOT_FOUND });
     }
 
     // Check if temporarily closed
     if (activeSchedule.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
       return res.status(STATUS_CODES.FORBIDDEN).json({ 
         success: false, 
-        message: "Restaurant is temporarily closed",
+        message: ERROR_MESSAGES.RESTAURANT_CLOSED,
         closedTill: activeSchedule.closedTill 
       });
     }
@@ -389,7 +390,7 @@ export const getRestaurantMenu = async (req, res, next) => {
     const search = req.query.search || "";
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Invalid Restaurant ID" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.VALIDATION_FAILED });
     }
 
     // Check if temporarily closed
@@ -401,7 +402,7 @@ export const getRestaurantMenu = async (req, res, next) => {
     if (activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
       return res.status(STATUS_CODES.FORBIDDEN).json({ 
         success: false, 
-        message: "Restaurant is temporarily closed",
+        message: ERROR_MESSAGES.RESTAURANT_CLOSED,
         closedTill: activeSchedule.closedTill 
       });
     }

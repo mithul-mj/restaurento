@@ -11,9 +11,7 @@ import { WalletTransaction } from "../../models/WalletTransaction.model.js";
 import { Offer } from "../../models/Offer.model.js";
 import { sendNotification } from "../../utils/notification.util.js";
 import { format12hr } from "../../utils/timeUtils.js";
-
-
-
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
 
 export const preApprovalRestaurant = async (req, res, next) => {
     try {
@@ -45,7 +43,7 @@ export const preApprovalRestaurant = async (req, res, next) => {
 
         if (currentRestaurant.submissionAttempts >= 3) {
             return res.status(STATUS_CODES.FORBIDDEN).json({
-                message: "Maximum submission attempts (3) reached. Please contact support."
+                message: ERROR_MESSAGES.MAX_SUBMISSION_ATTEMPTS
             });
         }
 
@@ -69,12 +67,12 @@ export const preApprovalRestaurant = async (req, res, next) => {
         );
         if (!restaurant) {
             return res.status(STATUS_CODES.NOT_FOUND).json({
-                message: "Restaurant not found"
+                message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND
             })
         }
         return res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Restaurant registered successfully",
+            message: SUCCESS_MESSAGES.RESTAURANT_REGISTERED,
         });
     } catch (error) {
         next(error);
@@ -92,7 +90,7 @@ export const getRestaurantProfile = async (req, res, next) => {
         ]);
 
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         const isTemporaryClosed = activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date();
@@ -129,7 +127,7 @@ export const updateRestaurantProfile = async (req, res, next) => {
 
         const restaurant = await Restaurant.findById(req.user._id);
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         // Static profile updates
@@ -193,7 +191,7 @@ export const updateRestaurantProfile = async (req, res, next) => {
 
         res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Profile updated successfully. Timing changes will take effect in 5 days."
+            message: SUCCESS_MESSAGES.PROFILE_UPDATED + ". Timing changes will take effect in 5 days."
         });
     } catch (error) {
         next(error);
@@ -209,7 +207,7 @@ export const updateRestaurantSettings = async (req, res, next) => {
         const restaurant = await Restaurant.findById(req.user._id).session(session);
         if (!restaurant) {
             await session.abortTransaction();
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         if (isTemporaryClosed === true && closedTill) {
@@ -434,13 +432,13 @@ export const toggleItemAvailability = async (req, res, next) => {
         const restaurant = await Restaurant.findById(req.user._id);
 
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         const menuItem = restaurant.menuItems.id(itemId);
 
         if (!menuItem || menuItem.isDeleted) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item not found or already deleted" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.MENU_ITEM_NOT_FOUND });
         }
 
         menuItem.isAvailable = !menuItem.isAvailable;
@@ -448,7 +446,7 @@ export const toggleItemAvailability = async (req, res, next) => {
 
         res.status(STATUS_CODES.OK).json({
             status: "success",
-            message: `Item availability updated successfully`,
+            message: SUCCESS_MESSAGES.UPDATED("Item availability"),
             data: {
                 _id: menuItem._id,
                 isAvailable: menuItem.isAvailable,
@@ -467,13 +465,13 @@ export const updateMenuItem = async (req, res, next) => {
         const restaurant = await Restaurant.findById(req.user._id);
 
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         const menuItem = restaurant.menuItems.id(itemId);
 
         if (!menuItem || menuItem.isDeleted) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item not found or already deleted" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.MENU_ITEM_NOT_FOUND });
         }
 
         if (name) menuItem.name = name;
@@ -494,7 +492,7 @@ export const updateMenuItem = async (req, res, next) => {
 
         res.status(STATUS_CODES.OK).json({
             status: "success",
-            message: "Menu item updated successfully",
+            message: SUCCESS_MESSAGES.MENU_ITEM_UPDATED,
             data: menuItem,
         });
     } catch (error) {
@@ -509,7 +507,7 @@ export const addMenuItem = async (req, res, next) => {
         const restaurant = await Restaurant.findById(req.user._id);
 
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         const newItem = {
@@ -526,7 +524,7 @@ export const addMenuItem = async (req, res, next) => {
 
         res.status(STATUS_CODES.CREATED).json({
             status: "success",
-            message: "Menu item added successfully",
+            message: SUCCESS_MESSAGES.MENU_ITEM_ADDED,
             data: restaurant.menuItems[restaurant.menuItems.length - 1],
         });
     } catch (error) {
@@ -546,14 +544,14 @@ export const deleteMenuItem = async (req, res, next) => {
         );
 
         if (!restaurant) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Menu item or Restaurant not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.RESTAURANT_NOT_FOUND });
         }
 
         // Return only non-deleted items to stay consistent
         const activeMenuItems = restaurant.menuItems.filter(item => !item.isDeleted);
 
         return res.status(STATUS_CODES.OK).json({
-            message: "Menu item removed successfully",
+            message: SUCCESS_MESSAGES.DELETED("Menu item"),
             menuItems: activeMenuItems,
         });
 
@@ -671,7 +669,7 @@ export const verifyCheckIn = async (req, res, next) => {
 
         if (!token) {
             return res.status(STATUS_CODES.BAD_REQUEST).json({
-                message: 'No token found'
+                message: ERROR_MESSAGES.QR_MISSING
             });
         }
 
@@ -680,7 +678,7 @@ export const verifyCheckIn = async (req, res, next) => {
             decoded = jwt.verify(token, env.QR_CODE_SECRET);
         } catch (error) {
             return res.status(STATUS_CODES.UNAUTHORIZED).json({
-                message: "Invalid or expired QR code"
+                message: ERROR_MESSAGES.QR_INVALID
             });
         }
 
@@ -694,23 +692,23 @@ export const verifyCheckIn = async (req, res, next) => {
         const booking = await Booking.findById(bid).populate("userId", "fullName email");
         if (!booking) {
             return res.status(STATUS_CODES.NOT_FOUND).json({
-                message: "Booking record not found"
+                message: ERROR_MESSAGES.BOOKING_NOT_FOUND
             });
         }
 
         // Verify the booking belongs to the scanning restaurant
         if (booking.restaurantId.toString() !== restaurantId.toString()) {
             return res.status(STATUS_CODES.FORBIDDEN).json({
-                message: "Unauthorized: this booking belongs to another restaurant"
+                message: ERROR_MESSAGES.UNAUTHORIZED_RESTAURANT
             });
         }
 
         if (booking.status === "checked-in") {
-            return res.status(STATUS_CODES.CONFLICT).json({ message: "Guest is already checked-in" });
+            return res.status(STATUS_CODES.CONFLICT).json({ message: ERROR_MESSAGES.ALREADY_CHECKED_IN });
         }
 
         if (booking.status === "canceled") {
-            return res.status(STATUS_CODES.FORBIDDEN).json({ message: "This booking has been canceled" });
+            return res.status(STATUS_CODES.FORBIDDEN).json({ message: ERROR_MESSAGES.BOOKING_CANCELLED });
         }
 
         if (booking.status !== "approved") {
@@ -753,7 +751,7 @@ export const verifyCheckIn = async (req, res, next) => {
 
         return res.status(STATUS_CODES.OK).json({
             success: true,
-            message: "Check-in successful!",
+            message: SUCCESS_MESSAGES.CHECKIN_SUCCESS,
             guest: {
                 name: booking.userId?.fullName || "Guest",
                 email: booking.userId?.email || "N/A",
