@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, UtensilsCrossed, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import authService from "../services/auth.service";
 
 const ResetPassword = () => {
@@ -55,11 +55,12 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
 
-      <div className="absolute top-6 left-6 flex items-center gap-2">
-        <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-          <UtensilsCrossed size={20} />
-        </div>
-        <span className="font-bold text-xl text-gray-900">Restauranto</span>
+      <div className="absolute top-6 left-6 flex items-center">
+        <img
+          src="/LogoWithText.png"
+          alt="Restaurento"
+          className="h-10 w-auto"
+        />
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4">

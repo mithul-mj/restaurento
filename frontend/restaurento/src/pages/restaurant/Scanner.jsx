@@ -60,7 +60,7 @@ const Scanner = () => {
             <div className="max-w-xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">Guest Check-in</h1>
-                    <p className="text-[10px] font-bold text-orange-500 uppercase tracking-[0.2em]">Restauranto Terminal</p>
+                    <p className="text-[10px] font-bold text-orange-500 uppercase tracking-[0.2em]">Restaurento Terminal</p>
                 </div>
 
                 {!scanResult && !error && !isVerifying ? (

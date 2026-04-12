@@ -86,11 +86,12 @@ const LandingPage = () => {
             {/* Professional Navigation Bar */}
             <nav className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-500 px-6 md:px-12 py-5 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <Link to="/landing" className="flex items-center gap-2 group">
-                        <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center group-hover:bg-[#e05200] transition-colors">
-                            <Utensils size={18} />
-                        </div>
-                        <span className={`text-xl font-bold tracking-tight transition-colors ${isScrolled ? 'text-gray-900' : 'text-white'}`}>Restauranto</span>
+                    <Link to="/landing" className="flex items-center">
+                        <img
+                            src="/text.png"
+                            alt="Restaurento"
+                            className={`h-10 w-auto transition-all ${isScrolled ? '' : 'brightness-0 invert'}`}
+                        />
                     </Link>
 
                     {/* Desktop Links */}
@@ -478,9 +479,12 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-20 mb-32">
                         <div className="lg:col-span-2 space-y-12">
-                            <Link to="/landing" className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-900 text-white rounded-lg flex items-center justify-center font-black text-xl">R</div>
-                                <span className="text-2xl font-bold text-gray-900 tracking-tight whitespace-nowrap">Restauranto</span>
+                            <Link to="/landing">
+                                <img
+                                    src="/LogoWithText.png"
+                                    alt="Restaurento"
+                                    className="h-12 w-auto"
+                                />
                             </Link>
                             <p className="text-gray-400 font-medium max-w-sm leading-relaxed">
                                 Curating the world's finest dining experiences through seamless technology and intentional design.
@@ -523,7 +527,7 @@ const LandingPage = () => {
 
                     <div className="flex flex-col md:flex-row justify-between items-center pt-20 border-t border-gray-100 gap-10">
                         <div className="text-[9px] font-bold text-gray-300 tracking-[0.4em] uppercase text-center md:text-left">
-                            &copy; 2026 RESTAURENTO. ALL RIGHTS RESERVED. <br className="md:hidden" /> DESIGNED FOR EXCELLENCE.
+                            &copy; {new Date().getFullYear()} RESTAURENTO. ALL RIGHTS RESERVED. <br className="md:hidden" /> DESIGNED FOR EXCELLENCE.
                         </div>
                         <div className="flex gap-12 text-[9px] font-black tracking-[0.4em] text-gray-400 uppercase">
                             <a href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</a>

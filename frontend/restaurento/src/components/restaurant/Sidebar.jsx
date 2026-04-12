@@ -32,14 +32,15 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
             className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static ${isOpen ? "translate-x-0" : "-translate-x-full"
                 }`}>
             <div className="h-full flex flex-col">
-                <div className="px-6 py-6 border-b border-gray-50 flex items-center gap-3">
-                    <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-                        <span className="font-bold text-lg">R</span>
-                    </div>
-                    <span className="font-bold text-xl text-gray-900">Restaurento</span>
+                <div className="relative px-6 py-6 border-b border-gray-50 flex items-center justify-center">
+                    <img
+                        src="/text.png"
+                        alt="Restaurento"
+                        className="h-11 w-auto"
+                    />
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="md:hidden ml-auto text-gray-400">
+                        className="absolute right-6 md:hidden text-gray-400">
                         <X size={20} />
                     </button>
                 </div>

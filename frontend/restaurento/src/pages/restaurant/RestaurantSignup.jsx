@@ -99,7 +99,7 @@ const RestaurantSignup = () => {
   return (
     <AuthLayout
       title="Become a Partner"
-      subtitle="Join thousands of restaurants growing their business with Restauranto."
+      subtitle="Join thousands of restaurants growing their business with Restaurento."
       image="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop">
       {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">

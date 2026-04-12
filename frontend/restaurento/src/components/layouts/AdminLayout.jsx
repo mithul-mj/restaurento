@@ -34,11 +34,12 @@ const AdminLayout = () => {
 
             <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
                 <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between md:hidden">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-[#ff5e00] text-white p-1 rounded-md flex items-center justify-center">
-                            <span className="font-bold text-sm">A</span>
-                        </div>
-                        <span className="font-bold text-lg text-gray-900">Restauranto</span>
+                    <div className="flex items-center">
+                        <img
+                            src="/text.png"
+                            alt="Restaurento"
+                            className="h-7 w-auto"
+                        />
                     </div>
                     <button onClick={() => setIsSidebarOpen(true)} className="text-gray-500">
                         <Menu size={24} />

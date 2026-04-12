@@ -39,14 +39,15 @@ const Sidebar = ({ isOpen, setIsOpen, activePage }) => {
         }`}
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-3 border-b border-gray-50 px-6 py-6">
-          <div className="flex items-center justify-center rounded-md bg-[#ff5e00] p-1.5 text-white">
-            <span className="text-lg font-bold">A</span>
-          </div>
-          <span className="text-xl font-bold text-gray-900">Restauranto</span>
+        <div className="relative flex items-center justify-center border-b border-gray-50 px-6 py-6">
+          <img
+            src="/text.png"
+            alt="Restaurento"
+            className="h-11 w-auto"
+          />
           <button
             onClick={() => setIsOpen(false)}
-            className="ml-auto text-gray-400 md:hidden"
+            className="absolute right-6 text-gray-400 md:hidden"
           >
             <X size={20} />
           </button>

@@ -9,6 +9,10 @@ const NotFound = () => {
         <div className="min-h-screen bg-[#fcfcfc] flex flex-col items-center justify-center p-4 text-center">
             <div className="max-w-md w-full">
 
+                <div className="flex justify-center mb-8">
+                    <img src="/LogoWithText.png" alt="Restaurento" className="h-12 w-auto" />
+                </div>
+
                 <h1 className="text-9xl font-black text-[#ff5e00] opacity-20 mb-4 select-none">
                     404
                 </h1>
@@ -50,7 +54,7 @@ const NotFound = () => {
 
 
             <div className="mt-16 text-gray-400 text-sm">
-                &copy; 2024 Restaurento
+                &copy; {new Date().getFullYear()} Restaurento
             </div>
         </div>
     );

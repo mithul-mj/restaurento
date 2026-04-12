@@ -1,5 +1,4 @@
 import React from 'react';
-import { UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AuthLayout = ({
@@ -36,11 +35,12 @@ const AuthLayout = ({
 
                 <div className="w-full max-w-[450px] relative z-10">
 
-                    <div className="flex items-center gap-3 mb-8 justify-center md:justify-start">
-                        <div className="bg-[#ff5e00] text-white p-1.5 rounded-md flex items-center justify-center">
-                            <UtensilsCrossed size={20} />
-                        </div>
-                        <span className="font-bold text-xl text-white md:text-gray-900">Restauranto</span>
+                    <div className="flex justify-center md:justify-start mb-8">
+                        <img
+                            src="/LogoWithText.png"
+                            alt="Restaurento"
+                            className="h-12 w-auto md:brightness-100 brightness-0 invert"
+                        />
                     </div>
 
                     <h1 className="text-3xl font-bold text-white md:text-gray-900 mb-2 text-center md:text-left">

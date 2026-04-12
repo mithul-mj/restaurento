@@ -15,7 +15,15 @@ const storage = new CloudinaryStorage({
   params: {
     folder: "restaurento/onboarding",
     allowed_formats: ["jpg", "png", "jpeg", "avif", "webp"],
-    transformation: [{ width: 1200, height: 1200, crop: "limit", quality: "auto", fetch_format: "auto" }],
+    transformation: [
+      {
+        width: 1200,
+        height: 1200,
+        crop: "limit",
+        quality: "auto",
+        fetch_format: "auto",
+      },
+    ],
   },
 });
 
@@ -25,7 +33,12 @@ const bannerStorage = new CloudinaryStorage({
     folder: "restaurento/banners",
     allowed_formats: ["jpg", "png", "jpeg", "webp", "avif"],
     transformation: [
-      { width: 2200, crop: "limit", quality: "auto:best", fetch_format: "auto" }
+      {
+        width: 2200,
+        crop: "limit",
+        quality: "auto:best",
+        fetch_format: "auto",
+      },
     ],
   },
 });

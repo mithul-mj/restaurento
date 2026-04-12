@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Heart, Trash2, ArrowRight, ChevronLeft, ChevronRight, Utensils, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useWishlist } from "../../hooks/useWishlist";
 import { showConfirm, showToast } from "../../utils/alert";
 import Loader from "../../components/Loader";

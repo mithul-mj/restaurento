@@ -1,3 +1,8 @@
+import { env } from "../config/env.config.js";
+
+const BRAND_COLOR = "#ff5e00";
+const LOGO_URL = `${env.FRONTEND_URL}/LogoWithText.png`;
+
 export const getOtpEmailTemplate = (otp, userName = "Foodie") => {
   return `
     <!DOCTYPE html>
@@ -8,15 +13,15 @@ export const getOtpEmailTemplate = (otp, userName = "Foodie") => {
       <title>Verify Your Email</title>
       <style>
         /* Resets to ensure consistent rendering across clients */
-        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; }
-        table { border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header { background-color: #ff6b6b; padding: 30px; text-align: center; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px; }
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+        table { border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { background-color: #ffffff; padding: 40px 30px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .header img { height: 50px; width: auto; }
         .content { padding: 40px 30px; color: #333333; text-align: center; }
-        .otp-box { background-color: #fff0f0; border: 2px dashed #ff6b6b; border-radius: 8px; padding: 15px 30px; margin: 25px 0; display: inline-block; }
-        .otp-code { font-size: 32px; font-weight: bold; color: #ff6b6b; letter-spacing: 5px; margin: 0; }
-        .footer { background-color: #333333; padding: 20px; text-align: center; font-size: 12px; color: #cccccc; }
-        .footer a { color: #ff6b6b; text-decoration: none; }
+        .otp-box { background-color: #fff5eb; border: 2px dashed ${BRAND_COLOR}; border-radius: 8px; padding: 15px 30px; margin: 25px 0; display: inline-block; }
+        .otp-code { font-size: 32px; font-weight: bold; color: ${BRAND_COLOR}; letter-spacing: 5px; margin: 0; }
+        .footer { background-color: #111827; padding: 25px; text-align: center; font-size: 12px; color: #9ca3af; }
+        .footer a { color: ${BRAND_COLOR}; text-decoration: none; }
       </style>
     </head>
     <body>
@@ -24,7 +29,7 @@ export const getOtpEmailTemplate = (otp, userName = "Foodie") => {
       <table>
         <tr>
           <td class="header">
-            <h1>Restaurento 🍽️</h1>
+            <img src="${LOGO_URL}" alt="Restaurento">
           </td>
         </tr>
 
@@ -73,22 +78,22 @@ export const getPreApprovalEmailTemplate = (userName = "Restaurant Partner") => 
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Application Received</title>
       <style>
-        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; }
-        table { border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header { background-color: #ff6b6b; padding: 30px; text-align: center; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px; }
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+        table { border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { background-color: #ffffff; padding: 40px 30px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .header img { height: 50px; width: auto; }
         .content { padding: 40px 30px; color: #333333; text-align: center; }
-        .status-box { background-color: #fff0f0; border: 2px dashed #ff6b6b; border-radius: 8px; padding: 15px 30px; margin: 25px 0; display: inline-block; }
-        .status-text { font-size: 24px; font-weight: bold; color: #ff6b6b; margin: 0; }
-        .footer { background-color: #333333; padding: 20px; text-align: center; font-size: 12px; color: #cccccc; }
-        .footer a { color: #ff6b6b; text-decoration: none; }
+        .status-box { background-color: #fff5eb; border: 2px dashed ${BRAND_COLOR}; border-radius: 8px; padding: 15px 30px; margin: 25px 0; display: inline-block; }
+        .status-text { font-size: 24px; font-weight: bold; color: ${BRAND_COLOR}; margin: 0; }
+        .footer { background-color: #111827; padding: 25px; text-align: center; font-size: 12px; color: #9ca3af; }
+        .footer a { color: ${BRAND_COLOR}; text-decoration: none; }
       </style>
     </head>
     <body>
       <table>
         <tr>
           <td class="header">
-            <h1>Restaurento 🍽️</h1>
+            <img src="${LOGO_URL}" alt="Restaurento">
           </td>
         </tr>
         <tr>
@@ -138,24 +143,24 @@ export const getVerificationStatusEmailTemplate = (
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
       <style>
-        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; }
-        table { border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header { background-color: #ff6b6b; padding: 30px; text-align: center; }
-        .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px; }
+        body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+        table { border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { background-color: #ffffff; padding: 40px 30px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .header img { height: 50px; width: auto; }
         .content { padding: 40px 30px; color: #333333; text-align: center; }
         .status-box { background-color: ${statusBg}; border: 2px dashed ${statusBorder}; border-radius: 8px; padding: 15px 30px; margin: 25px 0; display: inline-block; }
         .status-text { font-size: 24px; font-weight: bold; color: ${statusColor}; margin: 0; text-transform: capitalize; }
         .reason-box { background-color: #f8f9fa; border-left: 4px solid ${statusBorder}; padding: 15px; margin-top: 20px; text-align: left; }
-        .footer { background-color: #333333; padding: 20px; text-align: center; font-size: 12px; color: #cccccc; }
-        .footer a { color: #ff6b6b; text-decoration: none; }
-        .action-button { background-color: #ff6b6b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin-top: 20px; }
+        .footer { background-color: #111827; padding: 25px; text-align: center; font-size: 12px; color: #9ca3af; }
+        .footer a { color: ${BRAND_COLOR}; text-decoration: none; }
+        .action-button { background-color: ${BRAND_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin-top: 20px; }
       </style>
     </head>
     <body>
       <table>
         <tr>
           <td class="header">
-            <h1>Restaurento 🍽️</h1>
+            <img src="${LOGO_URL}" alt="Restaurento">
           </td>
         </tr>
         <tr>
@@ -227,6 +232,7 @@ export const getBookingConfirmationEmailTemplate = (booking, restaurant, userNam
     <body>
       <div class="container">
         <div class="header">
+          <img src="${LOGO_URL}" alt="Restaurento" style="height: 40px; margin-bottom: 20px;">
           <h1 style="margin:0; font-size: 28px;">Booking Confirmed! 🎉</h1>
           <p style="margin:10px 0 0 0; opacity: 0.9;">We're excited to see you at ${restaurant.restaurantName}</p>
         </div>
@@ -252,7 +258,7 @@ export const getBookingConfirmationEmailTemplate = (booking, restaurant, userNam
 
         <div class="footer">
           <p style="margin:0;">&copy; ${new Date().getFullYear()} Restaurento. All rights reserved.</p>
-          <p style="margin:10px 0 0 0;">Need help? <a href="#" style="color: #ff5e00; text-decoration: none;">Contact Support</a></p>
+          <p style="margin:10px 0 0 0;">Need help? <a href="#" style="color: ${BRAND_COLOR}; text-decoration: none;">Contact Support</a></p>
         </div>
       </div>
     </body>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { UtensilsCrossed, XCircle, AlertCircle, ArrowRight, Ban, LogOut } from 'lucide-react';
+import { XCircle, AlertCircle, ArrowRight, Ban, LogOut } from 'lucide-react';
 import restaurantService from '../../services/restaurant.service';
 import authService from '../../services/auth.service';
 import { logout } from '../../redux/slices/authSlice';
@@ -49,11 +49,12 @@ const VerificationPending = () => {
     return (
         <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center p-6 text-center">
 
-            <div className="flex items-center gap-2 mb-8 animate-fade-in-down">
-                <div className="w-8 h-8 bg-[#ff5e00] rounded-full flex items-center justify-center shadow-lg shadow-orange-200">
-                    <span className="text-white font-bold text-lg">R</span>
-                </div>
-                <span className="text-xl font-bold text-gray-800 tracking-tight">Restauranto</span>
+            <div className="flex justify-center mb-8 animate-fade-in-down">
+                <img
+                    src="/LogoWithText.png"
+                    alt="Restaurento"
+                    className="h-12 w-auto"
+                />
             </div>
 
             {isBanned ? (
@@ -134,8 +135,8 @@ const VerificationPending = () => {
 
                     <div className="mt-12 flex justify-center">
                         <div className="relative">
-                            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center animate-pulse">
-                                <UtensilsCrossed className="text-[#ff5e00]" size={32} />
+                            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center animate-pulse overflow-hidden p-4">
+                                <img src="/log.png" alt="Restaurento" className="w-full h-full object-contain" />
                             </div>
                             <div className="absolute top-0 left-0 w-16 h-16 border-4 border-[#ff5e00]/20 rounded-full animate-spin-slow" style={{ animationDuration: '3s' }} />
                         </div>
@@ -144,7 +145,7 @@ const VerificationPending = () => {
             )}
 
             <div className="absolute bottom-6 text-gray-400 text-xs font-medium">
-                &copy; {new Date().getFullYear()} Restauranto Inc.
+                &copy; {new Date().getFullYear()} Restaurento Inc.
             </div>
         </div>
     );
