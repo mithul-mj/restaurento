@@ -86,7 +86,7 @@ const RestaurantLogin = () => {
                             className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
                             ${errors.email
                                     ? 'border-red-500 bg-red-50 focus:border-red-500'
-                                    : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
+                                    : 'border-gray-200 bg-white focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter restaurant email"
                             {...register("email")}
@@ -106,7 +106,7 @@ const RestaurantLogin = () => {
                             className={`w-full px-4 py-3.5 pr-10 rounded-lg border focus:outline-none transition-colors
                             ${errors.password
                                     ? 'border-red-500 bg-red-50 focus:border-red-500'
-                                    : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
+                                    : 'border-gray-200 bg-white focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter password"
                             {...register("password")}
@@ -121,7 +121,7 @@ const RestaurantLogin = () => {
                     </div>
                     {errors.password && <span className="text-red-500 text-xs mt-1">{errors.password.message}</span>}
                     <div className="flex justify-end mt-2">
-                        <button type="button" onClick={() => setShowForgotPasswordModal(true)} className="text-xs text-gray-300 md:text-gray-500 hover:text-[#ff5e00] underline">
+                        <button type="button" onClick={() => setShowForgotPasswordModal(true)} className="text-gray-300 md:text-gray-500 text-xs hover:text-[#ff5e00] underline">
                             Forgot Password?
                         </button>
                     </div>

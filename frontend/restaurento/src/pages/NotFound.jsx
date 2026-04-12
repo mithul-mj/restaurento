@@ -9,8 +9,8 @@ const NotFound = () => {
         <div className="min-h-screen bg-[#fcfcfc] flex flex-col items-center justify-center p-4 text-center">
             <div className="max-w-md w-full">
 
-                <div className="flex justify-center mb-8">
-                    <img src="/LogoWithText.png" alt="Restaurento" className="h-12 w-auto" />
+                <div className="flex justify-center mb-6">
+                    <img src="/LogoWithText.png" alt="Restaurento" className="h-28 w-auto" />
                 </div>
 
                 <h1 className="text-9xl font-black text-[#ff5e00] opacity-20 mb-4 select-none">

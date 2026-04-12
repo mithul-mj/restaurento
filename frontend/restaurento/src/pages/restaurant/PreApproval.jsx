@@ -122,11 +122,11 @@ const PreApproval = () => {
     return (
         <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
             <div className="max-w-4xl mx-auto">
-                <div className="flex justify-center mb-10">
+                <div className="flex justify-center mb-6">
                     <img
                         src="/LogoWithText.png"
                         alt="Restaurento"
-                        className="h-12 w-auto"
+                        className="h-28 w-auto"
                     />
                 </div>
                 <div className="mb-8">

@@ -116,7 +116,7 @@ const UserSignup = () => {
                             className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
                             ${errors.fullName
                                     ? 'border-red-500 bg-red-50 focus:border-red-500'
-                                    : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
+                                    : 'border-gray-200 bg-white focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your Full Name"
                             {...register("fullName")}
@@ -136,7 +136,7 @@ const UserSignup = () => {
                             className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
                             ${errors.email
                                     ? 'border-red-500 bg-red-50 focus:border-red-500'
-                                    : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
+                                    : 'border-gray-200 bg-white focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your email address"
                             {...register("email")}
@@ -156,7 +156,7 @@ const UserSignup = () => {
                             className={`w-full px-4 py-3.5 pr-10 rounded-lg border focus:outline-none transition-colors
                             ${errors.password
                                     ? 'border-red-500 bg-red-50 focus:border-red-500'
-                                    : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
+                                    : 'border-gray-200 bg-white focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your password"
                             {...register("password")}
@@ -183,7 +183,7 @@ const UserSignup = () => {
                             className={`w-full px-4 py-3.5 pr-10 rounded-lg border focus:outline-none transition-colors
                             ${errors.confirmPassword
                                     ? 'border-red-500 bg-red-50 focus:border-red-500'
-                                    : 'border-gray-200 bg-gray-50/50 focus:border-[#ff5e00] focus:bg-white'}
+                                    : 'border-gray-200 bg-white focus:border-[#ff5e00] focus:bg-white'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             placeholder="Enter your password"
                             {...register("confirmPassword")}

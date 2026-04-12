@@ -35,20 +35,20 @@ const AuthLayout = ({
 
                 <div className="w-full max-w-[450px] relative z-10">
 
-                    <div className="flex justify-center md:justify-start mb-8">
+                    <div className="flex justify-center mb-6">
                         <img
                             src="/LogoWithText.png"
                             alt="Restaurento"
-                            className="h-12 w-auto md:brightness-100 brightness-0 invert"
+                            className="h-28 w-auto md:brightness-100 brightness-0 invert"
                         />
                     </div>
 
-                    <h1 className="text-3xl font-bold text-white md:text-gray-900 mb-2 text-center md:text-left">
+                    <h1 className="text-3xl font-bold text-white md:text-gray-900 mb-2 text-center">
                         {title}
                     </h1>
 
                     {subtitle && (
-                        <p className="text-gray-300 md:text-gray-500 text-sm mb-8 text-center md:text-left font-normal">
+                        <p className="text-gray-300 md:text-gray-500 text-sm mb-8 text-center font-normal">
                             {subtitle}
                         </p>
                     )}

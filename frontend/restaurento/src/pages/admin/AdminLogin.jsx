@@ -58,7 +58,7 @@ const AdminLogin = () => {
                         type="email"
                         placeholder="Enter your email"
                         className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors
-                        ${errors.email ? 'border-red-500 bg-red-50 focus:border-red-500' : 'border-gray-200 bg-white/90 md:bg-white focus:border-[#ff5e00]'}
+                        ${errors.email ? 'border-red-500 bg-red-50 focus:border-red-500' : 'border-gray-200 bg-white focus:border-[#ff5e00]'}
                         text-gray-900 placeholder-gray-400 text-sm`}
                         {...register("email")}
                     />
@@ -72,7 +72,7 @@ const AdminLogin = () => {
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
                             className={`w-full px-4 py-3.5 rounded-lg border focus:outline-none transition-colors pr-10
-                            ${errors.password ? 'border-red-500 bg-red-50 focus:border-red-500' : 'border-gray-200 bg-white/90 md:bg-white focus:border-[#ff5e00]'}
+                            ${errors.password ? 'border-red-500 bg-red-50 focus:border-red-500' : 'border-gray-200 bg-white focus:border-[#ff5e00]'}
                             text-gray-900 placeholder-gray-400 text-sm`}
                             {...register("password")}
                         />

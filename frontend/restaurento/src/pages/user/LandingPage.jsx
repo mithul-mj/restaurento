@@ -478,7 +478,7 @@ const LandingPage = () => {
             <footer className="pt-40 pb-20 px-6 md:px-12 bg-white relative overflow-hidden">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-20 mb-32">
-                        <div className="lg:col-span-2 space-y-12">
+                        <div className="lg:col-span-2 space-y-12 flex flex-col items-center lg:items-start text-center lg:text-left">
                             <Link to="/landing">
                                 <img
                                     src="/LogoWithText.png"

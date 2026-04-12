@@ -55,16 +55,17 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
 
-      <div className="absolute top-6 left-6 flex items-center">
-        <img
-          src="/LogoWithText.png"
-          alt="Restaurento"
-          className="h-10 w-auto"
-        />
-      </div>
+
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 w-full max-w-[480px] text-center">
+          <div className="flex justify-center mb-6">
+            <img
+              src="/LogoWithText.png"
+              alt="Restaurento"
+              className="h-28 w-auto"
+            />
+          </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">
             Set a New Password
           </h1>

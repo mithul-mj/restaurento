@@ -68,11 +68,11 @@ const VerifyEmail = () => {
 
 
                 <div className="w-full max-w-[450px] relative z-10 bg-white md:bg-transparent rounded-2xl p-8 md:p-0 shadow-2xl md:shadow-none">
-                    <div className="flex justify-center mb-10">
+                    <div className="flex justify-center mb-6">
                         <img
                             src="/LogoWithText.png"
                             alt="Restaurento"
-                            className="h-12 w-auto md:brightness-100 brightness-0 invert"
+                            className="h-28 w-auto"
                         />
                     </div>
                     <div className="text-center mb-8">

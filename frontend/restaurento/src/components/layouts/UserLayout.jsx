@@ -8,7 +8,7 @@ const UserLayout = () => {
     const location = useLocation();
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+        <div className="flex flex-col h-[100dvh] overflow-hidden bg-[#fcfcfc]">
             <div className="relative z-[100] flex-shrink-0">
                 <UserNavbar />
             </div>

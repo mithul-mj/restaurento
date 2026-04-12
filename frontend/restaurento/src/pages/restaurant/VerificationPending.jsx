@@ -49,11 +49,11 @@ const VerificationPending = () => {
     return (
         <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center p-6 text-center">
 
-            <div className="flex justify-center mb-8 animate-fade-in-down">
+            <div className="flex justify-center mb-6 animate-fade-in-down">
                 <img
                     src="/LogoWithText.png"
                     alt="Restaurento"
-                    className="h-12 w-auto"
+                    className="h-28 w-auto"
                 />
             </div>
 

@@ -97,18 +97,18 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] pb-20">
+    <div className="min-h-full bg-[#fcfcfc] pb-32">
       {/* Background Decorative Element */}
       <div className="h-48 w-full bg-gradient-to-r from-[#ff5e00] to-[#ff9500] absolute top-0 left-0 -z-10 opacity-5 md:h-64" />
 
       <motion.main
-        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-16"
+        className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 pt-6 md:pt-16"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         {/* Header Section */}
-        <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-10">
+        <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-8">
           <div className="relative group">
             <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl">
               <img
@@ -120,14 +120,14 @@ const Profile = () => {
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            </div>
+          </div>
 
-          <div className="flex-1 text-center md:text-left mb-2">
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-start gap-2 md:gap-4 mb-2">
               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
                 {user?.fullName}
               </h1>
-              <div className="flex items-center justify-center md:justify-start gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[11px] font-bold uppercase tracking-wider border border-green-100">
+              <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[11px] font-bold uppercase tracking-wider border border-green-100 w-fit mx-auto md:mx-0">
                 <ShieldCheck size={12} />
                 Verified
               </div>
@@ -142,26 +142,26 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 justify-center">
             <Link to="/edit-profile" className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
               Edit Profile
             </Link>
           </div>
         </motion.div>
 
-        <div className="mb-10">
+        <div className="mb-8">
           {/* Wallet Card - Full Width */}
-          <motion.div variants={itemVariants} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+          <motion.div variants={itemVariants} className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4 text-[#ff5e00]">
-                <Wallet size={24} />
-                <span className="font-bold text-sm uppercase tracking-widest">Available Balance</span>
+            <div className="relative z-10 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-3 mb-3 text-[#ff5e00]">
+                <Wallet size={20} />
+                <span className="font-bold text-xs uppercase tracking-widest">Available Balance</span>
               </div>
               <div className="text-4xl md:text-5xl font-black text-gray-900">
                 ₹{(user?.walletBalance ?? 0).toLocaleString()}
               </div>
-              <p className="text-xs text-gray-400 mt-2 font-medium">Use for quick bookings and instant refunds</p>
+              <p className="text-xs text-gray-400 mt-2 font-medium">Quick bookings and instant refunds</p>
             </div>
             <div className="relative z-10 w-full sm:w-auto">
               <Link to="/my-wallet" className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-[#fff5eb] text-[#ff5e00] text-sm font-bold rounded-2xl hover:bg-[#ffe0cc] transition-all group/btn">
@@ -173,11 +173,11 @@ const Profile = () => {
         </div>
 
         {/* Rewards Section */}
-        <motion.div variants={itemVariants} className="bg-white rounded-[32px] p-8 md:p-12 border border-gray-100 shadow-sm relative overflow-hidden">
+        <motion.div variants={itemVariants} className="bg-white rounded-[32px] p-6 md:p-12 border border-gray-100 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50/50 rounded-full -mr-32 -mt-32 -z-0" />
-          
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10 relative z-10">
-            <div className="flex-1">
+
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
+            <div className="flex-1 w-full text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#ff5e00] rounded-full text-[10px] font-bold uppercase tracking-wider mb-6">
                 <Share2 size={12} />
                 Referral Program
@@ -185,24 +185,23 @@ const Profile = () => {
               <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-4 tracking-tight">
                 Invite Friends & <br className="hidden md:block" /> Get Rewarded
               </h2>
-              <p className="text-gray-500 text-sm md:text-base max-w-sm mb-8 leading-relaxed">
-                Share your unique link and earn <span className="font-bold text-gray-900">₹{REFERRAL_REWARD_REFERRER}</span> after their first booking. 
-                Your friends also get <span className="font-bold text-gray-900">₹{REFERRAL_REWARD_NEW_USER}</span> on their first reservation.
+              <p className="text-gray-500 text-sm md:text-base max-w-sm mx-auto lg:mx-0 mb-8 leading-relaxed">
+                Earn <span className="font-bold text-gray-900">₹{REFERRAL_REWARD_REFERRER}</span> after their first booking.
+                They also get <span className="font-bold text-gray-900">₹{REFERRAL_REWARD_NEW_USER}</span>.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="flex-1 bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center gap-3">
-                  <span className="flex-1 text-xs font-mono font-bold text-gray-500 truncate select-all">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+                <div className="flex-1 bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center justify-center gap-3 overflow-hidden">
+                  <span className="text-[10px] font-mono font-bold text-gray-500 truncate select-all">
                     {`${window.location.origin}/signup?ref=${user.referralCode}`}
                   </span>
                 </div>
                 <button
                   onClick={handleCopy}
-                  className={`px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shrink-0 ${
-                    copied 
-                    ? "bg-green-600 text-white" 
-                    : "bg-[#ff5e00] text-white hover:bg-[#e05200] shadow-lg shadow-orange-100"
-                  }`}
+                  className={`px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shrink-0 ${copied
+                      ? "bg-green-600 text-white"
+                      : "bg-[#ff5e00] text-white hover:bg-[#e05200] shadow-lg shadow-orange-100"
+                    }`}
                 >
                   {copied ? (
                     <>
@@ -231,7 +230,7 @@ const Profile = () => {
         </motion.div>
 
         {/* Global Actions */}
-        <motion.div variants={itemVariants} className="mt-10 flex justify-center">
+        <motion.div variants={itemVariants} className="mt-8 flex justify-center">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-8 py-3 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all"
