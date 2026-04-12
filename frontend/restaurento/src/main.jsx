@@ -12,6 +12,10 @@ import { SocketProvider } from "./context/SocketContext.jsx";
 import { LocationProvider } from "./context/LocationContext";
 import { showToast } from "./utils/alert.js";
 import STATUS_CODES from "./constants/statusCodes.js";
+import { registerSW } from 'virtual:pwa-register';
+
+// Register PWA service worker
+registerSW({ immediate: true });
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
