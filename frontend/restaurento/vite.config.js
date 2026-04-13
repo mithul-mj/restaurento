@@ -14,22 +14,27 @@ export default defineConfig({
         short_name: 'Restaurento',
         description: 'Premium Restaurant Experience & Booking Platform',
         theme_color: '#ff5e00',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
-            src: 'appIcon.png',
+            src: '/appIcon.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'appIcon.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'appIcon.png',
+            src: '/appIcon.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: '/appIcon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
