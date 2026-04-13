@@ -400,7 +400,7 @@ const RestaurantDetails = () => {
                 <motion.div 
                     initial={{ y: 100 }}
                     animate={{ y: 0 }}
-                    className="fixed bottom-6 left-4 right-4 z-50 bg-[#1a1a1a] text-white p-4 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/20"
+                    className={`fixed left-4 right-4 z-50 bg-[#1a1a1a] text-white p-4 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/20 ${user ? 'bottom-24' : 'bottom-6'}`}
                 >
                     <div>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">{cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'}</p>

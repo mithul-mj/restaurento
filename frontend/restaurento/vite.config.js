@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['log.png', 'LogoWithText.png'],
+      includeAssets: ['log.png', 'LogoWithText.png', 'appIcon.png'],
       manifest: {
         name: 'Restaurento',
         short_name: 'Restaurento',
@@ -16,17 +16,17 @@ export default defineConfig({
         theme_color: '#ff5e00',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'appIcon.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'appIcon.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'appIcon.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
