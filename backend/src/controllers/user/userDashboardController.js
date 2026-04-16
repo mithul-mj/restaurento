@@ -486,6 +486,11 @@ export const getTopRestaurants = async (req, res, next) => {
       restaurantIds = [...restaurantIds, ...extra.map(r => r._id)];
     }
 
+    const now = new Date();
+    const day = now.getDay();
+    const currentDayIndex = day === 0 ? 6 : day - 1;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
     const pipeline = [
       { $match: { _id: { $in: restaurantIds } } },
       {
@@ -506,6 +511,34 @@ export const getTopRestaurants = async (req, res, next) => {
           $nor: [
             { "schedule.closedTill": { $gt: new Date() } }
           ]
+        }
+      },
+      {
+        $addFields: {
+          todaySchedule: { $arrayElemAt: ["$schedule.openingHours.days", currentDayIndex] }
+        }
+      },
+      {
+        $addFields: {
+          isCurrentlyOpen: {
+            $cond: {
+              if: {
+                $and: [
+                  {
+                    $or: [
+                      { $not: ["$schedule.closedTill"] },
+                      { $lte: ["$schedule.closedTill", new Date()] }
+                    ]
+                  },
+                  { $eq: ["$todaySchedule.isClosed", false] },
+                  { $gte: [currentMinutes, "$todaySchedule.startTime"] },
+                  { $lte: [currentMinutes, "$todaySchedule.endTime"] }
+                ]
+              },
+              then: true,
+              else: false
+            }
+          }
         }
       },
       {
@@ -555,6 +588,7 @@ export const getTopRestaurants = async (req, res, next) => {
           tags: 1,
           slotPrice: "$schedule.slotPrice",
           bestOffer: 1,
+          isCurrentlyOpen: 1,
         }
       }
     ];
