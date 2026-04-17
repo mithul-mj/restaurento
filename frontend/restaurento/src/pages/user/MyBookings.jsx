@@ -24,7 +24,16 @@ const MyBookings = () => {
     const [retryingBookingId, setRetryingBookingId] = useState(null);
     const [ratingModal, setRatingModal] = useState({ isOpen: false, restaurantId: null, restaurantName: "" });
 
-    const { data, isLoading, isError, cancelBooking, isCanceling, checkBookingAvailability, verifyRazorpayPayment } = useBookings({
+    const { 
+        data, 
+        isLoading, 
+        isError, 
+        cancelBooking, 
+        isCanceling, 
+        checkBookingAvailability, 
+        verifyRazorpayPayment,
+        retryBookingPayment 
+    } = useBookings({
         type: activeTab,
         page,
         limit,
@@ -36,24 +45,21 @@ const MyBookings = () => {
 
         try {
             // 1. Pre-check availability
-        try {
             await checkBookingAvailability(booking._id);
-        } catch (availErr) {
-            setRetryingBookingId(null);
-            const msg = availErr.response?.data?.message || "This slot is no longer available.";
-            showConfirm("Cannot Proceed", msg, "OK");
-            return;
-        }
 
-
+            // 2. Refresh the Razorpay order (handles expiration & wallet adjustment)
+            const retryRes = await retryBookingPayment(booking._id);
+            if (!retryRes.success || !retryRes.order) {
+                throw new Error(retryRes.message || "Failed to refresh payment order.");
+            }
 
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-                amount: booking.totalAmount * 100,
-                currency: "INR",
+                amount: retryRes.order.amount,
+                currency: retryRes.order.currency,
                 name: "Restaurento",
                 description: "Complete your table booking",
-                order_id: booking.razorpayOrderId,
+                order_id: retryRes.order.id,
                 modal: {
                     ondismiss: () => setRetryingBookingId(null)
                 },

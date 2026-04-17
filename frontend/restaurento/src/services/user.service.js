@@ -88,6 +88,10 @@ const userService = {
     const response = await api.patch(`/bookings/${bookingId}/cancel`);
     return response.data;
   },
+  retryBookingPayment: async (bookingId) => {
+    const response = await api.post(`/bookings/${bookingId}/retry`);
+    return response.data;
+  },
   getMyWalletHistory: async (page = 1, limit = 3) => {
     const response = await api.get('/wallet', {
       params: { page, limit }

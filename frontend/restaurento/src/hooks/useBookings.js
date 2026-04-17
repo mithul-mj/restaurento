@@ -27,6 +27,7 @@ export const useBookings = ({ type = 'upcoming', page = 1, limit = 3 }) => {
         ...query,
         cancelBooking: cancelBookingMutation.mutate,
         isCanceling: cancelBookingMutation.isPending,
+        retryBookingPayment: userService.retryBookingPayment,
         checkBookingAvailability: userService.checkBookingAvailability,
         verifyRazorpayPayment: userService.verifyRazorpayPayment
     };

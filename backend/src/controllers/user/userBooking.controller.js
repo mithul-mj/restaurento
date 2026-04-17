@@ -53,14 +53,11 @@ export const BookingRestaurant = async (req, res, next) => {
 
         // 3. Wallet Logic
         let walletAmountUsed = 0;
-        if (useWallet) {
-            const user = await User.findById(userId).session(session);
-            if (user && user.walletBalance > 0) {
-                walletAmountUsed = Math.min(user.walletBalance, pricing.finalTotal);
-                if (walletAmountUsed === pricing.finalTotal) {
-                    user.walletBalance -= walletAmountUsed;
-                    await user.save({ session });
-                }
+        let userDoc = null;
+        if (useWallet && pricing.finalTotal > 0) {
+            userDoc = await User.findById(userId).session(session);
+            if (userDoc && userDoc.walletBalance > 0) {
+                walletAmountUsed = Math.min(userDoc.walletBalance, pricing.finalTotal);
             }
         }
 
@@ -74,18 +71,21 @@ export const BookingRestaurant = async (req, res, next) => {
             walletAmountUsed
         };
 
-        // --- CASE 1: FULL WALLET PAYMENT ---
+        // --- CASE 1: FULL WALLET PAYMENT (OR FREE) ---
         if (walletAmountUsed === pricing.finalTotal) {
             const booking = new Booking({ ...bookingData, status: 'approved' });
-            const [walletTx] = await WalletTransaction.create([{
-                userId, bookingId: booking._id, amount: -walletAmountUsed,
-                description: `Used wallet for booking at ${restaurant.restaurantName}`
-            }], { session });
+            
+            if (walletAmountUsed > 0) {
+                const [walletTx] = await WalletTransaction.create([{
+                    userId, bookingId: booking._id, amount: -walletAmountUsed,
+                    description: `Used wallet for booking at ${restaurant.restaurantName}`
+                }], { session });
 
-            user.walletBalance -= walletAmountUsed;
-            await user.save({ session });
+                userDoc.walletBalance -= walletAmountUsed;
+                await userDoc.save({ session });
+                booking.walletTransactionId = walletTx._id;
+            }
 
-            booking.walletTransactionId = walletTx._id;
             await booking.save({ session });
             
             // Process Referral Award if this is their first purchase
@@ -196,8 +196,9 @@ export const retryBookingPayment = async (req, res, next) => {
         const holdKey = `hold:${userId}:${booking.restaurantId.toString()}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
         await redisClient.setEx(holdKey, PAYMENT_WINDOW_SECONDS, booking.guests.toString());
 
-        // 3. New Razorpay Order
-        const order = await bookingService.createRazorpayOrder(booking.totalAmount);
+        // 3. New Razorpay Order for the remaining amount
+        const amountToPay = booking.totalAmount - (booking.walletAmountUsed || 0);
+        const order = await bookingService.createRazorpayOrder(amountToPay);
         booking.razorpayOrderId = order.id;
         await booking.save();
 
