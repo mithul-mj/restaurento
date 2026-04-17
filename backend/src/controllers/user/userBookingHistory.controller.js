@@ -118,6 +118,14 @@ export const getBookingDetails = async (req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user._id;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                message: "Invalid booking ID format."
+            });
+        }
+
         const bookings = await Booking.aggregate([
             {
                 $match: {

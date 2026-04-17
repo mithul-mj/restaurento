@@ -37,13 +37,13 @@ export const showError = (title, text) => {
     return showAlert(title, text || "Something went wrong!", "error");
 };
 
-export const showConfirm = (title, text, confirmButtonText = "Yes, do it!", isHtml = false) => {
+export const showConfirm = (title, text, confirmButtonText = "Yes, do it!", icon = "warning", isHtml = false) => {
     return Swal.fire({
         ...swalStandardOptions,
         title,
         text: isHtml ? undefined : text,
         html: isHtml ? text : undefined,
-        icon: "warning",
+        icon,
         showCancelButton: true,
         confirmButtonText,
         cancelButtonText: "Cancel",

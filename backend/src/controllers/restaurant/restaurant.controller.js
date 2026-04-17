@@ -777,6 +777,12 @@ export const getBookingById = async (req, res, next) => {
         const { bookingId } = req.params;
         const restaurantId = req.user._id;
 
+        if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                message: "Invalid booking ID format."
+            });
+        }
+
         const booking = await Booking.findOne({
             _id: bookingId,
             restaurantId: restaurantId

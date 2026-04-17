@@ -82,6 +82,9 @@ export const BookingRestaurant = async (req, res, next) => {
                 description: `Used wallet for booking at ${restaurant.restaurantName}`
             }], { session });
 
+            user.walletBalance -= walletAmountUsed;
+            await user.save({ session });
+
             booking.walletTransactionId = walletTx._id;
             await booking.save({ session });
             
@@ -97,7 +100,7 @@ export const BookingRestaurant = async (req, res, next) => {
 
             return res.status(STATUS_CODES.CREATED).json({
                 success: true, message: SUCCESS_MESSAGES.BOOKING_SUCCESS,
-                booking, remainingAmount: 0
+                booking, bookingId: booking._id, remainingAmount: 0
             });
         }
 

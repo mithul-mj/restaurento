@@ -81,7 +81,7 @@ const BookingSummary = () => {
 
                 if (response.remainingAmount === 0) {
                     setIsBookingConfirmed(true);
-                    showConfirm("Booking Successful!", "Your table has been reserved using your wallet balance.", "View My Bookings").then(() => {
+                    showAlert("Booking Successful!", "Your table has been reserved using your wallet balance.", "success", "View My Bookings").then(() => {
                         if (socket && user) {
                             socket.emit("confirm_booking", {
                                 restaurantId: restaurant._id,
