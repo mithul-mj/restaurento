@@ -77,7 +77,16 @@ const BookingSummary = () => {
             const response = await userService.createBooking(bookingData);
 
             if (response.success) {
-                const bookingId = response.bookingId;
+                const bookingId = response.bookingId || response.booking?._id || response.booking?.id;
+
+                if (!bookingId) {
+                    console.error("Booking redirection error: ID missing", response);
+                    setIsBookingConfirmed(true);
+                    showAlert("Booking Successful!", "Your table is reserved, but we couldn't redirect you automatically. Please check your bookings page.", "success", "Go to My Bookings").then(() => {
+                        navigate("/my-bookings", { replace: true });
+                    });
+                    return;
+                }
 
                 if (response.remainingAmount === 0) {
                     setIsBookingConfirmed(true);
@@ -116,6 +125,16 @@ const BookingSummary = () => {
 
                             if (verifyRes.success) {
                                 setIsBookingConfirmed(true);
+                                const verifiedBookingId = verifyRes.bookingId || verifyRes.booking?._id || verifyRes.booking?.id || bookingId;
+
+                                if (!verifiedBookingId) {
+                                    console.error("Payment redirection error: ID missing", verifyRes);
+                                    showAlert("Payment Successful!", "Your booking is confirmed, but we couldn't redirect you automatically. Please check your bookings page.", "success", "Go to My Bookings").then(() => {
+                                        navigate("/my-bookings", { replace: true });
+                                    });
+                                    return;
+                                }
+
                                 showAlert("Payment Successful!", "Your booking is now confirmed. Enjoy!", "success", "Great!").then(() => {
                                     if (socket && user) {
                                         socket.emit("confirm_booking", {
@@ -124,16 +143,16 @@ const BookingSummary = () => {
                                             slotMinutes: timeSlotMinutes,
                                             seats: partySize,
                                             userId: user._id || user.id,
-                                            bookingId: bookingId
+                                            bookingId: verifiedBookingId
                                         });
                                     }
-                                    navigate(`/my-bookings/${bookingId}`, { replace: true });
+                                    navigate(`/my-bookings/${verifiedBookingId}`, { replace: true });
                                 });
                             }
                         } catch (err) {
                             const errorMsg = err.response?.data?.message || "Payment verification failed";
                             showConfirm("Action Required", errorMsg, "OK").then(() => {
-                                navigate(`/my-bookings/${bookingId}`, { replace: true });
+                                navigate(`/my-bookings/${verifiedBookingId || bookingId}`, { replace: true });
                             });
                         }
                     },

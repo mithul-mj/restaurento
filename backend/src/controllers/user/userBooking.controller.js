@@ -100,7 +100,7 @@ export const BookingRestaurant = async (req, res, next) => {
 
             return res.status(STATUS_CODES.CREATED).json({
                 success: true, message: SUCCESS_MESSAGES.BOOKING_SUCCESS,
-                booking, bookingId: booking._id, remainingAmount: 0
+                booking, bookingId: booking._id.toString(), remainingAmount: 0
             });
         }
 
