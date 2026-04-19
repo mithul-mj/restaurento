@@ -18,7 +18,12 @@ const userService = {
     return response.data;
   },
   getDashboard: async (page = 1, limit = 6, search = "", filters = {}, coordinates = null, activeFilter = null) => {
-    let params = { page, limit, search, ...filters };
+    const now = new Date();
+    const day = now.getDay();
+    const dayIndex = day === 0 ? 6 : day - 1;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    let params = { page, limit, search, ...filters, dayIndex, currentMinutes };
 
     if (activeFilter === "Open Now") {
       params.openNow = true;
@@ -35,7 +40,14 @@ const userService = {
     return response.data;
   },
   getRestaurantDetails: async (id) => {
-    const response = await api.get(`/restaurants/${id}`);
+    const now = new Date();
+    const day = now.getDay();
+    const dayIndex = day === 0 ? 6 : day - 1;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const response = await api.get(`/restaurants/${id}`, {
+      params: { dayIndex, currentMinutes }
+    });
     return response.data;
   },
   getRestaurantMenu: async (id, page = 1, category = "All", search = "", limit = 6) => {
@@ -107,7 +119,14 @@ const userService = {
     return response.data;
   },
   getTopRestaurants: async () => {
-    const response = await api.get('/top-restaurants');
+    const now = new Date();
+    const day = now.getDay();
+    const dayIndex = day === 0 ? 6 : day - 1;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const response = await api.get('/top-restaurants', {
+      params: { dayIndex, currentMinutes }
+    });
     return response.data;
   },
   submitReview: async (data) => {

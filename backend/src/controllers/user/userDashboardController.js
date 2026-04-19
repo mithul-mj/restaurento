@@ -17,6 +17,8 @@ export const getUserDashboard = async (req, res, next) => {
     const cost = req.query.cost || req.query['cost[]'] || [];
     const lat = parseFloat(req.query.lat);
     const lng = parseFloat(req.query.lng);
+    const clientDayIndex = req.query.dayIndex !== undefined ? parseInt(req.query.dayIndex) : null;
+    const clientMinutes = req.query.currentMinutes !== undefined ? parseInt(req.query.currentMinutes) : null;
 
     let sort = req.query.sort;
     if (!sort) {
@@ -210,8 +212,12 @@ export const getUserDashboard = async (req, res, next) => {
 
     const now = new Date();
     const day = now.getDay();
-    const currentDayIndex = day === 0 ? 6 : day - 1;
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const serverDayIndex = day === 0 ? 6 : day - 1;
+    const serverMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const currentDayIndex = clientDayIndex !== null ? clientDayIndex : serverDayIndex;
+    const currentMinutes = clientMinutes !== null ? clientMinutes : serverMinutes;
+
 
     const addFieldsStage = {
       $addFields: {
@@ -349,19 +355,25 @@ export const getRestaurantDetails = async (req, res, next) => {
       });
     }
 
+    const clientDayIndex = req.query.dayIndex !== undefined ? parseInt(req.query.dayIndex) : null;
+    const clientMinutes = req.query.currentMinutes !== undefined ? parseInt(req.query.currentMinutes) : null;
+
     // 2. Prepare for "Currently Open" calculation
     const now = new Date();
     const day = now.getDay();
-    const currentDayIndex = day === 0 ? 6 : day - 1;
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const serverDayIndex = day === 0 ? 6 : day - 1;
+    const serverMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const currentDayIndex = clientDayIndex !== null ? clientDayIndex : serverDayIndex;
+    const currentMinutes = clientMinutes !== null ? clientMinutes : serverMinutes;
 
     const todaySchedule = activeSchedule.openingHours.days[currentDayIndex];
 
     // Logic to check if open for business right now
-    const isCurrentlyOpen = !restaurant.isTemporaryClosed &&
-      !todaySchedule.isClosed &&
-      currentMinutes >= todaySchedule.startTime &&
-      currentMinutes <= todaySchedule.endTime;
+    const isCurrentlyOpen = (activeSchedule && !activeSchedule.closedTill || new Date(activeSchedule.closedTill) <= new Date()) &&
+      todaySchedule && !todaySchedule.isClosed &&
+      currentMinutes >= (todaySchedule.startTime || 0) &&
+      currentMinutes <= (todaySchedule.endTime || 1440);
 
     // Combine everything for the frontend
     const finalRestaurantData = {
@@ -463,6 +475,8 @@ export const getRestaurantMenu = async (req, res, next) => {
 
 export const getTopRestaurants = async (req, res, next) => {
   try {
+    const clientDayIndex = req.query.dayIndex !== undefined ? parseInt(req.query.dayIndex) : null;
+    const clientMinutes = req.query.currentMinutes !== undefined ? parseInt(req.query.currentMinutes) : null;
     const topBooked = await Booking.aggregate([
       { $match: { status: { $in: ["approved", "checked-in"] } } },
       { $group: { _id: "$restaurantId", bookingCount: { $sum: 1 } } },
@@ -488,8 +502,11 @@ export const getTopRestaurants = async (req, res, next) => {
 
     const now = new Date();
     const day = now.getDay();
-    const currentDayIndex = day === 0 ? 6 : day - 1;
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const serverDayIndex = day === 0 ? 6 : day - 1;
+    const serverMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const currentDayIndex = clientDayIndex !== null ? clientDayIndex : serverDayIndex;
+    const currentMinutes = clientMinutes !== null ? clientMinutes : serverMinutes;
 
     const pipeline = [
       { $match: { _id: { $in: restaurantIds } } },
