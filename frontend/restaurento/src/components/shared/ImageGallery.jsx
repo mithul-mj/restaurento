@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { ChefHat, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChefHat, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ImgDiv = ({ src, className, loading = "lazy" }) => (
+const ImgDiv = ({ src, className, loading = "lazy", onClick }) => (
   <div
-    className={`overflow-hidden w-full h-full ${className || ""} bg-gray-100 flex-shrink-0`}>
+    className={`overflow-hidden w-full h-full ${className || ""} bg-gray-100 flex-shrink-0 ${onClick ? 'cursor-pointer' : ''}`}
+    onClick={onClick}
+  >
     {src ? (
       <img
         src={src}
@@ -24,6 +26,7 @@ const ImgDiv = ({ src, className, loading = "lazy" }) => (
 const ImageGallery = ({ images = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const galleryImages =
     images.length > 0
@@ -142,15 +145,15 @@ const ImageGallery = ({ images = [] }) => {
     if (count === 1) {
       return (
         <div className="hidden md:block h-[400px] rounded-3xl overflow-hidden">
-          <ImgDiv src={displayImages[0]} loading="eager" />
+          <ImgDiv src={displayImages[0]} loading="eager" onClick={() => setSelectedImage(displayImages[0])} />
         </div>
       );
     }
     if (count === 2) {
       return (
         <div className="hidden md:grid md:grid-cols-2 gap-2 h-[400px] rounded-3xl overflow-hidden">
-          <ImgDiv src={displayImages[0]} loading="eager" />
-          <ImgDiv src={displayImages[1]} />
+          <ImgDiv src={displayImages[0]} loading="eager" onClick={() => setSelectedImage(displayImages[0])} />
+          <ImgDiv src={displayImages[1]} onClick={() => setSelectedImage(displayImages[1])} />
         </div>
       );
     }
@@ -158,11 +161,11 @@ const ImageGallery = ({ images = [] }) => {
       return (
         <div className="hidden md:grid md:grid-cols-3 gap-2 h-[400px] rounded-3xl overflow-hidden">
           <div className="md:col-span-2 h-full">
-            <ImgDiv src={displayImages[0]} loading="eager" />
+            <ImgDiv src={displayImages[0]} loading="eager" onClick={() => setSelectedImage(displayImages[0])} />
           </div>
           <div className="grid grid-rows-2 gap-2 h-full">
-            <ImgDiv src={displayImages[1]} />
-            <ImgDiv src={displayImages[2]} />
+            <ImgDiv src={displayImages[1]} onClick={() => setSelectedImage(displayImages[1])} />
+            <ImgDiv src={displayImages[2]} onClick={() => setSelectedImage(displayImages[2])} />
           </div>
         </div>
       );
@@ -170,14 +173,14 @@ const ImageGallery = ({ images = [] }) => {
     if (count === 4) {
       return (
         <div className="hidden md:grid md:grid-cols-2 gap-2 h-[400px] rounded-3xl overflow-hidden">
-          <ImgDiv src={displayImages[0]} loading="eager" />
+          <ImgDiv src={displayImages[0]} loading="eager" onClick={() => setSelectedImage(displayImages[0])} />
           <div className="h-full w-full flex flex-col gap-2">
             <div className="flex-1 w-full min-h-0">
-              <ImgDiv src={displayImages[1]} />
+              <ImgDiv src={displayImages[1]} onClick={() => setSelectedImage(displayImages[1])} />
             </div>
             <div className="flex-1 w-full min-h-0 grid grid-cols-2 gap-2">
-              <ImgDiv src={displayImages[2]} />
-              <ImgDiv src={displayImages[3]} />
+              <ImgDiv src={displayImages[2]} onClick={() => setSelectedImage(displayImages[2])} />
+              <ImgDiv src={displayImages[3]} onClick={() => setSelectedImage(displayImages[3])} />
             </div>
           </div>
         </div>
@@ -187,22 +190,22 @@ const ImageGallery = ({ images = [] }) => {
     return (
       <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr] gap-2 h-[400px] rounded-3xl overflow-hidden">
         <div className="h-full w-full">
-          <ImgDiv src={displayImages[0]} loading="eager" />
+          <ImgDiv src={displayImages[0]} loading="eager" onClick={() => setSelectedImage(displayImages[0])} />
         </div>
         <div className="h-full w-full flex flex-col gap-2">
           <div className="flex-1 w-full min-h-0">
-            <ImgDiv src={displayImages[1]} />
+            <ImgDiv src={displayImages[1]} onClick={() => setSelectedImage(displayImages[1])} />
           </div>
           <div className="flex-1 w-full min-h-0">
-            <ImgDiv src={displayImages[2]} />
+            <ImgDiv src={displayImages[2]} onClick={() => setSelectedImage(displayImages[2])} />
           </div>
         </div>
         <div className="h-full w-full flex flex-col gap-2">
           <div className="flex-1 w-full min-h-0">
-            <ImgDiv src={displayImages[3]} />
+            <ImgDiv src={displayImages[3]} onClick={() => setSelectedImage(displayImages[3])} />
           </div>
           <div className="flex-1 w-full min-h-0">
-            <ImgDiv src={displayImages[4]} />
+            <ImgDiv src={displayImages[4]} onClick={() => setSelectedImage(displayImages[4])} />
           </div>
         </div>
       </div>
@@ -213,6 +216,36 @@ const ImageGallery = ({ images = [] }) => {
     <>
       <MobileCarousel />
       <DesktopGrid />
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 md:p-8"
+            onClick={() => setSelectedImage(null)}
+          >
+            <button 
+              className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImage(null);
+              }}
+            >
+              <X size={32} />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              src={selectedImage}
+              alt="Fullscreen view"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

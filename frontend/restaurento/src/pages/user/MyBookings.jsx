@@ -412,7 +412,7 @@ const BookingCard = ({ booking, onCancel, onRetry, onRate, isCanceling, retrying
                     </div>
 
                     <div className="mt-6 flex flex-wrap gap-3 items-center justify-end border-t border-gray-50 pt-5">
-                        {!isCanceled && booking.status === 'approved' && (
+                        {!isCanceled && booking.status === 'approved' && type === 'upcoming' && (
                             <AddToCalendarButton booking={booking} restaurant={restaurant} />
                         )}
                         {booking.status === 'checked-in' && (
