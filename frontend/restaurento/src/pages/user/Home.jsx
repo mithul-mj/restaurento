@@ -408,7 +408,7 @@ const Home = () => {
                     </div>
 
                     {/* Mobile Banner Carousel */}
-                    <div className="md:hidden -mx-4 md:mx-0 mt-2 mb-4">
+                    <div className="md:hidden mt-2 mb-6">
                       <BannerCarousel
                         banners={activeBanners}
                         isLoading={isLoadingBanners}
