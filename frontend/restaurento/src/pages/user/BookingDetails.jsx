@@ -51,9 +51,9 @@ const BookingDetails = () => {
                 <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-6">
                     <AlertCircle size={40} />
                 </div>
-                <h2 className="text-2xl font-black text-gray-900 mb-2">Booking Not Found</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Booking Not Found</h2>
                 <p className="text-gray-500 mb-8 text-center max-w-md">We couldn't retrieve this booking. It might have been deleted or the link is invalid.</p>
-                <Link to="/my-bookings" className="px-8 py-3 bg-[#ff5e00] text-white rounded-2xl font-black shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all">
+                <Link to="/my-bookings" className="px-8 py-3 bg-[#ff5e00] text-white rounded-2xl font-bold shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all">
                     View My Bookings
                 </Link>
             </div>
@@ -307,7 +307,7 @@ const BookingDetails = () => {
                                 )}
                             </div>
                             <div className="flex-1 space-y-4 py-2">
-                                <h1 className="text-3xl font-bold text-gray-900">{restaurant?.restaurantName}</h1>
+                                <h1 className="text-xl font-semibold text-gray-900">{restaurant?.restaurantName}</h1>
 
                                 <div className="space-y-3">
                                     <div className="flex items-start gap-3 justify-center md:justify-start">
@@ -338,7 +338,7 @@ const BookingDetails = () => {
                         {/* Booking Details Card */}
                         <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-50">
-                                <h2 className="text-lg font-bold text-gray-800">Booking Details</h2>
+                                <h2 className="text-base font-semibold text-gray-800">Booking Details</h2>
                             </div>
                             <div className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
@@ -347,7 +347,7 @@ const BookingDetails = () => {
                                             <Calendar size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-800">
+                                            <p className="text-sm font-semibold text-gray-800">
                                                 <span className="text-gray-400 font-medium mr-1">Date:</span>
                                                 {formatDate(booking.bookingDate, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                                             </p>
@@ -359,7 +359,7 @@ const BookingDetails = () => {
                                             <Clock size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-800">
+                                            <p className="text-sm font-semibold text-gray-800">
                                                 <span className="text-gray-400 font-medium mr-1">Time:</span>
                                                 {formatTime12Hour(booking.slotTime)}
                                             </p>
@@ -371,7 +371,7 @@ const BookingDetails = () => {
                                             <Users size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-800">
+                                            <p className="text-sm font-semibold text-gray-800">
                                                 <span className="text-gray-400 font-medium mr-1">Guests:</span>
                                                 {booking.guests} People
                                             </p>
@@ -385,7 +385,7 @@ const BookingDetails = () => {
                         {/* Pre-ordered Items Card */}
                         <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-50">
-                                <h2 className="text-lg font-bold text-gray-800">Pre-ordered Items</h2>
+                                <h2 className="text-base font-semibold text-gray-800">Pre-ordered Items</h2>
                             </div>
                             <div className="p-6">
                                 <div className="space-y-6">
@@ -394,10 +394,10 @@ const BookingDetails = () => {
                                             {booking.preOrderItems.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between items-start">
                                                     <div>
-                                                        <p className="text-md font-bold text-gray-800 mb-1">{item.name}</p>
-                                                        <p className="text-xs text-gray-400 font-medium tracking-wide">Qty: {item.qty}</p>
+                                                        <p className="text-sm font-semibold text-gray-800 mb-0.5">{item.name}</p>
+                                                        <p className="text-xs font-medium text-gray-400">Qty: {item.qty}</p>
                                                     </div>
-                                                    <p className="text-md font-bold text-gray-700">₹{(item.priceAtBooking * item.qty).toFixed(2)}</p>
+                                                    <p className="text-sm font-semibold text-gray-700">₹{(item.priceAtBooking * item.qty).toFixed(2)}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -410,12 +410,12 @@ const BookingDetails = () => {
                                     <div className="pt-8 space-y-3 border-t border-dashed border-gray-100 mt-10">
                                         <div className="flex justify-between items-center text-sm text-gray-500">
                                             <span className="font-medium">Booking Fee ({booking.guests} x ₹{slotPrice.toFixed(2)})</span>
-                                            <span className="font-bold">₹{bookingFee.toFixed(2)}</span>
+                                            <span className="font-semibold">₹{bookingFee.toFixed(2)}</span>
                                         </div>
                                         {preOrderTotal > 0 && (
                                             <div className="flex justify-between items-center text-sm text-gray-500">
                                                 <span className="font-medium">Food Subtotal</span>
-                                                <span className="font-bold">₹{preOrderTotal.toFixed(2)}</span>
+                                                <span className="font-semibold">₹{preOrderTotal.toFixed(2)}</span>
                                             </div>
                                         )}
                                         {tax > 0 && (
@@ -450,8 +450,8 @@ const BookingDetails = () => {
                                         )}
                                         <div className="border-t border-gray-100 pt-4 mt-2">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-lg font-bold text-gray-900 tracking-tight">Total Paid</span>
-                                                <span className="text-xl font-bold text-gray-900 tracking-tight">₹{totalPaid.toFixed(2)}</span>
+                                                <span className="text-base font-semibold text-gray-900 tracking-tight">Total Paid</span>
+                                                <span className="text-base font-semibold text-gray-900 tracking-tight">₹{totalPaid.toFixed(2)}</span>
                                             </div>
                                             {booking.walletAmountUsed > 0 && (
                                                 <div className="flex justify-between items-center mt-1 text-[11px] text-gray-400 font-medium">
@@ -470,11 +470,11 @@ const BookingDetails = () => {
 
                         {/* Booking Status Card */}
                         <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center flex flex-col items-center">
-                            <h3 className="text-xs font-bold text-gray-400 tracking-[0.1em] uppercase mb-6">Booking Status</h3>
+                            <h3 className="text-xs font-medium text-gray-400 tracking-[0.1em] uppercase mb-6">Booking Status</h3>
 
                             {booking.status === 'approved' ? (
                                 <>
-                                    <div className="inline-flex items-center gap-2 px-6 py-2 bg-green-50 text-green-600 rounded-full font-bold text-sm mb-6 border border-green-100">
+                                        <div className="flex items-center gap-2 px-6 py-2 bg-green-50 text-green-600 rounded-full font-semibold text-sm mb-6 border border-green-100">
                                         <CheckCircle2 size={16} />
                                         Confirmed
                                     </div>
@@ -493,7 +493,7 @@ const BookingDetails = () => {
                                         </div>
                                         {isPast && (
                                             <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-xl flex items-center justify-center p-6 z-20">
-                                                <div className="px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-xl">Expired</div>
+                                                <div className="px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-semibold uppercase tracking-wider shadow-xl">Expired</div>
                                             </div>
                                         )}
                                     </div>
@@ -503,8 +503,8 @@ const BookingDetails = () => {
                                     <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
                                         <CheckCircle2 size={32} />
                                     </div>
-                                    <h4 className="text-lg font-bold text-blue-600 mb-2">Checked In</h4>
-                                    <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto">
+                                    <h4 className="text-base font-semibold text-blue-600 mb-2">Checked In</h4>
+                                    <p className="text-sm font-medium text-gray-400 leading-relaxed max-w-[200px] mx-auto">
                                         Enjoy your meal! You have successfully checked in at the restaurant.
                                     </p>
                                 </div>
@@ -513,14 +513,14 @@ const BookingDetails = () => {
                                     <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-100">
                                         <AlertCircle size={32} />
                                     </div>
-                                    <h4 className="text-lg font-bold text-amber-600 mb-2">Payment Pending</h4>
+                                    <h4 className="text-base font-semibold text-amber-600 mb-2">Payment Pending</h4>
                                     <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto mb-6">
                                         Your payment wasn't completed. Please finish the payment to receive your QR code.
                                     </p>
                                     <button
                                         onClick={handleRetryPayment}
                                         disabled={isRetrying}
-                                        className="px-6 py-2.5 bg-[#ff5e00] text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all disabled:opacity-50"
+                                        className="px-6 py-2.5 bg-[#ff5e00] text-white rounded-xl text-sm font-semibold shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all disabled:opacity-50"
                                     >
                                         {isRetrying ? "Processing..." : "Retry Payment"}
                                     </button>
@@ -530,7 +530,7 @@ const BookingDetails = () => {
                                     <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
                                         <XCircle size={32} />
                                     </div>
-                                    <h4 className="text-lg font-bold text-red-600 mb-2">Cancelled</h4>
+                                    <h4 className="text-base font-semibold text-red-600 mb-2">Cancelled</h4>
                                     <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-[200px] mx-auto">
                                         {booking.canceledBy === 'RESTAURANT'
                                             ? "The restaurant had to cancel this booking. We apologize for the inconvenience."
@@ -543,14 +543,14 @@ const BookingDetails = () => {
 
                         {/* Actions Card */}
                         <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-                            <h3 className="text-xs font-bold text-gray-400 tracking-[0.1em] uppercase mb-6">Actions</h3>
+                            <h3 className="text-xs font-medium text-gray-400 tracking-[0.1em] uppercase mb-6">Actions</h3>
 
                             <div className="space-y-3">
                                 <a
                                     href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant?.location?.coordinates[1]},${restaurant?.location?.coordinates[0]}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full flex items-center justify-center gap-3 py-4 bg-[#800000] text-white rounded-xl font-bold text-sm hover:bg-[#600000] transition-colors shadow-sm"
+                                    className="w-full flex items-center justify-center gap-3 py-4 bg-[#800000] text-white rounded-xl font-semibold text-sm hover:bg-[#600000] transition-colors shadow-sm"
                                 >
                                     <Navigation size={18} />
                                     Get Directions
@@ -560,7 +560,7 @@ const BookingDetails = () => {
                                     <button
                                         onClick={handleCancel}
                                         disabled={isCanceling}
-                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-red-500 border border-red-200 rounded-xl font-bold text-sm hover:bg-red-50 transition-colors shadow-sm mt-3"
+                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-red-500 border border-red-200 rounded-xl font-semibold text-sm hover:bg-red-50 transition-colors shadow-sm mt-3"
                                     >
                                         {isCanceling ? (
                                             <div className="w-5 h-5 border-2 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
@@ -576,7 +576,7 @@ const BookingDetails = () => {
                                 {(booking.status === "approved" || booking.status === "checked-in") && (
                                     <button
                                         onClick={handleDownloadInvoice}
-                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#ff5e00] border border-orange-200 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-sm mt-3"
+                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#ff5e00] border border-orange-200 rounded-xl font-semibold text-sm hover:bg-orange-50 transition-colors shadow-sm mt-3"
                                     >
                                         <Download size={18} />
                                         Download Invoice
@@ -598,7 +598,7 @@ const BookingDetails = () => {
                                                 }
                                             }), {}) || {}
                                         }}
-                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#ff5e00] border border-orange-200 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-sm mt-3"
+                                        className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#ff5e00] border border-orange-200 rounded-xl font-semibold text-sm hover:bg-orange-50 transition-colors shadow-sm mt-3"
                                     >
                                         <Calendar size={18} />
                                         Rebook Now
@@ -611,7 +611,7 @@ const BookingDetails = () => {
 
                 {/* Sublte Footer ID */ }
     <div className="mt-12 text-center">
-        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em] mb-1">
+        <p className="text-[10px] font-medium text-gray-300 uppercase tracking-[0.2em] mb-1">
             Booking Reference
         </p>
         <p className="text-[11px] font-medium text-gray-400">

@@ -54,7 +54,7 @@ const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMar
                         <Bell size={24} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800">Notification</h2>
+                        <h2 className="text-base font-semibold text-gray-800">Notification</h2>
                         <p className="text-sm text-gray-500 font-medium">{unreadCount} unread notifications</p>
                     </div>
                 </div>
@@ -114,7 +114,7 @@ const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMar
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start mb-1 gap-2">
-                                    <h3 className="font-bold text-gray-800 text-sm truncate">{notification.title}</h3>
+                                    <h3 className="font-semibold text-gray-800 text-sm truncate">{notification.title}</h3>
                                     <div className="flex items-center gap-2 shrink-0">
                                         {!notification.isRead && <span className="w-2 h-2 bg-[#ff5e00] rounded-full shadow-[0_0_8px_rgba(255,94,0,0.6)]"></span>}
                                         <span className="text-[11px] text-gray-400 font-medium">
@@ -134,7 +134,7 @@ const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMar
                     <button
                         onClick={handleLoadMore}
                         disabled={isLoadingMore}
-                        className="w-full py-3 bg-gray-50 text-gray-600 text-xs font-bold rounded-2xl hover:bg-gray-100 transition-all active:scale-95 disabled:opacity-50"
+                        className="w-full py-3 bg-gray-50 text-gray-600 text-xs font-semibold rounded-2xl hover:bg-gray-100 transition-all active:scale-95 disabled:opacity-50"
                     >
                         {isLoadingMore ? "Loading..." : "Load more notifications"}
                     </button>

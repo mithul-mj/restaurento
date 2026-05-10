@@ -177,7 +177,7 @@ const FilterModal = ({ isOpen, onClose, onApply, filters, hasLocation }) => {
                                 <div className="p-2 bg-orange-50 text-[#ff9500] rounded-xl hidden md:block">
                                     <Filter size={20} strokeWidth={2.5} />
                                 </div>
-                                <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+                                <h3 className="text-xl md:text-lg font-semibold text-gray-900 tracking-tight">
                                     {window.innerWidth < 768 ? "Filters" : "Search Filters"}
                                 </h3>
                             </div>

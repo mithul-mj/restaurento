@@ -104,7 +104,7 @@ const LandingPage = () => {
                                     const element = document.getElementById(item.toLowerCase());
                                     element?.scrollIntoView({ behavior: 'smooth' });
                                 }}
-                                className={`text-[10px] font-black tracking-[0.3em] uppercase transition-colors min-h-[44px] px-2 ${isScrolled ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}
+                                className={`text-[10px] font-bold tracking-[0.3em] uppercase transition-colors min-h-[44px] px-2 ${isScrolled ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}
                             >
                                 {item}
                             </button>
@@ -138,12 +138,12 @@ const LandingPage = () => {
                                     setIsMobileNavOpen(false);
                                     document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' });
                                 }}
-                                className="text-2xl font-black text-gray-900 uppercase tracking-tighter"
+                                className="text-lg font-semibold text-gray-900 uppercase tracking-tighter"
                             >
                                 {item}
                             </button>
                         ))}
-                        <Link to="/login" className="text-2xl font-black text-[#ff5e00] uppercase tracking-tighter">Login</Link>
+                        <Link to="/login" className="text-lg font-semibold text-[#ff5e00] uppercase tracking-tighter">Login</Link>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -192,7 +192,7 @@ const LandingPage = () => {
                         transition={{ duration: 0.6, delay: 1 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8"
                     >
-                        <button onClick={() => navigate('/')} className="w-full sm:w-auto px-12 py-5 bg-[#ff5e00] text-white rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-gray-900 transition-all shadow-2xl shadow-orange-500/40 active:scale-95">
+                        <button onClick={() => navigate('/')} className="w-full sm:w-auto px-12 py-5 bg-[#ff5e00] text-white rounded-2xl font-bold text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-gray-900 transition-all shadow-2xl shadow-orange-500/40 active:scale-95">
                             Explore Collections
                         </button>
                         <Link to="/restaurant/dashboard" className="w-full sm:w-auto px-12 py-5 border border-white/20 text-white rounded-2xl font-bold text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-gray-900 transition-all active:scale-95 text-center">
@@ -203,7 +203,7 @@ const LandingPage = () => {
 
                 {/* Vertical Text Scroller */}
                 <div aria-label="Scroll indicator to explore more content" className="absolute right-12 bottom-24 hidden lg:flex flex-col items-center gap-12 group">
-                    <span aria-hidden="true" className="text-[9px] font-black text-white/20 uppercase tracking-[0.8em] vertical-text">Scroll to Dive</span>
+                    <span aria-hidden="true" className="text-[9px] font-bold text-white/20 uppercase tracking-[0.8em] vertical-text">Scroll to Dive</span>
                     <div className="w-[1px] h-32 bg-gradient-to-b from-white/20 to-transparent relative">
                         <motion.div
                             animate={{ y: [0, 80, 0] }}
@@ -225,7 +225,7 @@ const LandingPage = () => {
                             className="space-y-16"
                         >
                             <div className="space-y-6 text-center lg:text-left">
-                                <span className="text-[10px] font-black tracking-[0.5em] text-[#ff5e00] uppercase">The Experience</span>
+                                <span className="text-[10px] font-bold tracking-[0.5em] text-[#ff5e00] uppercase">The Experience</span>
                                 <h2 className="text-4xl md:text-6xl font-bold text-gray-900 leading-[1.1] md:leading-[0.9] tracking-tight uppercase">Built for the <br className="hidden md:block" /> modern diner.</h2>
                             </div>
 
@@ -240,7 +240,7 @@ const LandingPage = () => {
                                         <div className="w-14 h-14 bg-gray-50 flex items-center justify-center text-[#ff5e00] rounded-2xl mb-6 transition-all duration-300 group-hover:bg-[#ff5e00] group-hover:text-white shadow-sm border border-gray-100">
                                             {React.cloneElement(item.icon, { size: 24 })}
                                         </div>
-                                        <h3 className="text-xs font-black tracking-[0.2em] uppercase text-gray-900 mb-3">{item.title}</h3>
+                                        <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-gray-900 mb-3">{item.title}</h3>
                                         <p className="text-sm font-medium text-gray-400 leading-relaxed">{item.desc}</p>
                                     </motion.div>
                                 ))}
@@ -284,8 +284,8 @@ const LandingPage = () => {
 
                 <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
                     <motion.div {...fadeInUp} className="space-y-12">
-                        <span className="text-[10px] font-black tracking-[0.8em] text-white/40 uppercase">Beyond Reservations</span>
-                        <h2 className="text-4xl md:text-8xl font-black uppercase tracking-tighter leading-[1.1] md:leading-[0.9]">
+                        <span className="text-[10px] font-bold tracking-[0.8em] text-white/40 uppercase">Beyond Reservations</span>
+                        <h2 className="text-4xl md:text-8xl font-bold uppercase tracking-tighter leading-[1.1] md:leading-[0.9]">
                             We believe in the luxury <br className="hidden md:block" /> of <span className="text-[#ff5e00]">undivided attention.</span>
                         </h2>
                         <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
@@ -305,7 +305,7 @@ const LandingPage = () => {
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 md:mb-32 gap-8 md:gap-12 text-center md:text-left">
                             <div className="space-y-4 flex-1 w-full">
-                                <span className="text-[10px] font-black tracking-[0.5em] text-gray-300 uppercase">Season 2026</span>
+                                <span className="text-[10px] font-bold tracking-[0.5em] text-gray-300 uppercase">Season 2026</span>
                                 <h2 className="text-4xl md:text-6xl font-bold text-gray-900 tracking-tight uppercase">Selected <br className="hidden md:block" /> Collections.</h2>
                             </div>
                             <p className="flex-1 text-gray-400 font-medium max-w-sm text-sm leading-relaxed">
@@ -336,21 +336,21 @@ const LandingPage = () => {
                                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                                         {res.bestOffer && (
-                                            <div className="absolute top-6 right-6 bg-[#ff5e00] text-white px-4 py-2 rounded-full text-[9px] font-black tracking-widest uppercase shadow-xl transform transition-transform group-hover:scale-110">
+                                            <div className="absolute top-6 right-6 bg-[#ff5e00] text-white px-4 py-2 rounded-full text-[9px] font-bold tracking-widest uppercase shadow-xl transform transition-transform group-hover:scale-110">
                                                 -{res.bestOffer.discountValue}%
                                             </div>
                                         )}
 
                                         <div className="absolute bottom-10 left-10 right-10 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                                            <div className="flex items-center gap-2 text-[8px] font-black tracking-widest uppercase mb-2">
+                                            <div className="flex items-center gap-2 text-[8px] font-bold tracking-widest uppercase mb-2">
                                                 <Utensils size={10} />
                                                 {res.tags?.[0]}
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest block underline underline-offset-4">Book Table</span>
+                                            <span className="text-[10px] font-semibold uppercase tracking-wider block underline underline-offset-4">Book Table</span>
                                         </div>
                                     </div>
                                     <div className="px-2">
-                                        <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] mb-2 group-hover:text-[#ff5e00] transition-colors duration-300">{res.restaurantName}</h3>
+                                        <h3 className="text-[11px] font-bold text-gray-900 uppercase tracking-[0.2em] mb-2 group-hover:text-[#ff5e00] transition-colors duration-300">{res.restaurantName}</h3>
                                         <div className="flex items-center gap-2 text-[9px] font-bold text-gray-300 tracking-[0.1em] uppercase">
                                             <span>{res.address?.city || 'Selected Venue'}</span>
                                             <span className="w-1 h-1 bg-gray-200 rounded-full" />
@@ -369,17 +369,17 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto px-6 block lg:flex items-center gap-20 md:gap-32">
                     <motion.div {...fadeInUp} className="flex-1 space-y-10 md:space-y-12 text-center lg:text-left">
                         <div className="space-y-6">
-                            <span className="text-[10px] font-black tracking-[0.5em] text-[#ff5e00] uppercase">Partner with us</span>
-                            <h2 className="text-4xl md:text-6xl font-black text-gray-900 uppercase tracking-tighter leading-[1.1] md:leading-[0.9]">Transform your <br className="hidden md:block" /> establishment.</h2>
+                            <span className="text-[10px] font-bold tracking-[0.5em] text-[#ff5e00] uppercase">Partner with us</span>
+                            <h2 className="text-4xl md:text-6xl font-bold text-gray-900 uppercase tracking-tighter leading-[1.1] md:leading-[0.9]">Transform your <br className="hidden md:block" /> establishment.</h2>
                         </div>
                         <p className="text-gray-500 font-medium text-base md:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
                             Join over 500 premium establishments using Restaurento to streamline their bookings and pre-order systems. Increase table turnover and guest satisfaction today.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center gap-8 justify-center md:justify-start pt-6">
-                            <Link to="/restaurant/signup" className="px-10 py-5 bg-[#ff5e00] text-white rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-gray-900 transition-colors">
+                            <Link to="/restaurant/signup" className="px-10 py-5 bg-[#ff5e00] text-white rounded-2xl font-bold text-[10px] tracking-[0.3em] uppercase hover:bg-gray-900 transition-colors">
                                 Become a Partner
                             </Link>
-                            <Link to="/restaurant/login" className="text-[10px] font-black tracking-[0.3em] text-gray-400 hover:text-gray-900 uppercase transition-colors">
+                            <Link to="/restaurant/login" className="text-[10px] font-bold tracking-[0.3em] text-gray-400 hover:text-gray-900 uppercase transition-colors">
                                 Dashboard Login
                             </Link>
                         </div>
@@ -398,7 +398,7 @@ const LandingPage = () => {
                                         <CheckCircle size={32} />
                                     </div>
                                     <div>
-                                        <h4 className="font-black text-gray-900 uppercase tracking-widest">30% Efficiency Gain</h4>
+                                        <h4 className="font-bold text-gray-900 uppercase tracking-widest">30% Efficiency Gain</h4>
                                         <p className="text-xs text-gray-400 font-medium">Average increase in table rotation</p>
                                     </div>
                                 </div>
@@ -408,7 +408,7 @@ const LandingPage = () => {
                                         <ShoppingBag size={32} />
                                     </div>
                                     <div>
-                                        <h4 className="font-black text-gray-900 uppercase tracking-widest">Seamless Ordering</h4>
+                                        <h4 className="font-bold text-gray-900 uppercase tracking-widest">Seamless Ordering</h4>
                                         <p className="text-xs text-gray-400 font-medium">Zero-friction pre-order management</p>
                                     </div>
                                 </div>
@@ -418,7 +418,7 @@ const LandingPage = () => {
                                         <Wallet size={32} />
                                     </div>
                                     <div>
-                                        <h4 className="font-black text-gray-900 uppercase tracking-widest">Direct Payments</h4>
+                                        <h4 className="font-bold text-gray-900 uppercase tracking-widest">Direct Payments</h4>
                                         <p className="text-xs text-gray-400 font-medium">Automated settlement cycles</p>
                                     </div>
                                 </div>
@@ -443,7 +443,7 @@ const LandingPage = () => {
 
                         <div className="relative z-10 max-w-2xl mx-auto text-center space-y-12">
                             <div className="space-y-6">
-                                <span className="text-[10px] font-black tracking-[0.5em] text-[#ff5e00] uppercase">The Inner Circle</span>
+                                <span className="text-[10px] font-bold tracking-[0.5em] text-[#ff5e00] uppercase">The Inner Circle</span>
                                 <h2 className="text-4xl md:text-7xl font-bold text-white tracking-tight leading-[1.1] md:leading-[0.9] uppercase">Join the <br className="hidden md:block" /> movement.</h2>
                                 <p className="text-gray-400 font-medium text-base md:text-lg leading-relaxed px-4">
                                     Become a member of our exclusive community. Get early access to newly <br className="hidden md:block" /> curated venues and signature dining experiences.
@@ -460,7 +460,7 @@ const LandingPage = () => {
                                 />
                                 <button
                                     type="submit"
-                                    className="w-full sm:w-auto px-10 py-5 bg-[#ff5e00] text-white rounded-2xl font-black text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-gray-900 transition-all active:scale-95 shadow-xl shadow-orange-500/20"
+                                    className="w-full sm:w-auto px-10 py-5 bg-[#ff5e00] text-white rounded-2xl font-bold text-[10px] tracking-[0.3em] uppercase hover:bg-white hover:text-gray-900 transition-all active:scale-95 shadow-xl shadow-orange-500/20"
                                 >
                                     Join Now
                                 </button>
@@ -498,7 +498,7 @@ const LandingPage = () => {
                         </div>
 
                         <div className="space-y-10">
-                            <h5 className="text-[10px] font-black text-gray-900 tracking-[0.5em] uppercase">Navigation</h5>
+                            <h5 className="text-[10px] font-bold text-gray-900 tracking-[0.5em] uppercase">Navigation</h5>
                             <ul className="space-y-6">
                                 {['All Restaurants', 'Top Trending', 'Featured Chefs', 'Cities'].map(item => (
                                     <li key={item}><Link to="/" className="text-[11px] font-bold text-gray-400 hover:text-[#ff5e00] tracking-widest uppercase transition-colors">{item}</Link></li>
@@ -507,7 +507,7 @@ const LandingPage = () => {
                         </div>
 
                         <div className="space-y-10">
-                            <h5 className="text-[10px] font-black text-gray-900 tracking-[0.5em] uppercase">Partners</h5>
+                            <h5 className="text-[10px] font-bold text-gray-900 tracking-[0.5em] uppercase">Partners</h5>
                             <ul className="space-y-6">
                                 {['Business Support', 'Partner Login', 'Enrollment', 'Dashboard'].map(item => (
                                     <li key={item}><Link to="/restaurant/login" className="text-[11px] font-bold text-gray-400 hover:text-[#ff5e00] tracking-widest uppercase transition-colors">{item}</Link></li>
@@ -516,7 +516,7 @@ const LandingPage = () => {
                         </div>
 
                         <div className="space-y-10">
-                            <h5 className="text-[10px] font-black text-gray-900 tracking-[0.5em] uppercase">Contact</h5>
+                            <h5 className="text-[10px] font-bold text-gray-900 tracking-[0.5em] uppercase">Contact</h5>
                             <ul className="space-y-6">
                                 <li className="text-[11px] font-bold text-gray-900 tracking-widest uppercase">support@restaurento.com</li>
                                 <li className="text-[11px] font-bold text-gray-400 tracking-widest uppercase">Mumbai, India</li>
@@ -529,7 +529,7 @@ const LandingPage = () => {
                         <div className="text-[9px] font-bold text-gray-300 tracking-[0.4em] uppercase text-center md:text-left">
                             &copy; {new Date().getFullYear()} RESTAURENTO. ALL RIGHTS RESERVED. <br className="md:hidden" /> DESIGNED FOR EXCELLENCE.
                         </div>
-                        <div className="flex gap-12 text-[9px] font-black tracking-[0.4em] text-gray-400 uppercase">
+                        <div className="flex gap-12 text-[9px] font-bold tracking-[0.4em] text-gray-400 uppercase">
                             <a href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</a>
                             <a href="#" className="hover:text-gray-900 transition-colors">Terms of Service</a>
                         </div>

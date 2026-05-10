@@ -292,7 +292,7 @@ const RestaurantDetails = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter uppercase mb-6 leading-none"
+                            className="text-5xl md:text-7xl font-bold text-gray-900 tracking-tighter uppercase mb-6 leading-none"
                         >
                             Taking a <br />
                             <span className="text-[#ff5e00] italic">Short Break</span>
@@ -309,7 +309,7 @@ const RestaurantDetails = () => {
                                     <>
                                         This venue is currently undergoing some magic behind the scenes.
                                         They'll be back to serve you on
-                                        <span className="block mt-4 text-3xl font-black text-gray-900 tracking-tight">
+                                        <span className="block mt-4 text-xl font-semibold text-gray-900 tracking-tight">
                                             {new Date(closedTill).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                         </span>
                                     </>
@@ -326,7 +326,7 @@ const RestaurantDetails = () => {
                         >
                             <Link
                                 to="/"
-                                className="inline-flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-2xl font-black text-[11px] tracking-[0.3em] uppercase hover:bg-[#ff5e00] transition-all shadow-2xl hover:shadow-orange-500/20 active:scale-95 group"
+                                className="inline-flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-2xl font-bold text-[11px] tracking-[0.3em] uppercase hover:bg-[#ff5e00] transition-all shadow-2xl hover:shadow-orange-500/20 active:scale-95 group"
                             >
                                 Explorer other venues
                                 <ChevronRight size={18} className="translate-y-[-1px] group-hover:translate-x-1 transition-transform" strokeWidth={3} />
@@ -334,7 +334,7 @@ const RestaurantDetails = () => {
                         </motion.div>
                     </div>
 
-                    <p className="absolute bottom-10 left-0 right-0 text-center text-[10px] font-black tracking-[0.4em] uppercase text-gray-300 pointer-events-none">
+                    <p className="absolute bottom-10 left-0 right-0 text-center text-[10px] font-bold tracking-[0.4em] uppercase text-gray-300 pointer-events-none">
                         Restaurento Premium Dining
                     </p>
                 </motion.div>
@@ -346,9 +346,9 @@ const RestaurantDetails = () => {
                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
                     <AlertTriangle size={36} className="text-gray-300" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant Not Found</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Restaurant Not Found</h2>
                 <p className="text-gray-400 font-medium mb-8">The place you're looking for doesn't seem to exist or is inactive.</p>
-                <Link to="/" className="text-[#ff5e00] font-black text-[10px] tracking-widest uppercase hover:underline">Back to Discover</Link>
+                <Link to="/" className="text-[#ff5e00] font-bold text-[10px] tracking-widest uppercase hover:underline">Back to Discover</Link>
             </div>
         );
     }
@@ -356,7 +356,7 @@ const RestaurantDetails = () => {
     if (!restaurant) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#fcfcfc]">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Restaurant Not Found</h2>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Restaurant Not Found</h2>
                 <Link to="/" className="text-[#ff5e00] hover:underline">Back to Home</Link>
             </div>
         );
@@ -403,12 +403,12 @@ const RestaurantDetails = () => {
                     className={`fixed left-4 right-4 z-50 bg-[#1a1a1a] text-white p-4 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/20 ${user ? 'bottom-24' : 'bottom-6'}`}
                 >
                     <div>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">{cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'}</p>
-                        <p className="text-lg font-black tracking-tight">₹{finalTotal.toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">{cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'}</p>
+                        <p className="text-lg font-bold tracking-tight">₹{finalTotal.toFixed(2)}</p>
                     </div>
                     <button
                         onClick={() => setActiveTab("book-a-seat")}
-                        className="bg-[#ff5e00] px-6 py-2.5 rounded-xl font-black text-sm flex items-center gap-2 active:scale-95 transition-transform"
+                        className="bg-[#ff5e00] px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 active:scale-95 transition-transform"
                     >
                         Review Booking <ChevronRight size={16} strokeWidth={3} />
                     </button>
@@ -436,7 +436,7 @@ const RestaurantDetails = () => {
 
                     <div className="lg:col-span-2">
                         <div className="mb-4">
-                            <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2.5 tracking-tight">
+                            <h1 className="text-3xl md:text-lg font-semibold text-gray-900 mb-2.5 tracking-tight">
                                 {restaurant.restaurantName}
                             </h1>
                             <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -459,7 +459,7 @@ const RestaurantDetails = () => {
                         {isMobile && restaurant.offers && restaurant.offers.length > 0 && (
                             <div className="mb-8 -mx-4 px-4">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Active Offers</h3>
+                                    <h3 className="text-xs font-medium text-gray-400 uppercase tracking-widest">Active Offers</h3>
                                     <div className="flex gap-2 text-[#ff5e00]">
                                         <Tag size={14} />
                                     </div>
@@ -473,7 +473,7 @@ const RestaurantDetails = () => {
                                             <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full transition-transform group-hover:scale-125"></div>
                                             <div className="relative z-10">
                                                 <div className="flex items-start justify-between mb-1">
-                                                    <p className="text-2xl font-black">₹{offer.discountValue} OFF</p>
+                                                    <p className="text-lg font-semibold">₹{offer.discountValue} OFF</p>
                                                     <span className="bg-white/20 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase">PROMO</span>
                                                 </div>
                                                 <p className="text-white/90 text-xs font-medium mb-2">
@@ -526,7 +526,7 @@ const RestaurantDetails = () => {
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <h3 className="text-xl font-bold text-gray-900 mb-4">About {restaurant.restaurantName}</h3>
+                                    <h3 className="text-base font-semibold text-gray-900 mb-4">About {restaurant.restaurantName}</h3>
                                     <p className="text-gray-600 leading-relaxed mb-6">
                                         {restaurant.description || `Experience the heart of ${restaurant.tags?.includes("Italian") ? "Italy" : "culinary excellence"} right here. 
                                     ${restaurant.restaurantName} offers a culinary journey through authentic flavors, crafted 
@@ -542,7 +542,7 @@ const RestaurantDetails = () => {
 
                                     </div>
 
-                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Details</h3>
+                                    <h3 className="text-base font-semibold text-gray-900 mb-4">Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl relative overflow-hidden">
                                         <div className="space-y-4 relative z-10">
                                             <div className="flex items-start gap-3">
@@ -645,7 +645,7 @@ const RestaurantDetails = () => {
                                     className="lg:hidden"
                                 >
                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-6">Complete Your Booking</h3>
+                                        <h3 className="text-base font-semibold text-gray-900 mb-6">Complete Your Booking</h3>
                                         {/* Scheduling Section for Mobile Tab */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                             <div>
@@ -693,7 +693,7 @@ const RestaurantDetails = () => {
                                                     </motion.button>
 
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-sm font-black text-gray-900 leading-none">{partySize}</span>
+                                                        <span className="text-sm font-semibold text-gray-900 leading-none">{partySize}</span>
                                                         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-0.5">Guests</span>
                                                     </div>
 
@@ -772,7 +772,7 @@ const RestaurantDetails = () => {
                                                     <p className="text-sm text-gray-500 mb-3 px-6">Your order is empty. Select some delicious items to proceed.</p>
                                                     <button
                                                         onClick={() => setActiveTab("menu")}
-                                                        className="px-6 py-2 bg-white text-[#ff5e00] text-xs font-black uppercase tracking-widest rounded-full shadow-sm border border-orange-100 hover:bg-orange-50 active:scale-95 transition-all"
+                                                        className="px-6 py-2 bg-white text-[#ff5e00] text-xs font-semibold uppercase tracking-wider rounded-full shadow-sm border border-orange-100 hover:bg-orange-50 active:scale-95 transition-all"
                                                     >
                                                         Add a dish
                                                     </button>
@@ -782,10 +782,10 @@ const RestaurantDetails = () => {
                                                     {cartItems.map((item) => (
                                                         <div key={item._id} className="flex justify-between items-center">
                                                             <div className="flex-1">
-                                                                <p className="text-sm font-bold text-gray-800">{item.name}</p>
+                                                                <p className="text-sm font-semibold text-gray-800">{item.name}</p>
                                                                 <p className="text-xs text-gray-400">Qty: {item.qty}</p>
                                                             </div>
-                                                            <p className="text-sm font-bold text-gray-900">₹{(item.price * item.qty).toFixed(2)}</p>
+                                                            <p className="text-sm font-semibold text-gray-900">₹{(item.price * item.qty).toFixed(2)}</p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -809,7 +809,7 @@ const RestaurantDetails = () => {
                                                         <span>Platform Fee (5%)</span>
                                                         <span>₹{platformFee.toFixed(2)}</span>
                                                     </div>
-                                                    <div className="flex justify-between text-xl font-black text-gray-900 pt-3 border-t border-gray-100 mt-3">
+                                                    <div className="flex justify-between text-base font-semibold text-gray-900 pt-3 border-t border-gray-100 mt-3">
                                                         <span>Total</span>
                                                         <span>₹{finalTotal.toFixed(2)}</span>
                                                     </div>
@@ -820,7 +820,7 @@ const RestaurantDetails = () => {
                                                 <button
                                                     onClick={handleBookNow}
                                                     disabled={isBooking || cartItems.length === 0 || !selectedTimeSlot}
-                                                    className="w-full py-4 bg-[#ff5e00] text-white rounded-2xl font-black shadow-lg shadow-orange-200 disabled:opacity-50 disabled:shadow-none active:scale-95 transition-all flex items-center justify-center gap-3"
+                                                    className="w-full py-4 bg-[#ff5e00] text-white rounded-2xl font-bold shadow-lg shadow-orange-200 disabled:opacity-50 disabled:shadow-none active:scale-95 transition-all flex items-center justify-center gap-3"
                                                 >
                                                     {isBooking ? (
                                                         <>
@@ -859,7 +859,7 @@ const RestaurantDetails = () => {
                         {!isMobile && restaurant.offers && restaurant.offers.length > 0 && (
                             <div className="mb-6 lg:block hidden">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Available Offers</h3>
+                                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Available Offers</h3>
                                     {restaurant.offers.length > 1 && (
                                         <button
                                             onClick={() => setIsOffersModalOpen(true)}
@@ -880,7 +880,7 @@ const RestaurantDetails = () => {
                                             <Tag size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-lg font-black text-gray-900">
+                                            <p className="text-base font-semibold text-gray-900">
                                                 ₹{restaurant.offers[0].discountValue} OFF
                                             </p>
                                             <p className="text-xs text-gray-500 font-medium">
@@ -891,7 +891,7 @@ const RestaurantDetails = () => {
                                         </div>
                                     </div>
                                     <div className="mt-3 pt-3 border-t border-orange-100/50 flex items-center justify-between">
-                                        <span className="text-[10px] bg-[#ff5e00] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Best Deal</span>
+                                        <span className="text-[10px] bg-[#ff5e00] text-white px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">Best Deal</span>
                                         <span className="text-[10px] text-gray-400 font-medium italic">Applied at checkout</span>
                                     </div>
                                 </motion.div>
@@ -899,7 +899,7 @@ const RestaurantDetails = () => {
                         )}
 
                         <div className="hidden lg:block sticky top-24 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6">Pre-Order Summary</h3>
+                            <h3 className="text-base font-semibold text-gray-900 mb-6">Pre-Order Summary</h3>
 
                             <div className="grid grid-cols-2 gap-4 mb-6">
                                 <div>
@@ -978,7 +978,7 @@ const RestaurantDetails = () => {
                                                     className="absolute inset-0 flex items-center justify-center gap-1 origin-center"
                                                     style={{ backfaceVisibility: "hidden" }}
                                                 >
-                                                    <span className="text-sm font-bold text-gray-900">{partySize}</span>
+                                                    <span className="text-sm font-semibold text-gray-900">{partySize}</span>
                                                     <span className="text-sm text-gray-400 font-normal">
                                                         {partySize === 1 ? 'Guest' : 'Guests'}
                                                     </span>
@@ -1117,7 +1117,7 @@ const RestaurantDetails = () => {
                                                     >
                                                         {timeLabel}
                                                         {liveSlotAvailability[startTimeInMinutes] === 0 && (
-                                                            <span className="absolute -top-1.5 -right-1.5 px-1 bg-red-500 text-[8px] text-white rounded-md font-black uppercase tracking-tighter shadow-sm">Full</span>
+                                                            <span className="absolute -top-1.5 -right-1.5 px-1 bg-red-500 text-[8px] text-white rounded-md font-bold uppercase tracking-tighter shadow-sm">Full</span>
                                                         )}
                                                     </button>
                                                 );
@@ -1160,15 +1160,15 @@ const RestaurantDetails = () => {
                                                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                                                     <button
                                                         onClick={() => handleUpdateCart(item, -1)}
-                                                        className="w-5 h-5 flex items-center justify-center text-xs font-bold text-gray-500 hover:bg-white rounded-md transition-all"
+                                                        className="w-5 h-5 flex items-center justify-center text-xs font-medium text-gray-500 hover:bg-white rounded-md transition-all"
                                                     >-</button>
                                                     <span className="text-xs font-semibold text-gray-900 w-3 text-center">{item.qty}</span>
                                                     <button
                                                         onClick={() => handleUpdateCart(item, 1)}
-                                                        className="w-5 h-5 flex items-center justify-center text-xs font-bold text-gray-500 hover:bg-white rounded-md transition-all"
+                                                        className="w-5 h-5 flex items-center justify-center text-xs font-medium text-gray-500 hover:bg-white rounded-md transition-all"
                                                     >+</button>
                                                 </div>
-                                                <p className="text-sm font-bold text-gray-900 w-12 text-right">
+                                                <p className="text-sm font-semibold text-gray-900 w-12 text-right">
                                                     ₹{(item.price * item.qty).toFixed(2)}
                                                 </p>
                                             </div>
@@ -1194,7 +1194,7 @@ const RestaurantDetails = () => {
                                     <span>Platform Fee (5%)</span>
                                     <span>₹{platformFee.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-lg font-black text-gray-900 pt-2 border-t border-gray-100 mt-2">
+                                <div className="flex justify-between text-base font-semibold text-gray-900 pt-2 border-t border-gray-100 mt-2">
                                     <span>Total</span>
                                     <span>₹{finalTotal.toFixed(2)}</span>
                                 </div>
@@ -1256,7 +1256,7 @@ const RestaurantDetails = () => {
                                     <div className="bg-[#ff5e00] p-2 rounded-xl text-white">
                                         <Tag size={20} />
                                     </div>
-                                    <h3 className="text-xl font-black text-gray-900">Available Offers</h3>
+                                    <h3 className="text-base font-semibold text-gray-900">Available Offers</h3>
                                 </div>
                                 <button
                                     onClick={() => setIsOffersModalOpen(false)}
@@ -1270,17 +1270,17 @@ const RestaurantDetails = () => {
                                 {restaurant.offers?.map((offer, idx) => (
                                     <div key={offer._id} className="group border border-gray-100 rounded-2xl p-4 hover:border-[#ff5e00]/30 hover:bg-orange-50/10 transition-all">
                                         <div className="flex items-center justify-between mb-2">
-                                            <p className="text-2xl font-black text-[#ff5e00]">₹{offer.discountValue} OFF</p>
+                                            <p className="text-lg font-semibold text-[#ff5e00]">₹{offer.discountValue} OFF</p>
                                             <div className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase">Code Auto-Applied</div>
                                         </div>
-                                        <p className="text-sm font-bold text-gray-800 mb-1">Exclusive Restaurant Offer</p>
+                                        <p className="text-sm font-semibold text-gray-800 mb-1">Exclusive Restaurant Offer</p>
                                         <p className="text-xs text-gray-500">
                                             {offer.minOrderValue > 0
                                                 ? `Valid on bookings above ₹${offer.minOrderValue}`
                                                 : 'No minimum booking value required'}
                                         </p>
                                         {idx === 0 && (
-                                            <div className="mt-3 inline-block bg-[#ff5e00]/10 text-[#ff5e00] text-[10px] font-black px-2 py-1 rounded shadow-sm">MOST POPULAR</div>
+                                            <div className="mt-3 inline-block bg-[#ff5e00]/10 text-[#ff5e00] text-[10px] font-bold px-2 py-1 rounded shadow-sm">MOST POPULAR</div>
                                         )}
                                     </div>
                                 ))}

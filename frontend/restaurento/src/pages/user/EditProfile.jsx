@@ -109,7 +109,7 @@ const EditProfile = () => {
       )}
 
       <main className="max-w-3xl mx-auto px-4 md:px-8 py-10">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center md:text-left">
+        <h1 className="text-lg font-semibold text-gray-900 mb-8 text-center md:text-left">
           Edit Profile
         </h1>
 
@@ -140,12 +140,12 @@ const EditProfile = () => {
           </div>
 
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900 mb-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-6">
               Basic Information
             </h2>
             <div className="grid grid-cols-1 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                   Full Name
                 </label>
                 <input
@@ -163,11 +163,11 @@ const EditProfile = () => {
           </div>
 
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900 mb-6">Security</h2>
+            <h2 className="text-base font-semibold text-gray-900 mb-6">Security</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                   Email
                 </label>
                 <div className="relative">
@@ -187,7 +187,7 @@ const EditProfile = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
                   Password
                 </label>
                 <div className="relative">

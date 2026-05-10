@@ -176,7 +176,7 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                                                     >
                                                         -
                                                     </button>
-                                                    <span className="w-8 text-center text-sm font-bold text-gray-900">{cartItem}</span>
+                                                    <span className="w-8 text-center text-sm font-semibold text-gray-900">{cartItem}</span>
                                                     <button
                                                         onClick={() => handleUpdateCart(item, 1)}
                                                         className="w-6 h-6 flex items-center justify-center bg-white rounded-md text-gray-600 shadow-sm hover:scale-105 transition-transform"

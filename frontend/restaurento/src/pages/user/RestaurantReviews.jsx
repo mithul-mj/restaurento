@@ -36,12 +36,12 @@ const RestaurantReviews = ({ restaurantId }) => {
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Reviews ({totalReviews})</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Reviews ({totalReviews})</h3>
 
             {/* Overall Rating Section */}
             <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-10">
                 <div className="text-center shrink-0">
-                    <div className="text-6xl font-black text-[#ff5e00] mb-2">{overallRating}</div>
+                    <div className="text-6xl font-bold text-[#ff5e00] mb-2">{overallRating}</div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                             <Star
@@ -115,7 +115,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-gray-300 mb-4 shadow-sm">
                             <MessageSquare size={32} />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">No reviews yet</h3>
+                        <h3 className="text-base font-semibold text-gray-900 mb-1">No reviews yet</h3>
                         <p className="text-sm text-gray-500 max-w-xs text-center">
                             Be the first to share your experience after your visit!
                         </p>
@@ -138,7 +138,7 @@ const RestaurantReviews = ({ restaurantId }) => {
                         <ChevronLeft size={20} className="text-[#ff5e00]" />
                     </button>
 
-                    <div className="text-sm font-black text-gray-400">
+                    <div className="text-sm font-bold text-gray-400">
                         Page <span className="text-gray-900">{pagination.currentPage}</span> of {pagination.totalPages}
                     </div>
 

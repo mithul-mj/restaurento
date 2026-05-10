@@ -54,29 +54,29 @@ const RestaurantCard = React.memo(({ item }) => {
 
             <div className="p-5 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2 gap-2">
-                    <h4 className="text-lg font-bold text-gray-900 line-clamp-1 flex-1">
+                    <h4 className="text-base font-semibold text-gray-900 line-clamp-1 flex-1">
                         {item.restaurantName}
                     </h4>
                     {item.ratingStats && item.ratingStats.average > 0 && (
-                        <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 text-green-700 font-bold text-[13px] shrink-0 transition-all group-hover:bg-green-100/50">
+                        <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 text-green-700 font-semibold text-xs shrink-0 transition-all group-hover:bg-green-100/50">
                             <Star size={12} className="fill-green-600 text-green-600" />
                             <span>{item.ratingStats.average.toFixed(1)}</span>
                         </div>
                     )}
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4 line-clamp-1">
+                <p className="text-[13px] text-gray-500 line-clamp-1">
                     {item.tags?.join(", ") || "Classical"}
                 </p>
 
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50 text-sm text-gray-500">
-                    <div className="flex items-start gap-1.5 flex-1 mr-4 min-h-[32px]">
-                        <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
-                        <span className="line-clamp-2 text-[11px] leading-tight text-gray-500">
+                <div className="mt-auto flex items-center justify-between pt-3 mt-3 border-t border-gray-50">
+                    <div className="flex items-start gap-1.5 flex-1 mr-4">
+                        <MapPin size={13} className="text-gray-400 mt-0.5 shrink-0" />
+                        <span className="line-clamp-2 text-xs font-medium text-gray-500">
                             {item.address || "Unknown"}
                         </span>
                     </div>
-                    <div className="font-semibold text-gray-700">
+                    <div className="text-xs font-semibold text-gray-700 shrink-0">
                         ₹{item.slotPrice || 3}/slot
                     </div>
                 </div>

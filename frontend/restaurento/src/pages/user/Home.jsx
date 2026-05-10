@@ -224,7 +224,7 @@ const Home = () => {
 
                     {/* Mobile Discover Text */}
                     <div className="md:hidden mb-8">
-                      <h1 className="text-[34px] leading-[1.1] font-[800] text-[#111111] tracking-tight">
+                      <h1 className="text-[34px] leading-[1.1] font-bold text-[#111111] tracking-tight">
                         Discover<br />Top Restaurants
                       </h1>
                     </div>

@@ -119,7 +119,7 @@ const MyBookings = () => {
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
             <header className="mb-10">
-                <h1 className="text-3xl font-bold text-gray-900 mb-6">My Bookings</h1>
+                <h1 className="text-lg font-semibold text-gray-900 mb-6">My Bookings</h1>
 
                 {/* Tabs */}
                 <div className="flex gap-8 border-b border-gray-100">
@@ -188,7 +188,7 @@ const MyBookings = () => {
                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-gray-300 mb-4 shadow-sm">
                                 <Calendar size={32} />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">No bookings found</h3>
+                            <h3 className="text-base font-semibold text-gray-900 mb-1">No bookings found</h3>
                             <p className="text-sm text-gray-500">
                                 {activeTab === "pending"
                                     ? "Good news! You have no failed or pending payments."
@@ -353,118 +353,118 @@ const BookingCard = ({ booking, onCancel, onRetry, onRate, isCanceling, retrying
     const restaurant = booking.restaurant;
     const isCanceled = booking.status === "canceled";
     const isPending = booking.status === "pending-payment";
+    const isCheckedIn = booking.status === "checked-in";
+    const isApproved = booking.status === "approved";
+
+    const statusConfig = {
+        "approved":          { label: "Confirmed",       classes: "bg-green-50 text-green-600 border-green-100" },
+        "checked-in":        { label: "Completed",       classes: "bg-blue-50 text-blue-600 border-blue-100" },
+        "pending-payment":   { label: "Payment Failed",  classes: "bg-red-50 text-red-500 border-red-100 animate-pulse" },
+        "canceled":          { label: booking.canceledBy === "RESTAURANT" ? "Cancelled by restaurant" : "Cancelled by you", classes: booking.canceledBy === "RESTAURANT" ? "bg-orange-50 text-[#ff5e00] border-orange-100" : "bg-gray-100 text-gray-500 border-gray-200" },
+    };
+    const status = statusConfig[booking.status];
 
     return (
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-            <div className="flex flex-col md:flex-row gap-6">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+            <div className="flex flex-col sm:flex-row">
                 {/* Image */}
-                <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden shrink-0 bg-gray-100 border border-gray-50">
+                <div className="relative sm:w-44 md:w-52 h-44 sm:h-auto shrink-0 overflow-hidden bg-gray-100">
                     <img
                         src={restaurant?.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?q=80&w=400&auto=format&fit=crop"}
                         alt={restaurant?.restaurantName}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
+                    {status && (
+                        <div className={`absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${status.classes}`}>
+                            {isCheckedIn && <CheckCircle2 size={10} />}
+                            {isPending && <XCircle size={10} />}
+                            {isApproved && <CheckCircle2 size={10} />}
+                            {status.label}
+                        </div>
+                    )}
+                    <div className="absolute bottom-3 left-3">
+                        <span className="text-[9px] font-medium text-white/80 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                            #{booking._id.slice(-6).toUpperCase()}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">
+                <div className="flex-1 flex flex-col p-5">
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-gray-900 leading-tight mb-0.5">
                                 {restaurant?.restaurantName}
                             </h3>
-                            <div className="flex flex-col items-end gap-1">
-                                {booking.status === 'checked-in' && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-600 border border-green-100">
-                                        <CheckCircle2 size={12} />
-                                        Completed
-                                    </div>
-                                )}
-                                {isPending && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 text-red-600 border border-red-100 animate-pulse">
-                                        <XCircle size={12} />
-                                        Payment Failed
-                                    </div>
-                                )}
-                                {isCanceled && (
-                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${booking.canceledBy === 'RESTAURANT' ? 'bg-orange-50 text-[#ff5e00]' : 'bg-gray-100 text-gray-500'
-                                        }`}>
-                                        {booking.canceledBy === 'RESTAURANT' ? 'Cancelled by restaurant' : 'Cancelled by you'}
-                                    </span>
-                                )}
-                            </div>
+                            <p className="text-xs font-medium text-gray-400">
+                                {formatDate(booking.bookingDate, { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </p>
                         </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-4">
-                            <div className="flex items-center gap-2 text-gray-500">
-                                <Calendar size={14} className="text-[#ff5e00]" />
-                                <span className="text-xs font-bold">{formatDate(booking.bookingDate, { weekday: 'short', day: '2-digit', month: 'short' })}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-500">
-                                <Clock size={14} className="text-[#ff5e00]" />
-                                <span className="text-xs font-bold">{formatTime12Hour(booking.slotTime)}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-500">
-                                <Users size={14} className="text-[#ff5e00]" />
-                                <span className="text-xs font-bold">{booking.guests} Guests</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 flex flex-wrap gap-3 items-center justify-end border-t border-gray-50 pt-5">
-                        {!isCanceled && booking.status === 'approved' && type === 'upcoming' && (
+                        {!isCanceled && isApproved && type === 'upcoming' && (
                             <AddToCalendarButton booking={booking} restaurant={restaurant} />
                         )}
-                        {booking.status === 'checked-in' && (
-                            <button
-                                onClick={onRate}
-                                className="px-6 py-2.5 bg-orange-50 text-[#ff5e00] font-black text-xs rounded-xl hover:bg-orange-100 transition-all active:scale-95"
-                            >
-                                Rate Restaurant
-                            </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-5">
+                        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+                            <Clock size={12} className="text-[#ff5e00]" />
+                            <span className="text-xs font-medium text-gray-600">{formatTime12Hour(booking.slotTime)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+                            <Users size={12} className="text-[#ff5e00]" />
+                            <span className="text-xs font-medium text-gray-600">{booking.guests} Guests</span>
+                        </div>
+                        {booking.totalAmount > 0 && (
+                            <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+                                <span className="text-xs font-medium text-gray-600">Rs.{booking.totalAmount.toFixed(0)} paid</span>
+                            </div>
                         )}
-                        {isPending && (
-                            <button
-                                onClick={onRetry}
-                                disabled={retryingBookingId !== null || isCanceling}
-                                className={`px-6 py-2.5 bg-orange-500 text-white font-black text-xs rounded-xl shadow-lg shadow-orange-200 transition-all transform active:scale-95 ${(retryingBookingId !== null || isCanceling) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-600'
-                                    }`}
-                            >
-                                {retryingBookingId === booking._id ? "Starting..." : "Retry Payment"}
-                            </button>
-                        )}
-                        {!isCanceled && booking.status === 'approved' && type !== 'past' && (
-                            <button
-                                onClick={onCancel}
-                                disabled={isCanceling || retryingBookingId !== null}
-                                className="px-6 py-2.5 bg-gray-50 text-gray-600 font-bold text-xs rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Cancel Booking
-                            </button>
-                        )}
-                        {isCanceled && (
-                            <Link
-                                to={`/restaurants/${restaurant._id}`}
-                                state={{
-                                    prefilledGuests: booking.guests,
-                                    prefilledCart: booking.preOrderItems?.reduce((acc, item) => ({
-                                        ...acc,
-                                        [item.dishId]: {
-                                            _id: item.dishId,
-                                            name: item.name,
-                                            price: item.priceAtBooking,
-                                            qty: item.qty
-                                        }
-                                    }), {}) || {}
-                                }}
-                                className="px-6 py-2.5 bg-orange-50 text-[#ff5e00] font-bold text-xs rounded-xl hover:bg-orange-100 transition-colors"
-                            >
-                                Rebook
-                            </Link>
-                        )}
+                    </div>
+
+                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-4 border-t border-gray-50">
+                        <div className="flex flex-wrap gap-2 flex-1">
+                            {isCheckedIn && (
+                                <button onClick={onRate} className="px-4 py-2 bg-orange-50 text-[#ff5e00] font-semibold text-xs rounded-xl hover:bg-orange-100 transition-all active:scale-95">
+                                    Rate
+                                </button>
+                            )}
+                            {isPending && (
+                                <button
+                                    onClick={onRetry}
+                                    disabled={retryingBookingId !== null || isCanceling}
+                                    className={`px-4 py-2 bg-[#ff5e00] text-white font-semibold text-xs rounded-xl transition-all active:scale-95 ${(retryingBookingId !== null || isCanceling) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#e05200]'}`}
+                                >
+                                    {retryingBookingId === booking._id ? "Starting..." : "Retry Payment"}
+                                </button>
+                            )}
+                            {!isCanceled && isApproved && type !== 'past' && (
+                                <button
+                                    onClick={onCancel}
+                                    disabled={isCanceling || retryingBookingId !== null}
+                                    className="px-4 py-2 text-gray-400 font-semibold text-xs rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                            {isCanceled && (
+                                <Link
+                                    to={`/restaurants/${restaurant._id}`}
+                                    state={{
+                                        prefilledGuests: booking.guests,
+                                        prefilledCart: booking.preOrderItems?.reduce((acc, item) => ({
+                                            ...acc,
+                                            [item.dishId]: { _id: item.dishId, name: item.name, price: item.priceAtBooking, qty: item.qty }
+                                        }), {}) || {}
+                                    }}
+                                    className="px-4 py-2 bg-orange-50 text-[#ff5e00] font-semibold text-xs rounded-xl hover:bg-orange-100 transition-colors"
+                                >
+                                    Rebook
+                                </Link>
+                            )}
+                        </div>
                         <Link
                             to={`/my-bookings/${booking._id}`}
-                            className="px-6 py-2.5 bg-[#ff5e00] text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-100 hover:bg-[#e05200] transition-all"
+                            className="px-5 py-2 bg-[#ff5e00] text-white font-semibold text-xs rounded-xl shadow-sm shadow-orange-100 hover:bg-[#e05200] transition-all active:scale-95 shrink-0"
                         >
                             View Details
                         </Link>

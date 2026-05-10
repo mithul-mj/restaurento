@@ -58,7 +58,7 @@ const RatingModal = ({ isOpen, onClose, restaurantId, restaurantName }) => {
                     className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden"
                 >
                     <div className="flex items-center justify-between p-8 pb-0">
-                        <h2 className="text-2xl font-black text-gray-900 leading-tight">Share Your Experience</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 leading-tight">Share Your Experience</h2>
                         <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <X size={20} className="text-gray-400" />
                         </button>
@@ -73,7 +73,7 @@ const RatingModal = ({ isOpen, onClose, restaurantId, restaurantName }) => {
                         ) : (
                             <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
                                 <div className="space-y-4">
-                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-widest">
                                         Your Rating
                                     </h3>
                                     <div className="flex gap-4">
@@ -106,7 +106,7 @@ const RatingModal = ({ isOpen, onClose, restaurantId, restaurantName }) => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-widest">
                                         Your Review
                                     </h3>
                                     <div className="relative">

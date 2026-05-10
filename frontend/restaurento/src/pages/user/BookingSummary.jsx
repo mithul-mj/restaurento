@@ -192,7 +192,7 @@ const BookingSummary = () => {
                     <div className="w-16 h-16 bg-orange-50 text-[#ff5e00] rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle size={32} />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">No Booking Found</h2>
+                    <h2 className="text-base font-semibold text-gray-900 mb-2">No Booking Found</h2>
                     <p className="text-gray-500 text-sm mb-6">It looks like you haven't started a booking yet.</p>
                     <Link to="/" className="inline-block w-full py-3 bg-[#ff5e00] text-white font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-[#e05200] transition-all">
                         Return to Home
@@ -311,7 +311,7 @@ const BookingSummary = () => {
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <h1 className="text-lg font-bold text-gray-900 tracking-tight">Booking Summary</h1>
+                    <h1 className="text-base font-semibold text-gray-900 tracking-tight">Booking Summary</h1>
                 </div>
             </header>
 
@@ -323,7 +323,7 @@ const BookingSummary = () => {
 
                         {/* Header Section */}
                         <div className="mb-8">
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-3xl md:text-lg font-semibold text-gray-900 mb-2">
                                 Booking Summary
                             </h1>
                             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
@@ -341,7 +341,7 @@ const BookingSummary = () => {
                         </div>
 
                         {/* Reservation Details */}
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Reservation Details</h3>
+                        <h3 className="text-base font-semibold text-gray-900 mb-4">Reservation Details</h3>
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="space-y-6 relative z-10">
                                 <div className="flex items-start justify-between">
@@ -373,7 +373,7 @@ const BookingSummary = () => {
                         </div>
 
                         {/* Pre-ordered Food Items */}
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Pre-ordered Items</h3>
+                        <h3 className="text-base font-semibold text-gray-900 mb-4">Pre-ordered Items</h3>
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="relative z-10">
 
@@ -395,7 +395,7 @@ const BookingSummary = () => {
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-bold text-gray-900">{item.name}</p>
                                                     {item.isUnavailable && (
-                                                        <span className="text-[9px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border border-red-100">Unavailable</span>
+                                                        <span className="text-[9px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-md font-semibold uppercase tracking-wide border border-red-100">Unavailable</span>
                                                     )}
                                                 </div>
                                                 <p className="text-xs text-gray-400 mt-1 font-semibold">
@@ -403,7 +403,7 @@ const BookingSummary = () => {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-6">
-                                                <p className={`font-black text-sm ${item.isUnavailable ? 'text-gray-300' : 'text-gray-900'}`}>
+                                                <p className={`font-bold text-sm ${item.isUnavailable ? 'text-gray-300' : 'text-gray-900'}`}>
                                                     ₹{(item.price * item.qty).toFixed(2)}
                                                 </p>
                                             </div>
@@ -414,7 +414,7 @@ const BookingSummary = () => {
                         </div>
 
                         {/* Pricing Breakdown */}
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Pricing Breakdown</h3>
+                        <h3 className="text-base font-semibold text-gray-900 mb-4">Pricing Breakdown</h3>
                         <div className="bg-gray-50 p-6 rounded-2xl relative overflow-hidden mb-8">
                             <div className="relative z-10">
 
@@ -445,15 +445,15 @@ const BookingSummary = () => {
                                     </div>
 
                                     <div className="pt-4 border-t border-dashed border-gray-100 flex justify-between items-center">
-                                        <p className="font-black text-gray-900">Final Amount</p>
-                                        <p className="text-xl font-black text-gray-900">₹{totalAmount.toFixed(2)}</p>
+                                        <p className="font-bold text-gray-900">Final Amount</p>
+                                        <p className="text-base font-semibold text-gray-900">₹{totalAmount.toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Restaurant Policies */}
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Restaurant Policies</h3>
+                        <h3 className="text-base font-semibold text-gray-900 mb-4">Restaurant Policies</h3>
                         <div className="bg-gray-50 rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
                             <button
                                 onClick={() => setIsPoliciesOpen(!isPoliciesOpen)}
@@ -489,7 +489,7 @@ const BookingSummary = () => {
                             <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                                 <div className="p-6 border-b border-gray-50">
                                     <div className="flex justify-between items-center mb-6">
-                                        <h3 className="font-black text-gray-900 text-lg">Summary</h3>
+                                        <h3 className="font-bold text-gray-900 text-lg">Summary</h3>
                                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs ${timeLeft < 60 ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-orange-50 text-[#ff5e00]'}`}>
                                             <Timer size={14} />
                                             {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
@@ -499,7 +499,7 @@ const BookingSummary = () => {
                                     {/* Coupons Section */}
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Available Coupons</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Available Coupons</p>
                                             {coupons.length > 2 && (
                                                 <button onClick={() => setIsCouponsModalOpen(true)} className="text-[10px] font-bold text-[#ff5e00] hover:underline">
                                                     View All
@@ -536,7 +536,7 @@ const BookingSummary = () => {
                                                                             <Ticket size={14} />
                                                                         </div>
                                                                         {isSelected && (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase tracking-wider">
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-semibold uppercase tracking-wide">
                                                                                 <CheckCircle size={8} /> Applied
                                                                             </span>
                                                                         )}
@@ -546,7 +546,7 @@ const BookingSummary = () => {
                                                                     </div>
                                                                 </div>
 
-                                                                <h4 className={`text-xl font-black tracking-tight ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>
+                                                                <h4 className={`text-xl font-bold tracking-tight ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>
                                                                     {coupon.discountValue}% OFF
                                                                 </h4>
                                                                 <p className="text-[10px] text-gray-500 mt-1 leading-snug font-medium pr-2">
@@ -563,7 +563,7 @@ const BookingSummary = () => {
                                                                     <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
                                                                         <Tag size={10} /> CODE:
                                                                     </div>
-                                                                    <span className={`font-black text-xs tracking-widest ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>{coupon.code}</span>
+                                                                    <span className={`font-bold text-xs tracking-widest ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>{coupon.code}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -578,19 +578,19 @@ const BookingSummary = () => {
                                         <div className="space-y-3">
                                             <div className="flex justify-between items-center text-[10px] font-bold text-gray-500">
                                                 <span>Amount saved (Using coupons)</span>
-                                                <span className="text-green-600 font-black">₹{amountSaved.toFixed(2)}</span>
+                                                <span className="text-green-600 font-bold">₹{amountSaved.toFixed(2)}</span>
                                             </div>
                                             {offerDiscount > 0 && (
                                                 <div className="flex justify-between items-center text-[10px] font-bold text-gray-500">
                                                     <span>Restaurant Offer Applied</span>
-                                                    <span className="text-green-600 font-black">₹{offerDiscount.toFixed(2)}</span>
+                                                    <span className="text-green-600 font-bold">₹{offerDiscount.toFixed(2)}</span>
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="pt-4 flex justify-between items-end border-t border-gray-100">
-                                            <p className="font-black text-gray-900 text-sm">Total Payable</p>
-                                            <p className="text-xl font-black text-gray-900">₹{totalAmount.toFixed(2)}</p>
+                                            <p className="font-bold text-gray-900 text-sm">Total Payable</p>
+                                            <p className="text-base font-semibold text-gray-900">₹{totalAmount.toFixed(2)}</p>
                                         </div>
                                     </div>
 
@@ -602,7 +602,7 @@ const BookingSummary = () => {
                                                     <Wallet size={20} />
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-bold text-gray-900">Wallet Balance</p>
+                                                    <p className="text-xs font-medium text-gray-900">Wallet Balance</p>
                                                     <p className="text-[10px] text-gray-400 font-medium">Available: ₹{walletBalance.toFixed(2)}</p>
                                                 </div>
                                             </div>
@@ -627,11 +627,11 @@ const BookingSummary = () => {
                                                 >
                                                     <div className="flex justify-between items-center text-xs">
                                                         <span className="text-gray-500 font-medium">Wallet Applied</span>
-                                                        <span className="text-[#ff5e00] font-black">-₹{walletAmountToUse.toFixed(2)}</span>
+                                                        <span className="text-[#ff5e00] font-bold">-₹{walletAmountToUse.toFixed(2)}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-sm mt-2">
                                                         <span className="text-gray-900 font-bold">Payable Amount</span>
-                                                        <span className="text-gray-900 font-black">₹{finalPayable.toFixed(2)}</span>
+                                                        <span className="text-gray-900 font-bold">₹{finalPayable.toFixed(2)}</span>
                                                     </div>
                                                 </motion.div>
                                             )}
@@ -643,7 +643,7 @@ const BookingSummary = () => {
                                     <button
                                         onClick={handleBookingRequest}
                                         disabled={isSubmitting || cartItems.some(i => i.isUnavailable)}
-                                        className={`w-full py-4 font-black rounded-2xl shadow-xl transition-all transform active:scale-[0.98] ${isSubmitting || cartItems.some(i => i.isUnavailable)
+                                        className={`w-full py-4 font-bold rounded-2xl shadow-xl transition-all transform active:scale-[0.98] ${isSubmitting || cartItems.some(i => i.isUnavailable)
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
                                             : 'bg-[#ff5e00] text-white shadow-orange-500/20 hover:bg-[#e05200]'
                                             }`}>
@@ -678,8 +678,8 @@ const BookingSummary = () => {
                         >
                             <div className="p-6 border-b border-gray-50 flex items-center justify-between sticky top-0 bg-white z-10">
                                 <div>
-                                    <h2 className="text-xl font-black text-gray-900">All Coupons</h2>
-                                    <p className="text-xs font-bold text-gray-400 mt-1">Available to apply</p>
+                                    <h2 className="text-base font-semibold text-gray-900">All Coupons</h2>
+                                    <p className="text-xs font-medium text-gray-400 mt-1">Available to apply</p>
                                 </div>
                                 <button onClick={() => setIsCouponsModalOpen(false)} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-600 transition-colors">
                                     <X size={18} />
@@ -708,7 +708,7 @@ const BookingSummary = () => {
                                                             <Percent size={18} />
                                                         </div>
                                                         {isSelected && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-semibold uppercase tracking-wide">
                                                                 <CheckCircle size={10} /> Applied
                                                             </span>
                                                         )}
@@ -718,7 +718,7 @@ const BookingSummary = () => {
                                                     </div>
                                                 </div>
 
-                                                <h4 className={`text-2xl font-black tracking-tight ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>
+                                                <h4 className={`text-lg font-semibold tracking-tight ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>
                                                     {coupon.discountValue}% OFF
                                                 </h4>
                                                 <p className="text-xs text-gray-500 mt-1 leading-relaxed font-medium">
@@ -735,7 +735,7 @@ const BookingSummary = () => {
                                                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400">
                                                         <Tag size={12} /> PROMO CODE:
                                                     </div>
-                                                    <span className={`font-black tracking-widest ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>{coupon.code}</span>
+                                                    <span className={`font-bold tracking-widest ${isSelected ? 'text-[#ff5e00]' : 'text-gray-900'}`}>{coupon.code}</span>
                                                 </div>
                                             </div>
                                         </div>

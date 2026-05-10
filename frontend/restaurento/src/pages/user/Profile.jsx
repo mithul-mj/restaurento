@@ -124,10 +124,10 @@ const Profile = () => {
 
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-start gap-2 md:gap-4 mb-2">
-              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              <h1 className="text-lg font-semibold text-gray-900 tracking-tight">
                 {user?.fullName}
               </h1>
-              <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[11px] font-bold uppercase tracking-wider border border-green-100 w-fit mx-auto md:mx-0">
+              <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-600 rounded-full text-[11px] font-semibold uppercase tracking-wide border border-green-100 w-fit mx-auto md:mx-0">
                 <ShieldCheck size={12} />
                 Verified
               </div>
@@ -158,7 +158,7 @@ const Profile = () => {
                 <Wallet size={20} />
                 <span className="font-bold text-xs uppercase tracking-widest">Available Balance</span>
               </div>
-              <div className="text-4xl md:text-5xl font-black text-gray-900">
+              <div className="text-lg font-semibold text-gray-900">
                 ₹{(user?.walletBalance ?? 0).toLocaleString()}
               </div>
               <p className="text-xs text-gray-400 mt-2 font-medium">Quick bookings and instant refunds</p>
@@ -178,11 +178,11 @@ const Profile = () => {
 
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
             <div className="flex-1 w-full text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#ff5e00] rounded-full text-[10px] font-bold uppercase tracking-wider mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#ff5e00] rounded-full text-[10px] font-semibold uppercase tracking-wide mb-6">
                 <Share2 size={12} />
                 Referral Program
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-4 tracking-tight">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 tracking-tight">
                 Invite Friends & <br className="hidden md:block" /> Get Rewarded
               </h2>
               <p className="text-gray-500 text-sm md:text-base max-w-sm mx-auto lg:mx-0 mb-8 leading-relaxed">
