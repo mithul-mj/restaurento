@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useEffect, Suspense, lazy } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { Toaster } from "sonner";
 import "./App.css";
 
@@ -77,6 +77,13 @@ const MyWallet = lazy(() => import("./pages/user/MyWallet"));
 function App() {
   const dispatch = useDispatch();
   const { isInitializing } = useSelector((state) => state.auth);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -116,7 +123,17 @@ function App() {
 
   return (
     <Router>
-      <Toaster position="top-right" richColors />
+      <Toaster
+        position={isMobile ? "bottom-center" : "top-right"}
+        richColors
+        duration={3000}
+        toastOptions={{
+          style: isMobile ? {
+            borderRadius: '999px',
+            marginBottom: '85px'
+          } : {}
+        }}
+      />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route element={<PublicRoutes />}>
