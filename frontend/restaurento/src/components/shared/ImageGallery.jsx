@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const ImgDiv = ({ src, className, loading = "lazy", onClick }) => (
   <div
-    className={`overflow-hidden w-full h-full ${className || ""} bg-gray-100 flex-shrink-0 ${onClick ? 'cursor-pointer' : ''}`}
+    className={`group overflow-hidden w-full h-full ${className || ""} bg-gray-100 flex-shrink-0 isolate transform-gpu ${onClick ? 'cursor-pointer' : ''}`}
     onClick={onClick}
   >
     {src ? (
       <img
         src={src}
         loading={loading}
-        className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         alt="Restaurant"
         style={{ minHeight: "100%", minWidth: "100%" }}
       />

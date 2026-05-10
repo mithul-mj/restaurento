@@ -433,7 +433,7 @@ const BookingCard = ({ booking, onCancel, onRetry, onRate, isCanceling, retrying
                                 {retryingBookingId === booking._id ? "Starting..." : "Retry Payment"}
                             </button>
                         )}
-                        {!isCanceled && booking.status === 'approved' && (
+                        {!isCanceled && booking.status === 'approved' && type !== 'past' && (
                             <button
                                 onClick={onCancel}
                                 disabled={isCanceling || retryingBookingId !== null}

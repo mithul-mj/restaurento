@@ -17,7 +17,7 @@ const RestaurantLayout = () => {
     const activeTab = getActiveTab();
 
     return (
-        <div className="flex h-screen bg-gray-50 text-gray-800 font-sans">
+        <div className="flex min-h-screen bg-gray-50 text-gray-800 font-sans">
             {isMobileSidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-20 md:hidden"
@@ -31,7 +31,7 @@ const RestaurantLayout = () => {
                 activeTab={activeTab}
             />
 
-            <main className="flex-1 overflow-y-auto h-screen flex flex-col">
+            <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
                 <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm shrink-0">
                     <button className="text-gray-500 p-1" onClick={() => setIsMobileSidebarOpen(true)}>
                         <Menu size={24} />
@@ -40,15 +40,15 @@ const RestaurantLayout = () => {
                     <div className="w-8"></div>
                 </div>
 
-                <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-80px)] w-full">
+                <main className="p-4 md:p-8 flex-1 overflow-x-hidden">
                     <ErrorBoundary
                         FallbackComponent={ErrorFallback}
                         resetKeys={[location.pathname]}
                     >
                         <Outlet />
                     </ErrorBoundary>
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

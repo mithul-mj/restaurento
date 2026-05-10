@@ -29,7 +29,7 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
 
     return (
         <aside
-            className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static ${isOpen ? "translate-x-0" : "-translate-x-full"
+            className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
                 }`}>
             <div className="h-full flex flex-col">
                 <div className="relative px-6 py-6 border-b border-gray-50 flex items-center justify-center">
@@ -45,7 +45,7 @@ const Sidebar = ({ isOpen, setIsOpen, activeTab }) => {
                     </button>
                 </div>
 
-                <nav className="flex-1 px-4 py-6 space-y-1">
+                <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto scrollbar-hide">
                     {menuItems.map((item) => (
                         <Link
                             key={item.id}
