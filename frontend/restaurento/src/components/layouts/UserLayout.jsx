@@ -14,7 +14,7 @@ const UserLayout = () => {
             <div className="relative z-[100] flex-shrink-0">
                 <UserNavbar />
             </div>
-            <main className={`flex-1 overflow-y-auto relative z-0 md:pb-0 ${user ? 'pb-20' : ''}`}>
+            <main className={`flex-1 overflow-y-auto relative md:pb-0 ${user ? 'pb-20' : ''}`}>
                 <ErrorBoundary
                     FallbackComponent={ErrorFallback}
                     resetKeys={[location.pathname]}

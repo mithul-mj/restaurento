@@ -45,7 +45,7 @@ const NotificationModal = ({ isOpen, onClose, notifications, onMarkAsRead, onMar
 
 
     return (
-        <div className="absolute top-16 right-0 w-[420px] max-sm:fixed max-sm:left-4 max-sm:right-4 max-sm:w-auto bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="absolute top-16 right-0 w-[420px] max-sm:fixed max-sm:left-4 max-sm:right-4 max-sm:w-auto bg-white rounded-3xl shadow-2xl border border-gray-100 z-[250] overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
             <div className="p-6 flex items-start justify-between border-b border-gray-50">
                 <div className="flex items-center gap-4">

@@ -7,6 +7,7 @@ import {
   X,
   LocateFixed,
   History,
+  Bell,
 } from "lucide-react";
 import FilterModal from "./FilterModal";
 import Loader from "../../components/Loader";
@@ -16,6 +17,11 @@ import BannerCarousel from "../../components/user/BannerCarousel";
 import useHome from "./useHome";
 import { useLocation } from "../../context/LocationContext";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useSocket } from "../../context/SocketContext";
+import notificationService from "../../services/notification.service";
+import NotificationModal from "../../pages/user/NotificationModal";
 
 const Home = () => {
   const {
@@ -62,25 +68,77 @@ const Home = () => {
     document.title = "Discover Top Restaurants | Restaurento";
   }, []);
 
+  const { user } = useSelector((state) => state.auth);
+  const avatar = user?.avatar;
+  const [isNotifModalOpen, setIsNotifModalOpen] = React.useState(false);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [notifications, setNotifications] = React.useState([]);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [hasNextPage, setHasNextPage] = React.useState(false);
+  const socket = useSocket();
+
+  React.useEffect(() => {
+    if (user?._id) {
+      notificationService.getUnreadCount().then(res => {
+        if (res.success) setUnreadCount(res.count);
+      });
+    }
+  }, [user?._id]);
+
+  React.useEffect(() => {
+    if (socket && user?._id) {
+      socket.emit("join_private_room", user._id);
+      socket.on("new_notification", (newNotif) => {
+        setNotifications(prev => [newNotif, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      });
+      return () => {
+        socket.off("new_notification");
+      };
+    }
+  }, [socket, user?._id]);
+
+  const handleBellClick = async () => {
+    if (!isNotifModalOpen) {
+      const res = await notificationService.getNotifications(1);
+      if (res.success) {
+        setNotifications(res.notifications);
+        setHasNextPage(res.meta.hasNextPage);
+        setCurrentPage(1);
+      }
+    }
+    setIsNotifModalOpen(!isNotifModalOpen);
+  };
+
+  const handleLoadMoreNotifs = async () => {
+    const nextPage = currentPage + 1;
+    const res = await notificationService.getNotifications(nextPage);
+    if (res.success) {
+      setNotifications(prev => [...prev, ...res.notifications]);
+      setHasNextPage(res.meta.hasNextPage);
+      setCurrentPage(nextPage);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const res = await notificationService.markAllAsRead();
+    if (res.success) {
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    }
+  };
+
+  const handleMarkAsRead = async (id) => {
+    const res = await notificationService.markOneAsRead(id);
+    if (res.success) {
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-[#fcfcfc] overflow-hidden">
-      {/* Mobile Fixed Location Header */}
-      <div 
-        onClick={() => setIsLocationModalOpen(true)}
-        className="md:hidden sticky top-0 z-[120] bg-white/95 backdrop-blur-md border-b border-gray-100 px-5 py-2 flex items-center gap-3 active:opacity-80 transition-all cursor-pointer shadow-sm shadow-gray-50/50">
-        <div className="text-[#ff5e00] shrink-0">
-          <MapPin size={18} strokeWidth={2.5} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-[10px] uppercase font-extrabold text-gray-400 tracking-wider leading-none">Your Location</span>
-            <ChevronDown size={11} className="text-[#ff5e00] opacity-50" />
-          </div>
-          <div className="text-gray-900 font-bold text-[13px] truncate tracking-tight pr-4">
-            {placeholderText}
-          </div>
-        </div>
-      </div>
+      {/* Mobile Location Header moved to UserNavbar */}
 
       <div ref={parentRef} className="flex-1 overflow-y-auto">
         <div
@@ -111,17 +169,78 @@ const Home = () => {
                     zIndex: 50,
                   }}>
                   <main className="max-w-7xl mx-auto px-4 md:px-8 pt-1 pb-1">
-                    <div className="-mx-4 md:mx-0">
+                    {/* Mobile Header (Location & Notifications) */}
+                    <div className="md:hidden flex items-center justify-between mb-8 mt-4">
+                        <div 
+                            onClick={() => setIsLocationModalOpen(true)}
+                            className="flex items-center gap-1 cursor-pointer"
+                        >
+                            <div className="relative flex items-center justify-center">
+                                <MapPin size={28} strokeWidth={1.5} className="text-[#111]" />
+                                <div className="absolute -bottom-0.5 -right-0.5 bg-[#fcfcfc] rounded-full p-[1.5px]">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                </div>
+                            </div>
+                            <div className="bg-[#1c1c1c] text-white px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-wide max-w-[140px] truncate">
+                                {placeholderText}
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                            {user ? (
+                                <>
+                                    <button
+                                        onClick={handleBellClick}
+                                        className="relative text-[#111] p-3 bg-[#f5f5f5] hover:bg-gray-200 rounded-full transition-colors"
+                                    >
+                                        <Bell size={22} strokeWidth={1.5} />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-[#f5f5f5]"></span>
+                                        )}
+                                    </button>
+                                    <Link to="/profile">
+                                        <div className="w-11 h-11 bg-[#e9e0ff] rounded-full overflow-hidden border border-gray-100">
+                                            <img
+                                                src={
+                                                    avatar ||
+                                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=ff5e00&color=fff`
+                                                }
+                                                alt="Profile"
+                                                referrerPolicy="no-referrer"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </Link>
+                                </>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="bg-[#1c1c1c] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider transition-all active:scale-[0.98]">
+                                    Join Now
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Mobile Discover Text */}
+                    <div className="md:hidden mb-8">
+                      <h1 className="text-[34px] leading-[1.1] font-[800] text-[#111111] tracking-tight">
+                        Discover<br />Top Restaurants
+                      </h1>
+                    </div>
+
+                    {/* Desktop Banner Carousel */}
+                    <div className="hidden md:block -mx-4 md:mx-0 mt-4 md:mt-0">
                       <BannerCarousel
                         banners={activeBanners}
                         isLoading={isLoadingBanners}
                       />
                     </div>
  
-                    <div className="sticky top-[50px] md:top-0 md:relative z-30 bg-[#fcfcfc]/95 backdrop-blur-lg -mx-4 px-4 pt-2 md:pt-0 md:bg-transparent md:backdrop-blur-none transition-all duration-300">
-                      <div className="w-full max-w-4xl mx-auto mt-2 md:-mt-14 relative z-10 mb-4 md:px-2">
+                    <div className="relative z-30 bg-transparent -mx-4 px-4 pt-2 md:pt-0 transition-all duration-300">
+                      <div className="w-full max-w-4xl mx-auto md:mt-2 md:-mt-14 relative z-10 mb-4 md:px-2">
                         <div
-                          className="relative flex flex-col md:flex-row shadow-xl shadow-gray-200/50 rounded-xl bg-white max-w-4xl mx-auto border border-gray-100"
+                          className="relative flex flex-col md:flex-row md:shadow-xl md:shadow-gray-200/50 rounded-full md:rounded-xl bg-transparent md:bg-white max-w-4xl mx-auto border-none md:border md:border-gray-100"
                           style={{ zIndex: 50 }}>
                           {/* Desktop Location Input */}
                           <div
@@ -218,20 +337,39 @@ const Home = () => {
                           </div>
 
                           {/* Search Input */}
-                          <div className="flex-1 flex items-center px-4 py-2 md:py-4 relative z-0">
-                            <Search className="md:hidden text-[#ff5e00] mr-2" size={18} />
-                            <input
-                              type="text"
-                              placeholder="Search for restaurant, cuisine.."
-                              className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400 text-sm md:text-base py-1"
-                              {...register("query")}
-                            />
-                            <div className="flex items-center gap-2">
+                          <div className="flex-1 flex items-center px-6 py-4 md:py-4 relative z-0 bg-[#f5f5f5] md:bg-transparent rounded-full md:rounded-none">
+                            <Search className="md:hidden text-[#111] mr-3" size={22} strokeWidth={1.5} />
+                            
+                            <div className="w-full relative flex items-center">
+                              <input
+                                type="text"
+                                placeholder="Search for restaurant, cuisine.."
+                                className="w-full bg-transparent focus:outline-none text-[#111] placeholder-gray-400 text-[16px] md:text-base py-1 relative z-10"
+                                {...register("query")}
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-2 z-10">
                               {watch("query") && (
                                 <button type="button" onClick={() => setValue("query", "")} className="p-1.5 text-gray-400 hover:text-gray-600">
                                   <X size={18} />
                                 </button>
                               )}
+                              {/* Filter Icon for Mobile */}
+                              <button 
+                                type="button" 
+                                onClick={() => setIsFilterModalOpen(true)}
+                                className="md:hidden p-1 text-[#111] ml-1"
+                              >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="3" y1="6" x2="21" y2="6"/>
+                                  <line x1="3" y1="12" x2="21" y2="12"/>
+                                  <line x1="3" y1="18" x2="21" y2="18"/>
+                                  <line x1="15" y1="4" x2="15" y2="8"/>
+                                  <line x1="9" y1="10" x2="9" y2="14"/>
+                                  <line x1="15" y1="16" x2="15" y2="20"/>
+                                </svg>
+                              </button>
                             </div>
                           </div>
 
@@ -242,7 +380,7 @@ const Home = () => {
                       </div>
 
                       {/* Filters */}
-                      <div className="flex items-center gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                      <div className="flex items-center gap-2 md:gap-3 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                         {filters.map((filter) => {
                           let count = 0;
                           if (filter === "Filters") {
@@ -254,7 +392,7 @@ const Home = () => {
                             <button
                               key={filter}
                               onClick={() => filter === "Filters" ? setIsFilterModalOpen(true) : setActiveFilter((prev) => prev === filter ? null : filter)}
-                              className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all border flex items-center gap-1.5 ${activeFilter === filter ? "bg-[#ffe8d6] text-[#ff5e00] border-[#ff5e00] shadow-sm" : "bg-white text-gray-600 border-gray-100 hover:bg-gray-200"
+                              className={`px-5 py-2.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-all flex items-center gap-1.5 border md:border-solid ${filter === 'Filters' ? 'hidden md:flex' : ''} ${activeFilter === filter ? "bg-[#1c1c1c] md:bg-[#ffe8d6] text-white md:text-[#ff5e00] border-transparent md:border-[#ff5e00] shadow-sm" : "bg-[#f5f5f5] md:bg-white text-gray-500 md:text-gray-600 border-transparent md:border-gray-100 hover:bg-gray-200"
                                 }`}>
                               {filter === "Filters" && <Filter size={14} className="inline mr-0.5" />}
                               {filter}
@@ -265,6 +403,16 @@ const Home = () => {
                           );
                         })}
                       </div>
+
+                      {/* Mobile Categories - Instead of full filters, maybe just categories or nothing. The user mockup didn't show them, but we'll hide the standard filter row on mobile since filter is in search bar now */}
+                    </div>
+
+                    {/* Mobile Banner Carousel */}
+                    <div className="md:hidden -mx-4 md:mx-0 mt-2 mb-4">
+                      <BannerCarousel
+                        banners={activeBanners}
+                        isLoading={isLoadingBanners}
+                      />
                     </div>
 
                     <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-1 flex items-center gap-2">
@@ -446,6 +594,17 @@ const Home = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <NotificationModal
+        isOpen={isNotifModalOpen}
+        onClose={() => setIsNotifModalOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={handleMarkAsRead}
+        onMarkAllAsRead={handleMarkAllAsRead}
+        hasNextPage={hasNextPage}
+        onLoadMore={handleLoadMoreNotifs}
+      />
     </div>
   );
 };

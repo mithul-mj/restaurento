@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { Bell, Heart } from "lucide-react";
+import { Link, NavLink, useLocation as useRouteLocation } from "react-router-dom";
+import { Bell, Heart, MapPin } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useSocket } from "../../context/SocketContext";
 import { useLocation } from "../../context/LocationContext";
@@ -18,10 +18,6 @@ const UserNavbar = () => {
     const [hasNextPage, setHasNextPage] = useState(false);
     const socket = useSocket();
     const { placeholderText, setIsLocationModalOpen } = useLocation();
-
-
-
-
 
     useEffect(() => {
         if (user?._id) {
@@ -88,7 +84,7 @@ const UserNavbar = () => {
 
 
     return (
-        <nav className="md:sticky top-0 z-[100] bg-white shadow-sm border-b border-gray-100 px-4 md:px-8 py-3">
+        <nav className="hidden md:block md:sticky md:top-0 z-[100] md:bg-white md:shadow-sm md:border-b md:border-gray-100 px-4 md:px-8 py-3">
             <div className="flex items-center justify-between relative">
                 <Link to="/" className="flex items-center group">
                     <img
@@ -167,29 +163,6 @@ const UserNavbar = () => {
                         </Link>
                     </div>
                 )}
-
-                {/* Mobile Icons - Simplified to just Notifications */}
-                <div className="flex items-center gap-2 md:hidden">
-                    {user ? (
-                        <button
-                            onClick={handleBellClick}
-                            className="relative text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                            <Bell size={22} />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                </span>
-                            )}
-                        </button>
-                    ) : (
-                        <Link
-                            to="/login"
-                            className="bg-[#ff5e00] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider transition-all active:scale-[0.98]">
-                            Join Now
-                        </Link>
-                    )}
-                </div>
 
                 {/* Notification Modal placed for both desktop/mobile positioning */}
                 <NotificationModal
