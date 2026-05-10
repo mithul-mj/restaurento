@@ -406,12 +406,6 @@ const BookingSummary = () => {
                                                 <p className={`font-black text-sm ${item.isUnavailable ? 'text-gray-300' : 'text-gray-900'}`}>
                                                     ₹{(item.price * item.qty).toFixed(2)}
                                                 </p>
-                                                <button
-                                                    onClick={() => handleRemoveItem(item._id)}
-                                                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
                                             </div>
                                         </div>
                                     ))}
