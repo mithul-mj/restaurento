@@ -75,10 +75,10 @@ export const getAllCoupons = async (req, res, next) => {
 
       const validityDate = coupon.expiryDate
         ? new Date(coupon.expiryDate).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
         : "Lifetime";
 
       return {

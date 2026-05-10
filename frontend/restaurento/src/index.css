@@ -65,6 +65,15 @@
     animation: fade-in-up 0.8s ease-out;
 }
 
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
 @layer utilities {
     .pb-safe {
         padding-bottom: env(safe-area-inset-bottom);

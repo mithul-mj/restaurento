@@ -199,8 +199,8 @@ const Profile = () => {
                 <button
                   onClick={handleCopy}
                   className={`px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shrink-0 ${copied
-                      ? "bg-green-600 text-white"
-                      : "bg-[#ff5e00] text-white hover:bg-[#e05200] shadow-lg shadow-orange-100"
+                    ? "bg-green-600 text-white"
+                    : "bg-[#ff5e00] text-white hover:bg-[#e05200] shadow-lg shadow-orange-100"
                     }`}
                 >
                   {copied ? (
@@ -218,13 +218,12 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="hidden lg:flex w-48 h-48 bg-orange-50 rounded-full items-center justify-center text-orange-200">
-              <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <line x1="19" y1="8" x2="19" y2="14"></line>
-                <line x1="22" y1="11" x2="16" y2="11"></line>
-              </svg>
+            <div className="hidden lg:flex w-48 h-48 bg-orange-50/50 rounded-full items-center justify-center relative overflow-hidden">
+              <img
+                src="/referral_hand.png"
+                alt="High Five"
+                className="w-70 h-70 object-contain drop-shadow-xl animate-float"
+              />
             </div>
           </div>
         </motion.div>
