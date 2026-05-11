@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
     Calendar,
@@ -236,33 +236,18 @@ const MyBookings = () => {
 };
 
 const AddToCalendarButton = ({ booking, restaurant }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
     const getDates = () => {
         const startTotalMinutes = booking.slotTime;
         const startH = Math.floor(startTotalMinutes / 60);
         const startM = startTotalMinutes % 60;
-        
+
         const startDate = new Date(booking.bookingDate);
         startDate.setHours(startH, startM, 0, 0);
-        
+
         const endDate = new Date(startDate);
         endDate.setHours(startDate.getHours() + 2);
 
-        const formatICSDate = (date) => {
-            return date.toISOString().replace(/-|:|\.\d+/g, '');
-        };
+        const formatICSDate = (date) => date.toISOString().replace(/-|:|\.\d+/g, '');
 
         return {
             startIcs: formatICSDate(startDate),
@@ -270,82 +255,23 @@ const AddToCalendarButton = ({ booking, restaurant }) => {
         };
     };
 
-    const generateGoogleUrl = () => {
+    const openGoogleCalendar = () => {
         const { startIcs, endIcs } = getDates();
         const title = encodeURIComponent(`Dining at ${restaurant?.restaurantName || 'Restaurant'}`);
         const details = encodeURIComponent(`Table reservation for ${booking.guests} guests.`);
         const location = encodeURIComponent(restaurant?.address || restaurant?.restaurantName || '');
-        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIcs}/${endIcs}&details=${details}&location=${location}`;
-    };
-
-    const generateAppleUrl = () => {
-        const { startIcs, endIcs } = getDates();
-        const title = `Dining at ${restaurant?.restaurantName || 'Restaurant'}`;
-        const details = `Table reservation for ${booking.guests} guests.`;
-        const location = restaurant?.address || restaurant?.restaurantName || '';
-        
-        const icsContent = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'BEGIN:VEVENT',
-            `DTSTART:${startIcs}`,
-            `DTEND:${endIcs}`,
-            `SUMMARY:${title}`,
-            `DESCRIPTION:${details}`,
-            `LOCATION:${location}`,
-            'END:VEVENT',
-            'END:VCALENDAR'
-        ].join('\r\n');
-
-        return encodeURI(`data:text/calendar;charset=utf8,${icsContent}`);
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIcs}/${endIcs}&details=${details}&location=${location}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     return (
-        <div className="relative" ref={dropdownRef}>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-500 rounded-xl hover:bg-orange-50 hover:text-[#ff5e00] transition-colors"
-                title="Add to Calendar"
-            >
-                <AlarmClock size={18} />
-            </button>
-            
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full mb-2 right-0 w-48 bg-[#2d2d2d] rounded-xl shadow-xl overflow-hidden z-20 border border-gray-700"
-                    >
-                        <a 
-                            href={generateGoogleUrl()}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 px-4 py-3 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" alt="Google" className="w-5 h-5 object-contain" />
-                            Google Calendar
-                        </a>
-                        <a 
-                            href={generateAppleUrl()}
-                            download="reservation.ics"
-                            className="flex items-center gap-3 px-4 py-3 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-                                <rect x="5" y="15" width="90" height="80" rx="20" fill="white" />
-                                <path d="M5 35 Q5 15 25 15 L75 15 Q95 15 95 35 L95 40 L5 40 Z" fill="#E84C3D" />
-                                <text x="50" y="32" fontFamily="sans-serif" fontSize="16" fontWeight="bold" fill="white" textAnchor="middle">JUL</text>
-                                <text x="50" y="80" fontFamily="sans-serif" fontSize="40" fontWeight="normal" fill="black" textAnchor="middle">17</text>
-                            </svg>
-                            Apple Calendar
-                        </a>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+        <button
+            onClick={openGoogleCalendar}
+            className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-500 rounded-xl hover:bg-orange-50 hover:text-[#ff5e00] transition-colors"
+            title="Add to Google Calendar"
+        >
+            <AlarmClock size={18} />
+        </button>
     );
 };
 
