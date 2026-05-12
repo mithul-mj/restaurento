@@ -17,6 +17,15 @@
 
 <br />
 
+## 💡 The Inspiration (Why I Built This)
+
+**The Problem:** Waiting in long restaurant queues turns relaxing family outings into stressful marathons. Most dining platforms don't offer real-time table availability or allow users to pre-book their exact time and menu, leading to unpredictable wait times and ruined plans.
+
+**The Solution:** Restaurento was built to eliminate the wait. It is a real-time reservation ecosystem that syncs diners directly with restaurant inventory. Diners can securely book tables, pre-order food, and guarantee their spot—ensuring the perfect outing stays perfect. 
+
+
+---
+
 ## 📖 Overview
 
 **Restaurento** is a comprehensive, scalable restaurant booking and management ecosystem designed for high concurrency and performance. It features a beautifully crafted, highly responsive UI, robust business logic, secure payment processing, and real-time operational syncing between diners and restaurant partners.
