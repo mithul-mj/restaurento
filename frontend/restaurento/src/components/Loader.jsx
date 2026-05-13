@@ -53,14 +53,39 @@ const STEAM_WISPS = [
 
 const Loader = ({ text = "Loading", size = "xs", showText = false, className = "" }) => {
     const [dots, setDots] = useState('');
+    const [currentText, setCurrentText] = useState(text);
+
+    useEffect(() => {
+        setCurrentText(text);
+    }, [text]);
 
     useEffect(() => {
         if (!showText) return;
-        const interval = setInterval(() => {
+        const dotsInterval = setInterval(() => {
             setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
         }, 400);
-        return () => clearInterval(interval);
+        return () => clearInterval(dotsInterval);
     }, [showText]);
+
+    useEffect(() => {
+        if (!showText) return;
+
+        const isDefault = typeof text === 'string' 
+            ? (text === "Loading" || text.toLowerCase() === "loading..." || text.toLowerCase() === "loading")
+            : false;
+            
+        const sequence = isDefault
+            ? ["Loading", "Setting up your table", "Polishing the silverware", "Warming up the oven", "Almost ready"]
+            : [text, "Still processing", "Please wait", "Almost there", "Taking a bit longer"];
+
+        let textIndex = 1;
+        const textInterval = setInterval(() => {
+            setCurrentText(sequence[textIndex % sequence.length]);
+            textIndex++;
+        }, 3000);
+
+        return () => clearInterval(textInterval);
+    }, [showText, text]);
 
     const { scale, fontSize } = useMemo(() => {
         if (typeof size === 'number') {
@@ -133,7 +158,7 @@ const Loader = ({ text = "Loading", size = "xs", showText = false, className = "
             {showText && (
                 <div className={`mt-1 flex justify-center w-full ${fontSize}`}>
                     <div className="text-slate-800 font-bold tracking-widest uppercase flex items-center h-4">
-                        <span className="shrink-0">{text}</span>
+                        <span className="shrink-0">{currentText}</span>
                         <span className="inline-block w-4 text-left tabular-nums">{dots}</span>
                     </div>
                 </div>
