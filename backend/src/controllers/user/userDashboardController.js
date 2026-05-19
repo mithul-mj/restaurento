@@ -82,7 +82,7 @@ export const getUserDashboard = async (req, res, next) => {
     ];
 
     pipeline.push(...lookupScheduleStage);
-    
+
     // Filter out restaurants that are currently in a temporary closure period
     pipeline.push({
       $match: {
@@ -125,7 +125,7 @@ export const getUserDashboard = async (req, res, next) => {
     ];
 
     pipeline.push(...lookupOfferStage);
-    
+
     // Calculate Dynamic Rating Stats
     const lookupRatingStats = [
       {
@@ -334,7 +334,7 @@ export const getRestaurantDetails = async (req, res, next) => {
         ]
       }).sort({ discountValue: -1 }).lean()
     ]);
-    
+
     const ratingStats = ReviewData?.[0] || { average: 0, count: 0 };
     if (ratingStats.average) ratingStats.average = parseFloat(ratingStats.average.toFixed(1));
 
@@ -348,10 +348,10 @@ export const getRestaurantDetails = async (req, res, next) => {
 
     // Check if temporarily closed
     if (activeSchedule.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
-      return res.status(STATUS_CODES.FORBIDDEN).json({ 
-        success: false, 
+      return res.status(STATUS_CODES.FORBIDDEN).json({
+        success: false,
         message: ERROR_MESSAGES.RESTAURANT_CLOSED,
-        closedTill: activeSchedule.closedTill 
+        closedTill: activeSchedule.closedTill
       });
     }
 
@@ -412,10 +412,10 @@ export const getRestaurantMenu = async (req, res, next) => {
     }).sort({ validFrom: -1 }).lean();
 
     if (activeSchedule?.closedTill && new Date(activeSchedule.closedTill) > new Date()) {
-      return res.status(STATUS_CODES.FORBIDDEN).json({ 
-        success: false, 
+      return res.status(STATUS_CODES.FORBIDDEN).json({
+        success: false,
         message: ERROR_MESSAGES.RESTAURANT_CLOSED,
-        closedTill: activeSchedule.closedTill 
+        closedTill: activeSchedule.closedTill
       });
     }
 
@@ -487,16 +487,16 @@ export const getTopRestaurants = async (req, res, next) => {
     let restaurantIds = topBooked.map(b => b._id);
 
     if (restaurantIds.length < 5) {
-      const extra = await Restaurant.find({ 
+      const extra = await Restaurant.find({
         _id: { $nin: restaurantIds },
         status: "active",
         verificationStatus: "approved",
         isOnboardingCompleted: true
       })
-      .sort({ "ratingStats.average": -1 })
-      .limit(5 - restaurantIds.length)
-      .select("_id");
-      
+        .sort({ "ratingStats.average": -1 })
+        .limit(5 - restaurantIds.length)
+        .select("_id");
+
       restaurantIds = [...restaurantIds, ...extra.map(r => r._id)];
     }
 
