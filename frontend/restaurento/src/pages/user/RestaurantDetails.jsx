@@ -77,6 +77,11 @@ const RestaurantDetails = () => {
     const direction = partySize > prevPartySize.current ? 1 : -1;
 
     const handleSaveWishlist = async () => {
+        if (!user) {
+            showToast('Please login to continue!', 'error');
+            return;
+        }
+
         const cartItems = Object.values(cart);
 
         if (cartItems.length === 0) {
@@ -363,6 +368,11 @@ const RestaurantDetails = () => {
     }
 
     const handleBookNow = () => {
+        if (!user) {
+            showToast('Please login to continue booking!', 'error');
+            return;
+        }
+
         if (!selectedTimeSlot) {
             showToast('Please select a time slot first!', 'error');
             return;
