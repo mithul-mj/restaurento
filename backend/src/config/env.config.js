@@ -63,6 +63,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().min(1, "SMTP_USER is required"),
   SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
   SENDER_EMAIL: z.string().min(1, "SENDER_EMAIL is required"),
+  BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required"),
 
   CLOUDINARY_CLOUD_NAME: z.string().min(1, "CLOUDINARY_CLOUD_NAME is required"),
   CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),

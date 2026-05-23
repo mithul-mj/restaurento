@@ -1,15 +1,11 @@
 import { env } from "./env.config.js";
-
 import nodemailer from "nodemailer";
+import brevoTransport from "nodemailer-brevo-transport";
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: false, // Use true for port 465, false for port 587
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-});
+const transporter = nodemailer.createTransport(
+  new brevoTransport({
+    apiKey: env.BREVO_API_KEY,
+  })
+);
 
 export default transporter;
