@@ -13,6 +13,7 @@ import { LocationProvider } from "./context/LocationContext";
 import { showToast } from "./utils/alert.js";
 import STATUS_CODES from "./constants/statusCodes.js";
 import { registerSW } from 'virtual:pwa-register';
+import { HelmetProvider } from "react-helmet-async";
 
 // Register PWA service worker
 registerSW({ immediate: true });
@@ -43,18 +44,20 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Provider store={store}>
-      <SocketProvider>
-        <LocationProvider>
-          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-            <QueryClientProvider client={queryClient}>
-              <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-                <App />
-              </ErrorBoundary>
-            </QueryClientProvider>
-          </GoogleOAuthProvider>
-        </LocationProvider>
-      </SocketProvider>
-    </Provider>
+    <HelmetProvider>
+      <Provider store={store}>
+        <SocketProvider>
+          <LocationProvider>
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+              <QueryClientProvider client={queryClient}>
+                <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+                  <App />
+                </ErrorBoundary>
+              </QueryClientProvider>
+            </GoogleOAuthProvider>
+          </LocationProvider>
+        </SocketProvider>
+      </Provider>
+    </HelmetProvider>
   </StrictMode>
 );

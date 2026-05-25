@@ -17,6 +17,7 @@ import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
 import { showConfirm, showToast } from "../../utils/alert";
 import { useSocket } from "../../context/SocketContext";
 import { useSelector } from "react-redux";
+import { Helmet } from "react-helmet-async";
 
 const RestaurantDetails = () => {
     const { id } = useParams();
@@ -256,8 +257,6 @@ const RestaurantDetails = () => {
         }
     }, [socket, id, selectedDate, availableMinutes.join(',')]);
 
-
-
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#fcfcfc]">
@@ -405,6 +404,39 @@ const RestaurantDetails = () => {
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] pb-32">
+            <Helmet>
+                <title>{restaurant.restaurantName || "Restaurant"} - Restaurento</title>
+                <meta name="description" content={restaurant.description || `Experience the best dining at ${restaurant.restaurantName}. Book your table now on Restaurento!`} />
+
+                {/* Open Graph (Facebook, WhatsApp, LinkedIn) */}
+                <meta property="og:site_name" content="Restaurento" />
+                <meta property="og:title" content={`${restaurant.restaurantName} - Restaurento`} />
+                <meta property="og:description" content={restaurant.description || `Experience the best dining at ${restaurant.restaurantName}. Book your table now on Restaurento!`} />
+                <meta property="og:url" content={window.location.href} />
+                <meta property="og:type" content="website" />
+                {restaurant.images?.[0] && (
+                    <>
+                        <meta property="og:image" content={restaurant.images[0].url || restaurant.images[0]} />
+                        <meta property="og:image:secure_url" content={restaurant.images[0].url || restaurant.images[0]} />
+                        <meta property="og:image:alt" content={`${restaurant.restaurantName} - Restaurento`} />
+                        <meta property="og:image:width" content="1200" />
+                        <meta property="og:image:height" content="630" />
+                    </>
+                )}
+
+                {/* X (formerly Twitter) */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:domain" content={window.location.hostname} />
+                <meta name="twitter:url" content={window.location.href} />
+                <meta name="twitter:title" content={`${restaurant.restaurantName} - Restaurento`} />
+                <meta name="twitter:description" content={restaurant.description || `Experience the best dining at ${restaurant.restaurantName}. Book your table now on Restaurento!`} />
+                {restaurant.images?.[0] && (
+                    <>
+                        <meta name="twitter:image" content={restaurant.images[0].url || restaurant.images[0]} />
+                        <meta name="twitter:image:alt" content={`${restaurant.restaurantName} - Restaurento`} />
+                    </>
+                )}
+            </Helmet>
             {/* Mobile Bottom Booking Bar */}
             {isMobile && cartItems.length > 0 && activeTab !== "book-a-seat" && (
                 <motion.div
