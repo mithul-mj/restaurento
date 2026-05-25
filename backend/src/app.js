@@ -40,6 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(globalLimiter);
 
+app.get("/ping", (req, res) => res.status(200).send("pong"));
 app.use(allRoutes);
 
 setupReservation(io);
