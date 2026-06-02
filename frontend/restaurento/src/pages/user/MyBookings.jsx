@@ -27,15 +27,15 @@ const MyBookings = () => {
     const [retryingBookingId, setRetryingBookingId] = useState(null);
     const [ratingModal, setRatingModal] = useState({ isOpen: false, restaurantId: null, restaurantName: "" });
 
-    const { 
-        data, 
-        isLoading, 
-        isError, 
-        cancelBooking, 
-        isCanceling, 
-        checkBookingAvailability, 
+    const {
+        data,
+        isLoading,
+        isError,
+        cancelBooking,
+        isCanceling,
+        checkBookingAvailability,
         verifyRazorpayPayment,
-        retryBookingPayment 
+        retryBookingPayment
     } = useBookings({
         type: activeTab,
         page,
@@ -171,10 +171,10 @@ const MyBookings = () => {
                                         });
                                     }}
                                     onRetry={() => handleRetryPayment(booking)}
-                                    onRate={() => setRatingModal({ 
-                                        isOpen: true, 
-                                        restaurantId: booking.restaurantId?._id || booking.restaurantId, 
-                                        restaurantName: booking.restaurant?.restaurantName 
+                                    onRate={() => setRatingModal({
+                                        isOpen: true,
+                                        restaurantId: booking.restaurantId?._id || booking.restaurantId,
+                                        restaurantName: booking.restaurant?.restaurantName
                                     })}
                                     retryingBookingId={retryingBookingId}
                                     isCanceling={isCanceling}
@@ -227,9 +227,9 @@ const MyBookings = () => {
                     </div>
                 )}
                 {/* Rating Modal */}
-                <RatingModal 
-                    isOpen={ratingModal.isOpen} 
-                    onClose={() => setRatingModal({ ...ratingModal, isOpen: false })} 
+                <RatingModal
+                    isOpen={ratingModal.isOpen}
+                    onClose={() => setRatingModal({ ...ratingModal, isOpen: false })}
                     restaurantId={ratingModal.restaurantId}
                     restaurantName={ratingModal.restaurantName}
                 />
@@ -286,10 +286,10 @@ const BookingCard = ({ booking, onCancel, onRetry, onRate, isCanceling, retrying
     const isApproved = booking.status === "approved";
 
     const statusConfig = {
-        "approved":          { label: "Confirmed",       classes: "bg-green-50 text-green-600 border-green-100" },
-        "checked-in":        { label: "Completed",       classes: "bg-blue-50 text-blue-600 border-blue-100" },
-        "pending-payment":   { label: "Payment Failed",  classes: "bg-red-50 text-red-500 border-red-100 animate-pulse" },
-        "canceled":          { label: booking.canceledBy === "RESTAURANT" ? "Cancelled by restaurant" : "Cancelled by you", classes: booking.canceledBy === "RESTAURANT" ? "bg-orange-50 text-[#ff5e00] border-orange-100" : "bg-gray-100 text-gray-500 border-gray-200" },
+        "approved": { label: "Confirmed", classes: "bg-green-50 text-green-600 border-green-100" },
+        "checked-in": { label: "Completed", classes: "bg-blue-50 text-blue-600 border-blue-100" },
+        "pending-payment": { label: "Payment Failed", classes: "bg-red-50 text-red-500 border-red-100 animate-pulse" },
+        "canceled": { label: booking.canceledBy === "RESTAURANT" ? "Cancelled by restaurant" : "Cancelled by you", classes: booking.canceledBy === "RESTAURANT" ? "bg-orange-50 text-[#ff5e00] border-orange-100" : "bg-gray-100 text-gray-500 border-gray-200" },
     };
     const status = statusConfig[booking.status];
 
