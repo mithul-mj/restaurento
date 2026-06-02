@@ -73,6 +73,7 @@ const BookingSummary = lazy(() => import("./pages/user/BookingSummary"));
 const MyBookings = lazy(() => import("./pages/user/MyBookings"));
 const BookingDetails = lazy(() => import("./pages/user/BookingDetails"));
 const MyWallet = lazy(() => import("./pages/user/MyWallet"));
+const PaymentFailed = lazy(() => import("./pages/user/PaymentFailed"));
 
 function App() {
   const dispatch = useDispatch();
@@ -161,6 +162,7 @@ function App() {
               <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/my-bookings/:id" element={<BookingDetails />} />
               <Route path="/booking-summary" element={<BookingSummary />} />
+              <Route path="/payment-failed/:bookingId" element={<PaymentFailed />} />
               <Route path="/my-wallet" element={<MyWallet />} />
             </Route>
           </Route>

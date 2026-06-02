@@ -156,22 +156,24 @@ const BookingSummary = () => {
                             });
                         }
                     },
-                    theme: { color: "#ff5e00" }
+                    theme: { color: "#ff5e00" },
+                    retry: { enabled: false }
                 };
 
                 options.modal = {
                     ondismiss: () => {
-                        showToast("Payment cancelled", "info");
-                        navigate(`/my-bookings/${bookingId}`, { replace: true });
+                        setIsBookingConfirmed(true); // Prevent hold release on unmount
+                        navigate(`/payment-failed/${bookingId}`, { replace: true });
                     }
                 };
 
                 const rzp = new window.Razorpay(options);
                 rzp.on('payment.failed', function (response) {
                     setIsSubmitting(false);
-                    showAlert("Payment Failed", "Something went wrong with the transaction. Your seats are still held - you can retry from your bookings.", "error", "Retry").then(() => {
-                        navigate(`/my-bookings/${bookingId}`, { replace: true });
-                    });
+                    setIsBookingConfirmed(true); // Prevent hold release on unmount
+                    
+                    // A hard redirect completely destroys the Razorpay iframe and its internal state cleanly
+                    window.location.href = `/payment-failed/${bookingId}`;
                 });
                 rzp.open();
             }

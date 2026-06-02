@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
     Calendar,
     Clock,
@@ -18,7 +18,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import RatingModal from "../../components/user/RatingModal";
 
 const MyBookings = () => {
-    const [activeTab, setActiveTab] = useState("upcoming");
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || "upcoming");
     const [page, setPage] = useState(1);
     const limit = 2;
 
@@ -86,13 +88,14 @@ const MyBookings = () => {
                         showConfirm("Verification Failed", errorMessage, "OK");
                     }
                 },
-                theme: { color: "#ff5e00" }
+                theme: { color: "#ff5e00" },
+                retry: { enabled: false }
             };
 
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function () {
                 setRetryingBookingId(null);
-                showConfirm("Payment Failed", "The retry attempt was unsuccessful.", "OK");
+                window.location.href = `/payment-failed/${booking._id}`;
             });
             rzp.open();
         } catch (error) {

@@ -3,7 +3,8 @@ import {
     BookingRestaurant,
     cancelBooking,
     checkBookingAvailability,
-    retryBookingPayment
+    retryBookingPayment,
+    setRetryHoldWindow
 } from "../../controllers/user/userBooking.controller.js";
 import {
     getMyBookings,
@@ -60,7 +61,10 @@ router.patch("/profile/change-email/verify", verifyEmailChange);
 
 
 router.post("/booking", validate(createBookingSchema), BookingRestaurant);
+
+
 router.post("/bookings/:bookingId/retry", retryBookingPayment);
+router.patch("/bookings/:bookingId/hold-retry-window", setRetryHoldWindow);
 router.get("/bookings", getMyBookings);
 router.get("/bookings/:id", getBookingDetails);
 router.get("/bookings/:id/check-availability", checkBookingAvailability);

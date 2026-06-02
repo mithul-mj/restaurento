@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Booking } from '../../models/Booking.model.js';
 import STATUS_CODES from '../../constants/statusCodes.js';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_LIMIT } from '../../constants/constants.js';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_LIMIT, MAX_PAYMENT_RETRIES } from '../../constants/constants.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages.js';
 
 export const getMyBookings = async (req, res, next) => {
@@ -29,6 +29,10 @@ export const getMyBookings = async (req, res, next) => {
             matchQuery.status = 'canceled';
         } else if (type === 'pending') {
             matchQuery.status = 'pending-payment';
+            matchQuery.$or = [
+                { paymentRetryCount: { $exists: false } },
+                { paymentRetryCount: { $lt: MAX_PAYMENT_RETRIES } }
+            ];
         } else {
             // Past
             matchQuery.$or = [

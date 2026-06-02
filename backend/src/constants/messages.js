@@ -5,9 +5,10 @@ export const ERROR_MESSAGES = {
     FILE_TOO_LARGE: "File is too large. Max limit is 10MB.",
     UNAUTHORIZED: "Unauthorized access",
     NOT_FOUND: "Resource not found",
-    
+
     // Auth & Accounts
     INVALID_ROLE: "Invalid role",
+    ROLE_MISMATCH: "Role mismatch",
     ACCOUNT_NOT_FOUND: "Account not found",
     ACCOUNT_SUSPENDED: "Your account has been suspended. Please contact support.",
     OTP_EXPIRED: "Invalid or expired OTP",
@@ -33,8 +34,10 @@ export const ERROR_MESSAGES = {
     TRANSACTION_NOT_FOUND: "Transaction not found",
     INVALID_RESET_LINK: "Invalid or expired reset link",
     REFRESH_TOKEN_MISSING: "Refresh token is missing",
+    INVALID_REFRESH_TOKEN: "Invalid or expired refresh token",
     DISH_UNAVAILABLE: "Some dishes are no longer available. Refunded to wallet.",
     VERIFICATION_FAILED: "Verification failed",
+    MAX_PAYMENT_RETRIES_EXCEEDED: "Maximum payment retries exceeded. Please start a new booking.",
 
     // User & Profile
     USER_NOT_FOUND: "User not found",
@@ -46,7 +49,7 @@ export const ERROR_MESSAGES = {
     RESTAURANT_CLOSED: "Restaurant is temporarily closed",
     MENU_ITEM_NOT_FOUND: "Menu item not found or already deleted",
     MAX_SUBMISSION_ATTEMPTS: "Maximum submission attempts (3) reached. Please contact support.",
-    
+
     // QR & Check-in
     QR_INVALID: "Invalid or expired QR code",
     QR_MISSING: "No token found",
@@ -86,11 +89,11 @@ export const SUCCESS_MESSAGES = {
     MENU_ITEM_ADDED: "Menu item added successfully",
     MENU_ITEM_UPDATED: "Menu item updated successfully",
     CHECKIN_SUCCESS: "Check-in successful!",
-    
+
     // Notifications
     NOTIFICATION_READ: "Notification marked as read",
     ALL_READ: "All marked as read",
-    
+
     // CRUD Operations (Generic)
     CREATED: (resource) => `${resource} created successfully`,
     UPDATED: (resource) => `${resource} updated successfully`,
@@ -104,7 +107,7 @@ export const SUCCESS_MESSAGES = {
     BANNER_DELETED: "Banner deleted successfully",
     BANNER_ACTIVATED: "Banner activated successfully",
     BANNER_DEACTIVATED: "Banner deactivated successfully",
-    
+
     COUPON_CREATED: "Coupon created successfully",
     COUPON_UPDATED: "Coupon updated successfully",
     COUPON_DELETED: "Coupon deleted successfully",

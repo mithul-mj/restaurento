@@ -5,7 +5,9 @@ export const REFERRAL_REWARD_REFERRER = 10;
 export const REFERRAL_REWARD_NEW_USER = 5;
 
 export const INITIAL_HOLD_TIME_SECONDS = 300; 
-export const PAYMENT_WINDOW_SECONDS = 900;   
+export const PAYMENT_WINDOW_SECONDS = 600;   // 10 minutes
+export const PAYMENT_RETRY_HOLD_SECONDS = 120; // 2 minutes on payment failure
+export const MAX_PAYMENT_RETRIES = 3;
 
 export const DEFAULT_PAGE_LIMIT = 10;
 export const DEFAULT_PAGE_NUMBER = 1;

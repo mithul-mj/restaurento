@@ -104,6 +104,10 @@ const bookingSchema = new Schema(
                 priceAtBooking: { type: Number, required: true },
             },
         ],
+        paymentRetryCount: {
+            type: Number,
+            default: 0,
+        },
     },
     { timestamps: true }
 );

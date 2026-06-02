@@ -12,7 +12,7 @@ import { sendEmail, processReferralReward } from '../../services/commonAuth.serv
 import { getBookingConfirmationEmailTemplate } from '../../utils/emailTemplates.js';
 import { sendNotification } from '../../utils/notification.util.js';
 import { format12hr } from '../../utils/timeUtils.js';
-import { PAYMENT_WINDOW_SECONDS, DEFAULT_SLOT_DURATION } from '../../constants/constants.js';
+import { PAYMENT_WINDOW_SECONDS, PAYMENT_RETRY_HOLD_SECONDS, DEFAULT_SLOT_DURATION, MAX_PAYMENT_RETRIES } from '../../constants/constants.js';
 
 // Service Imports
 import * as bookingService from '../../services/user/userBooking.service.js';
@@ -181,6 +181,15 @@ export const retryBookingPayment = async (req, res, next) => {
             return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.VALIDATION_FAILED });
         }
 
+        const currentRetryCount = booking.paymentRetryCount || 0;
+        if (currentRetryCount >= MAX_PAYMENT_RETRIES) {
+            return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ 
+                success: false, 
+                message: ERROR_MESSAGES.MAX_PAYMENT_RETRIES_EXCEEDED,
+                restaurantId: booking.restaurantId
+            });
+        }
+
         // 1. Re-verify everything using the Service
         const { restaurant } = await bookingService.validateBookingBasics(
             booking.restaurantId, booking.bookingDate, booking.slotTime, booking.guests, userId
@@ -200,6 +209,7 @@ export const retryBookingPayment = async (req, res, next) => {
         const amountToPay = booking.totalAmount - (booking.walletAmountUsed || 0);
         const order = await bookingService.createRazorpayOrder(amountToPay);
         booking.razorpayOrderId = order.id;
+        booking.paymentRetryCount = (booking.paymentRetryCount || 0) + 1;
         await booking.save();
 
         res.status(STATUS_CODES.OK).json({ success: true, order, message: SUCCESS_MESSAGES.UPDATED("Payment retry") });
@@ -265,6 +275,47 @@ export const cancelBooking = async (req, res, next) => {
         next(error);
     } finally {
         session.endSession();
+    }
+};
+
+export const setRetryHoldWindow = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const booking = await Booking.findOne({ _id: req.params.bookingId, userId });
+        if (!booking || booking.status !== 'pending-payment') {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.VALIDATION_FAILED });
+        }
+
+        // 1. Rebuild the same hold key used during booking creation
+        const dStr = new Date(booking.bookingDate);
+        const formattedDate = `${dStr.getUTCFullYear()}-${String(dStr.getUTCMonth() + 1).padStart(2, '0')}-${String(dStr.getUTCDate()).padStart(2, '0')}`;
+        const holdKey = `hold:${userId}:${booking.restaurantId.toString()}:${formattedDate}:${booking.slotTime}:seats:${booking.guests}`;
+
+        // 2. Check current TTL and enforce strict truncation without allowing extensions
+        const currentTTL = await redisClient.ttl(holdKey);
+        
+        let finalTTL = 0;
+        if (currentTTL > PAYMENT_RETRY_HOLD_SECONDS) {
+            // Truncate the original 10min hold down to 2min
+            await redisClient.expire(holdKey, PAYMENT_RETRY_HOLD_SECONDS);
+            finalTTL = PAYMENT_RETRY_HOLD_SECONDS;
+        } else if (currentTTL > 0) {
+            // If they refreshed and it's already under 2min, DO NOT extend it
+            finalTTL = currentTTL;
+        } else {
+            // Hold is already gone
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: ERROR_MESSAGES.BOOKING_NOT_FOUND });
+        }
+
+        res.status(STATUS_CODES.OK).json({ 
+            success: true, 
+            message: SUCCESS_MESSAGES.UPDATED("Hold"),
+            paymentRetryCount: booking.paymentRetryCount || 0,
+            maxRetries: MAX_PAYMENT_RETRIES,
+            remainingHoldSeconds: finalTTL
+        });
+    } catch (error) {
+        res.status(error.status || 500).json({ success: false, message: error.message });
     }
 };
 

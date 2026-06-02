@@ -129,13 +129,14 @@ const BookingDetails = () => {
                         showAlert("Verification Error", errorMessage, "error", "OK");
                     }
                 },
-                theme: { color: "#ff5e00" }
+                theme: { color: "#ff5e00" },
+                retry: { enabled: false }
             };
 
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function () {
                 setIsRetrying(false);
-                showAlert("Payment Failed", "The transaction could not be completed. You can try again from this screen.", "error", "Retry");
+                window.location.href = `/payment-failed/${booking._id}`;
             });
             rzp.open();
         } catch (error) {
