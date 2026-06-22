@@ -84,7 +84,7 @@
 
 | Domain | Technologies |
 | :--- | :--- |
-| **Frontend** | React 19, Vite, Tailwind CSS, Framer Motion, Recharts, React Hook Form |
+| **Frontend** | React 19, Vite, Tailwind CSS, Framer Motion, Recharts, React Hook Form, Tanstack |
 | **Backend** | Node.js, Express.js |
 | **Database** | MongoDB (Mongoose ORM) |
 | **Caching & Real-Time** | Redis, Socket.IO |
