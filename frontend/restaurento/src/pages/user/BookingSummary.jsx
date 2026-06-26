@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useSocket } from '../../context/SocketContext';
@@ -37,6 +37,7 @@ const BookingSummary = () => {
 
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
     const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
+    const skipHoldRelease = useRef(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [useWallet, setUseWallet] = useState(false);
     const [walletBalance, setWalletBalance] = useState(0);
@@ -162,6 +163,7 @@ const BookingSummary = () => {
 
                 options.modal = {
                     ondismiss: () => {
+                        skipHoldRelease.current = true;
                         setIsBookingConfirmed(true); // Prevent hold release on unmount
                         navigate(`/payment-failed/${bookingId}`, { replace: true });
                     }
@@ -170,6 +172,7 @@ const BookingSummary = () => {
                 const rzp = new window.Razorpay(options);
                 rzp.on('payment.failed', function (response) {
                     setIsSubmitting(false);
+                    skipHoldRelease.current = true;
                     setIsBookingConfirmed(true); // Prevent hold release on unmount
                     
                     // A hard redirect completely destroys the Razorpay iframe and its internal state cleanly
@@ -282,7 +285,7 @@ const BookingSummary = () => {
             // Release hold only on actual navigation (skips React StrictMode double mounts)
             const isAuthenticUnmount = window.location.pathname !== '/booking-summary';
 
-            if (!isBookingConfirmed && socket && user && isAuthenticUnmount) {
+            if (!skipHoldRelease.current && !isBookingConfirmed && socket && user && isAuthenticUnmount) {
                 socket.emit("release_hold", {
                     restaurantId: restaurant._id,
                     date: date,
