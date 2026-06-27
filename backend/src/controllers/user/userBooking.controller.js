@@ -8,7 +8,8 @@ import STATUS_CODES from '../../constants/statusCodes.js';
 import redisClient from '../../config/redis.js';
 import { getRealTimeAvailability } from '../../services/inventory.service.js';
 import ROLES from '../../constants/roles.js';
-import { sendEmail, processReferralReward } from '../../services/commonAuth.service.js';
+import { processReferralReward } from '../../services/commonAuth.service.js';
+import { emailQueue } from '../../queue/email.queue.js';
 import { getBookingConfirmationEmailTemplate } from '../../utils/emailTemplates.js';
 import { sendNotification } from '../../utils/notification.util.js';
 import { format12hr } from '../../utils/timeUtils.js';
@@ -335,7 +336,15 @@ const sendBookingNotifications = async (req, booking, restaurant) => {
             link: `/my-bookings/${booking._id}`
         });
         const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: restaurant.restaurantName }, req.user.fullName);
-        await sendEmail(req.user.email, `Booking Confirmed: ${restaurant.restaurantName}`, "", html);
+        emailQueue.add('booking-confirmation-email', {
+            to: req.user.email,
+            subject: `Booking Confirmed: ${restaurant.restaurantName}`,
+            text: "",
+            html: html
+        }, {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 2000 }
+        });
     } catch (err) {
         console.error("Notification/Email Error:", err);
     }

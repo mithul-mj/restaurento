@@ -3,7 +3,7 @@ import { Restaurant } from "../../models/Restaurant.model.js";
 import { Schedule } from "../../models/Schedule.model.js";
 import redisClient from "../../config/redis.js";
 import { env } from "../../config/env.config.js";
-import { sendEmail } from "../../services/commonAuth.service.js";
+import { emailQueue } from "../../queue/email.queue.js";
 import { getVerificationStatusEmailTemplate } from "../../utils/emailTemplates.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
@@ -166,12 +166,15 @@ export const toggleRestaurantVerificationStatus = async (req, res) => {
           reason,
         );
 
-        await sendEmail(
-          restaurant.email,
-          subject,
-          `Your application has been ${verificationStatus}.`,
-          html,
-        );
+        emailQueue.add('verification-status-email', {
+          to: restaurant.email,
+          subject: subject,
+          text: `Your application has been ${verificationStatus}.`,
+          html: html
+        }, {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 }
+        });
       }
     } catch (emailError) {
       console.error("Failed to send verification status email:", emailError);

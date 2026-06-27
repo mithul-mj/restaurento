@@ -13,6 +13,8 @@ import { format12hr } from '../utils/timeUtils.js';
 import { Restaurant } from '../models/Restaurant.model.js';
 import { getRealTimeAvailability } from '../services/inventory.service.js';
 
+import { emailQueue } from '../queue/email.queue.js'
+
 import redisClient from '../config/redis.js';
 
 
@@ -133,7 +135,7 @@ export const verifyRazorpayPayment = async (req, res) => {
             if (booking.preOrderItems && booking.preOrderItems.length > 0) {
                 const restaurantForMenu = await Restaurant.findById(booking.restaurantId._id || booking.restaurantId).session(session);
                 if (!restaurantForMenu) throw new Error(ERROR_MESSAGES.RESTAURANT_NOT_FOUND);
-                
+
                 for (const item of booking.preOrderItems) {
                     const dish = restaurantForMenu.menuItems.id(item.dishId);
                     if (!dish || dish.isDeleted || !dish.isAvailable) {
@@ -188,7 +190,7 @@ export const verifyRazorpayPayment = async (req, res) => {
             }
 
             await booking.save({ session });
-            
+
             // Process Referral Award if this is their first purchase
             await processReferralReward(booking.userId, session);
 
@@ -210,15 +212,25 @@ export const verifyRazorpayPayment = async (req, res) => {
                 link: `/my-bookings/${booking._id}`
             });
 
-            // And for the final touch: let's send them a confirmation email.
-            try {
-                const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: booking.restaurantId.restaurantName }, user.fullName);
-                const subject = `Booking Confirmed: ${booking.restaurantId.restaurantName}`;
-                const text = `Your booking at ${booking.restaurantId.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()}.`;
-                await sendEmail(user.email, subject, text, html);
-            } catch (emailError) {
-                console.error("Email Error:", emailError);
-            }
+            // send them a confirmation email.
+
+            const html = getBookingConfirmationEmailTemplate(booking, { restaurantName: booking.restaurantId.restaurantName }, user.fullName);
+            const subject = `Booking Confirmed: ${booking.restaurantId.restaurantName}`;
+            const text = `Your booking at ${booking.restaurantId.restaurantName} is confirmed for ${new Date(booking.bookingDate).toLocaleDateString()}.`;
+
+            emailQueue.add('booking-confirmation-email', {
+                to: user.email,
+                subject: subject,
+                text: text,
+                html: html
+            }, {
+                attempts: 3,
+                backoff: {
+                    type: 'exponential',
+                    delay: 2000
+                }
+            })
+
 
             res.status(STATUS_CODES.OK).json({
                 success: true,
