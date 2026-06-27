@@ -9,8 +9,8 @@ import {
   storeOtp,
   verifyAndRefreshToken,
   sendVerificationOtp,
-  sendEmail,
 } from "../services/commonAuth.service.js";
+import { emailQueue } from "../queue/email.queue.js";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.config.js";
 import STATUS_CODES from "../constants/statusCodes.js";
@@ -90,7 +90,15 @@ export const forgotPassword = async (req, res, next) => {
     const subject = "Reset Your Password";
     const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 15 minutes.</p>`;
 
-    await sendEmail(email, subject, "Reset your password", html);
+    emailQueue.add('reset-password-email', {
+      to: email,
+      subject: subject,
+      text: "Reset your password",
+      html: html
+    }, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 }
+    });
 
     res.status(STATUS_CODES.OK).json({ message: SUCCESS_MESSAGES.RESET_LINK_SENT });
   } catch (error) {

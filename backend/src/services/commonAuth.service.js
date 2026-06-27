@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import crypto from "crypto";
 import redisClient from "../config/redis.js";
-import transporter from "../config/nodeMailer.js";
+import { emailQueue } from "../queue/email.queue.js";
 import { ApiError } from "../utils/errors/ApiError.js";
 import { getOtpEmailTemplate } from "../utils/emailTemplates.js";
 import { env } from "../config/env.config.js";
@@ -40,7 +40,15 @@ export const sendVerificationOtp = async (email) => {
   const subject = "Your Verification Code for Restaurento";
   const text = `Your OTP is ${otp}. It is valid for 2 minutes.`;
   const html = getOtpEmailTemplate(otp, email);
-  await sendEmail(email, subject, text, html);
+  emailQueue.add('otp-email', {
+    to: email,
+    subject: subject,
+    text: text,
+    html: html
+  }, {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 }
+  });
 
   console.log(`OTP sent to ${email}: ${otp}`);
 };
@@ -107,17 +115,7 @@ export const verifyOtp = async (identifier, otp) => {
   return false;
 };
 
-export const sendEmail = async (to, subject, text, html) => {
-  const info = await transporter.sendMail({
-    from: env.SENDER_EMAIL,
-    to,
-    subject,
-    text,
-    html,
-  });
 
-  return info;
-};
 
 export const verifyAndRefreshToken = async (Model, token) => {
   if (!token) {

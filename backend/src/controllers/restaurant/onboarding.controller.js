@@ -2,7 +2,6 @@ import multer from "multer";
 import { storage, fileFilter } from "../../config/cloudinary.config.js";
 import { Restaurant } from "../../models/Restaurant.model.js";
 import { Schedule } from "../../models/Schedule.model.js";
-import { sendEmail } from "../../services/commonAuth.service.js";
 import { getPreApprovalEmailTemplate } from "../../utils/emailTemplates.js";
 import { timeToMinutes } from "../../utils/timeUtils.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
