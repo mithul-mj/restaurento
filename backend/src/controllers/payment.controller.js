@@ -6,7 +6,7 @@ import { Booking } from '../models/Booking.model.js';
 import { WalletTransaction } from '../models/WalletTransaction.model.js';
 import { User } from '../models/User.model.js';
 import STATUS_CODES from '../constants/statusCodes.js';
-import { sendEmail, processReferralReward } from '../services/commonAuth.service.js';
+import { processReferralReward } from '../services/commonAuth.service.js';
 import { getBookingConfirmationEmailTemplate } from '../utils/emailTemplates.js';
 import { sendNotification } from '../utils/notification.util.js';
 import { format12hr } from '../utils/timeUtils.js';
