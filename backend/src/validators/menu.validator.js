@@ -5,6 +5,7 @@ export const menuItemSchema = z.object({
     price: z.coerce.number().min(1, "Price must be at least 1").max(10000, "Price per dish cannot exceed 10000"),
     file: z.any().refine((f) => !!f, "Dish image is required"),
     description: z.string().min(5, "Description required (Min 5 chars)").max(100, "Description too long (Max 100)"),
+    dietaryPreference: z.enum(['veg', 'non-veg'], { required_error: "Dietary preference is required" }),
     categories: z.preprocess(
         (val) => {
             if (val === undefined || val === null) return val;

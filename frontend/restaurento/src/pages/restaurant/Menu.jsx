@@ -84,6 +84,7 @@ export default function Menu() {
         formData.append("name", data.name);
         formData.append("price", data.price);
         formData.append("description", data.description);
+        formData.append("dietaryPreference", data.dietaryPreference);
 
         if (Array.isArray(data.categories)) {
             data.categories.forEach((cat) => formData.append("categories", cat));
@@ -201,6 +202,11 @@ export default function Menu() {
                                     />
                                     <div>
                                         <h3 className="font-bold text-gray-900">{item.name}</h3>
+                                        {item.dietaryPreference === 'non-veg' ? (
+                                            <span className="text-red-600 text-[10px] font-bold border border-red-600 px-1 rounded inline-block mb-1 mt-0.5">NON-VEG</span>
+                                        ) : (
+                                            <span className="text-green-600 text-[10px] font-bold border border-green-600 px-1 rounded inline-block mb-1 mt-0.5">VEG</span>
+                                        )}
                                         <p className="text-sm text-gray-500 line-clamp-1">
                                             {item.description}
                                         </p>

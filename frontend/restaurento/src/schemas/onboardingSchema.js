@@ -7,6 +7,7 @@ export const singleDishSchema = z.object({
     name: z.string().min(1, "Item name is required").max(30, "Name too long (Max 30)"),
     price: z.coerce.number({ invalidTypeError: "Price required" }).min(1, "At least 1 required").max(10000, "Price per dish cannot exceed 10000"),
     description: z.string().min(5, "Description required (Min 5 chars)").max(100, "Description too long (Max 100)"),
+    dietaryPreference: z.enum(['veg', 'non-veg'], { required_error: "Please select Veg or Non-Veg" }),
     // Update image to be required if needed
     image: z.any().refine((file) => !!file, "Image is required"),
     categories: z.array(z.string()).min(1, "Select at least one category")

@@ -209,7 +209,7 @@ const BookingDetails = () => {
 
             // Tables Section
             const tableBody = booking.preOrderItems.map(item => [
-                String(item.name).toUpperCase(),
+                `${String(item.name).toUpperCase()} (${item.dietaryPreference === 'non-veg' ? 'NON-VEG' : 'VEG'})`,
                 `${item.qty} x Rs. ${item.priceAtBooking.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
                 `Rs. ${(item.priceAtBooking * item.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
             ]);
@@ -395,7 +395,14 @@ const BookingDetails = () => {
                                             {booking.preOrderItems.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between items-start">
                                                     <div>
-                                                        <p className="text-sm font-semibold text-gray-800 mb-0.5">{item.name}</p>
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <p className="text-sm font-semibold text-gray-800">{item.name}</p>
+                                                            {item.dietaryPreference === 'non-veg' ? (
+                                                                <span className="text-red-600 text-[9px] font-bold border border-red-600 px-1 rounded flex items-center justify-center">NON-VEG</span>
+                                                            ) : (
+                                                                <span className="text-green-600 text-[9px] font-bold border border-green-600 px-1 rounded flex items-center justify-center">VEG</span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-xs font-medium text-gray-400">Qty: {item.qty}</p>
                                                     </div>
                                                     <p className="text-sm font-semibold text-gray-700">₹{(item.priceAtBooking * item.qty).toFixed(2)}</p>

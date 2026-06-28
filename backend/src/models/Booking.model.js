@@ -100,6 +100,7 @@ const bookingSchema = new Schema(
             {
                 dishId: { type: Schema.Types.ObjectId },
                 name: { type: String },
+                dietaryPreference: { type: String, enum: ['veg', 'non-veg'], default: 'veg' },
                 qty: { type: Number, required: true },
                 priceAtBooking: { type: Number, required: true },
             },

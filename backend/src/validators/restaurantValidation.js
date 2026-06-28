@@ -51,6 +51,7 @@ export const onboardingSchema = z.object({
         price: z.coerce.number().min(1, "At least 1 required").max(10000, "Price per dish cannot exceed 10000"),
         description: z.string().min(5, "Description required (Min 5 chars)").max(100, "Description too long (Max 100)"),
         categories: z.array(z.string()).optional(),
+        dietaryPreference: z.enum(['veg', 'non-veg'], { required_error: "Dietary preference is required" }),
       })
     )
     .optional(),

@@ -68,6 +68,11 @@ const Step4Menu = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-gray-800">{field.name}</h4>
+                                    {field.dietaryPreference === 'non-veg' ? (
+                                        <span className="text-red-600 text-[10px] font-bold border border-red-600 px-1 rounded inline-block mb-1 mt-0.5">NON-VEG</span>
+                                    ) : (
+                                        <span className="text-green-600 text-[10px] font-bold border border-green-600 px-1 rounded inline-block mb-1 mt-0.5">VEG</span>
+                                    )}
                                     <p className="text-xs text-gray-400 line-clamp-1">{field.description}</p>
                                     <div className="flex gap-1 mt-1">
                                         {(field.categories || [field.category]).map((cat, i) => (

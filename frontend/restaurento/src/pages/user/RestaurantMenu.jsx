@@ -151,10 +151,17 @@ const RestaurantMenu = ({ restaurantId, cart, updateCart, selectedTimeSlot }) =>
                                 </div>
                                 <div className="flex-1 flex flex-col justify-between py-0.5">
                                     <div>
-                                        <div className="flex justify-between items-start">
-                                            <h4 className="font-bold text-gray-900 line-clamp-1">{item.name}</h4>
+                                        <div className="flex justify-between items-start gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-bold text-gray-900 line-clamp-1">{item.name}</h4>
+                                                {item.dietaryPreference === 'non-veg' ? (
+                                                    <span className="shrink-0 text-red-600 text-[10px] font-bold border border-red-600 px-1 rounded flex items-center justify-center">NON-VEG</span>
+                                                ) : (
+                                                    <span className="shrink-0 text-green-600 text-[10px] font-bold border border-green-600 px-1 rounded flex items-center justify-center">VEG</span>
+                                                )}
+                                            </div>
                                             {!isAvailable && (
-                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-400 text-[10px] font-bold uppercase rounded-md">Unavailable</span>
+                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-400 text-[10px] font-bold uppercase rounded-md shrink-0">Unavailable</span>
                                             )}
                                         </div>
                                         <p className="text-xs text-gray-500 line-clamp-2 mt-1 leading-relaxed">

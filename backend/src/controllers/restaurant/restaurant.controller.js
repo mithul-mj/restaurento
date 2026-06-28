@@ -460,7 +460,7 @@ export const toggleItemAvailability = async (req, res, next) => {
 export const updateMenuItem = async (req, res, next) => {
     try {
         const { itemId } = req.params;
-        const { name, price, description, categories, isAvailable } = req.body;
+        const { name, price, description, dietaryPreference, categories, isAvailable } = req.body;
 
         const restaurant = await Restaurant.findById(req.user._id);
 
@@ -477,6 +477,7 @@ export const updateMenuItem = async (req, res, next) => {
         if (name) menuItem.name = name;
         if (price) menuItem.price = price;
         if (description) menuItem.description = description;
+        if (dietaryPreference) menuItem.dietaryPreference = dietaryPreference;
 
         if (categories) {
             menuItem.categories = Array.isArray(categories) ? categories : [categories];
@@ -502,7 +503,7 @@ export const updateMenuItem = async (req, res, next) => {
 
 export const addMenuItem = async (req, res, next) => {
     try {
-        const { name, price, description, categories } = req.body;
+        const { name, price, description, dietaryPreference, categories } = req.body;
 
         const restaurant = await Restaurant.findById(req.user._id);
 
@@ -514,6 +515,7 @@ export const addMenuItem = async (req, res, next) => {
             name,
             price,
             description,
+            dietaryPreference,
             categories: Array.isArray(categories) ? categories : [categories],
             image: req.file ? req.file.path : null,
             isAvailable: true
