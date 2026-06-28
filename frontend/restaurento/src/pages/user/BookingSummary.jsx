@@ -51,6 +51,7 @@ const BookingSummary = () => {
         return {
             ...item,
             _id: id,
+            dietaryPreference: dbDish?.dietaryPreference || item.dietaryPreference || 'veg',
             isUnavailable: !dbDish || dbDish.isDeleted || !dbDish.isAvailable
         };
     });
@@ -70,6 +71,7 @@ const BookingSummary = () => {
                 preOrderItems: cartItems.map(item => ({
                     dishId: item._id,
                     name: item.name,
+                    dietaryPreference: item.dietaryPreference,
                     qty: Number(item.qty),
                     priceAtBooking: Number(item.price)
                 }))
@@ -399,6 +401,11 @@ const BookingSummary = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-bold text-gray-900">{item.name}</p>
+                                                    {item.dietaryPreference === 'non-veg' ? (
+                                                        <span className="text-red-600 text-[9px] font-bold border border-red-600 px-1 rounded flex items-center justify-center">NON-VEG</span>
+                                                    ) : (
+                                                        <span className="text-green-600 text-[9px] font-bold border border-green-600 px-1 rounded flex items-center justify-center">VEG</span>
+                                                    )}
                                                     {item.isUnavailable && (
                                                         <span className="text-[9px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-md font-semibold uppercase tracking-wide border border-red-100">Unavailable</span>
                                                     )}

@@ -98,6 +98,7 @@ const Onboarding = () => {
             formData.append(`menuItems[${index}].name`, item.name);
             formData.append(`menuItems[${index}].price`, item.price);
             formData.append(`menuItems[${index}].description`, item.description || "");
+            formData.append(`menuItems[${index}].dietaryPreference`, item.dietaryPreference);
 
             if (item.categories && item.categories.length > 0) {
                 item.categories.forEach((cat, catIndex) => {

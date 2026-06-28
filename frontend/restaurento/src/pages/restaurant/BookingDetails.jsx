@@ -1,13 +1,13 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
+import {
   ChevronLeft,
   ChevronRight,
-  Phone, 
-  Mail, 
-  Calendar, 
-  Clock, 
-  Users, 
+  Phone,
+  Mail,
+  Calendar,
+  Clock,
+  Users,
   IndianRupee,
   AlertCircle,
   XCircle
@@ -77,9 +77,9 @@ const BookingDetails = () => {
   return (
     <div className="min-h-screen bg-[#f8f8f8] p-4 md:p-8 lg:p-16 font-sans">
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12 animate-in fade-in duration-700">
-        
+
         <nav className="flex items-center gap-2 text-sm font-bold text-gray-400">
-          <button 
+          <button
             onClick={() => navigate("/restaurant/bookings")}
             className="hover:text-gray-900 transition-colors"
           >
@@ -104,9 +104,8 @@ const BookingDetails = () => {
               </span>
             )}
             {booking.status === 'canceled' && (
-              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
-                booking.canceledBy === 'RESTAURANT' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
-              }`}>
+              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${booking.canceledBy === 'RESTAURANT' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
+                }`}>
                 {booking.canceledBy === 'RESTAURANT' ? 'Cancelled by you' : 'Cancelled by customer'}
               </span>
             )}
@@ -163,7 +162,7 @@ const BookingDetails = () => {
               <div className="p-6 md:p-10 pb-4 md:pb-6">
                 <h3 className="text-xl font-bold text-gray-900">Pre-ordered Items</h3>
               </div>
-              
+
               <div className="flex-1 overflow-x-auto">
                 <div className="min-w-[500px] md:min-w-0">
                   <table className="w-full">
@@ -179,7 +178,16 @@ const BookingDetails = () => {
                       {booking.preOrderItems?.length > 0 ? (
                         booking.preOrderItems.map((item, idx) => (
                           <tr key={idx}>
-                            <td className="px-6 md:px-10 py-4 md:py-6 font-bold text-gray-900">{item.name}</td>
+                            <td className="px-6 md:px-10 py-4 md:py-6">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-gray-900">{item.name}</span>
+                                {item.dietaryPreference === 'non-veg' ? (
+                                  <span className="text-red-600 text-[9px] font-bold border border-red-600 px-1 rounded flex items-center justify-center h-fit">NON-VEG</span>
+                                ) : (
+                                  <span className="text-green-600 text-[9px] font-bold border border-green-600 px-1 rounded flex items-center justify-center h-fit">VEG</span>
+                                )}
+                              </div>
+                            </td>
                             <td className="px-6 md:px-10 py-4 md:py-6 text-center font-medium text-gray-400">{item.qty}</td>
                             <td className="px-6 md:px-10 py-4 md:py-6 text-right font-medium text-gray-400">₹{item.priceAtBooking?.toFixed(2)}</td>
                             <td className="px-6 md:px-10 py-4 md:py-6 text-right font-bold text-gray-900">₹{(item.priceAtBooking * item.qty).toFixed(2)}</td>
@@ -232,7 +240,7 @@ const BookingDetails = () => {
           </div>
           <div className="flex items-center w-full md:w-auto">
             {booking.status === 'approved' ? (
-              <button 
+              <button
                 className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-200 active:scale-95 disabled:opacity-50"
                 onClick={handleCancel}
                 disabled={updateStatus.isPending}

@@ -53,6 +53,7 @@ export const submitOnboarding = async (req, res, next) => {
         name: body[`menuItems[${i}].name`],
         price: Number(body[`menuItems[${i}].price`]),
         description: body[`menuItems[${i}].description`] || "",
+        dietaryPreference: body[`menuItems[${i}].dietaryPreference`],
         categories: Object.keys(body)
           .filter((key) => key.startsWith(`menuItems[${i}].categories[`))
           .map((key) => body[key]),

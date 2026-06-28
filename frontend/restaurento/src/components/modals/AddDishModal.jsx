@@ -13,6 +13,7 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
             name: "",
             price: "",
             description: "",
+            dietaryPreference: "veg",
             image: null,
             categories: ["Breakfast"]
         }
@@ -50,6 +51,7 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                 name: "",
                 price: "",
                 description: "",
+                dietaryPreference: "veg",
                 image: null,
                 categories: []
             });
@@ -143,6 +145,21 @@ const AddDishModal = ({ onClose, onSave, initialData }) => {
                                 placeholder="e.g., Fresh basil, mozzarella, san marzano tomatoes on a hand-tossed crust."
                             />
                             {errors.description && <span className="text-red-500 text-xs mt-1">{errors.description.message}</span>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-gray-800 mb-1.5">Dietary Preference</label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" value="veg" {...register("dietaryPreference")} className="accent-green-600 w-4 h-4" />
+                                    <span className="font-medium text-gray-700">Vegetarian</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" value="non-veg" {...register("dietaryPreference")} className="accent-red-600 w-4 h-4" />
+                                    <span className="font-medium text-gray-700">Non-Vegetarian</span>
+                                </label>
+                            </div>
+                            {errors.dietaryPreference && <span className="text-red-500 text-xs mt-1">{errors.dietaryPreference.message}</span>}
                         </div>
 
                         <div>

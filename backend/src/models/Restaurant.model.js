@@ -5,6 +5,7 @@ const menuSchema = new Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   description: { type: String },
+  dietaryPreference: { type: String, enum: ['veg', 'non-veg'], required: true, default: 'veg' },
   categories: [{ type: String }], // Array: ["Breakfast", "Lunch", "Dinner"]
   image: { type: String },
   isAvailable: { type: Boolean, default: true },
