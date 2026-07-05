@@ -22,6 +22,7 @@ import { useSelector } from "react-redux";
 import { useSocket } from "../../context/SocketContext";
 import notificationService from "../../services/notification.service";
 import NotificationModal from "../../pages/user/NotificationModal";
+import Footer from "../../components/common/Footer";
 
 const Home = () => {
   const {
@@ -47,6 +48,7 @@ const Home = () => {
     allRestaurants,
     activeBanners,
     isLoadingBanners,
+    hasNextPage: hasMoreRestaurants,
   } = useHome();
 
   const {
@@ -60,6 +62,7 @@ const Home = () => {
     handleLocationSelect,
     recentLocations,
     placeholderText,
+    clearLocation,
   } = useLocation();
 
   const dragControls = useDragControls();
@@ -151,9 +154,9 @@ const Home = () => {
             const isHeader = virtualRow.index === 0;
             const isLoader = virtualRow.index === rows.length;
             const rowItems = rows[virtualRow.index];
- 
+
             if (!rowItems && !isLoader) return null;
- 
+
             if (isHeader) {
               return (
                 <div
@@ -171,55 +174,62 @@ const Home = () => {
                   <main className="max-w-7xl mx-auto px-4 md:px-8 pt-1 pb-1">
                     {/* Mobile Header (Location & Notifications) */}
                     <div className="md:hidden flex items-center justify-between mb-8 mt-4">
-                        <div 
-                            onClick={() => setIsLocationModalOpen(true)}
-                            className="flex items-center gap-1 cursor-pointer"
+                      <div className="flex items-center gap-1">
+                        <div
+                          onClick={() => setIsLocationModalOpen(true)}
+                          className="flex items-center gap-1 cursor-pointer"
                         >
-                            <div className="relative flex items-center justify-center">
-                                <MapPin size={28} strokeWidth={1.5} className="text-[#111]" />
-                                <div className="absolute -bottom-0.5 -right-0.5 bg-[#fcfcfc] rounded-full p-[1.5px]">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                                </div>
+                          <div className="relative flex items-center justify-center">
+                            <MapPin size={28} strokeWidth={1.5} className="text-[#111]" />
+                            <div className="absolute -bottom-0.5 -right-0.5 bg-[#fcfcfc] rounded-full p-[1.5px]">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                             </div>
-                            <div className="bg-[#1c1c1c] text-white px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-wide max-w-[140px] truncate">
-                                {placeholderText}
-                            </div>
+                          </div>
+                          <div className="bg-[#1c1c1c] text-white px-3.5 py-1.5 rounded-full text-[12px] font-medium tracking-wide max-w-[140px] truncate">
+                            {placeholderText}
+                          </div>
                         </div>
-                        
-                        <div className="flex items-center gap-3">
-                            {user ? (
-                                <>
-                                    <button
-                                        onClick={handleBellClick}
-                                        className="relative text-[#111] p-3 bg-[#f5f5f5] hover:bg-gray-200 rounded-full transition-colors"
-                                    >
-                                        <Bell size={22} strokeWidth={1.5} />
-                                        {unreadCount > 0 && (
-                                            <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-[#f5f5f5]"></span>
-                                        )}
-                                    </button>
-                                    <Link to="/profile">
-                                        <div className="w-11 h-11 bg-[#e9e0ff] rounded-full overflow-hidden border border-gray-100">
-                                            <img
-                                                src={
-                                                    avatar ||
-                                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=ff5e00&color=fff`
-                                                }
-                                                alt="Profile"
-                                                referrerPolicy="no-referrer"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    </Link>
-                                </>
-                            ) : (
-                                <Link
-                                    to="/login"
-                                    className="bg-[#1c1c1c] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider transition-all active:scale-[0.98]">
-                                    Join Now
-                                </Link>
-                            )}
-                        </div>
+                        {selectedCoordinates && (
+                          <div onClick={(e) => { e.stopPropagation(); clearLocation(); }} className="p-1 rounded-full text-gray-400 hover:text-gray-600 cursor-pointer ml-0.5">
+                            <X size={16} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {user ? (
+                          <>
+                            <button
+                              onClick={handleBellClick}
+                              className="relative text-[#111] p-3 bg-[#f5f5f5] hover:bg-gray-200 rounded-full transition-colors"
+                            >
+                              <Bell size={22} strokeWidth={1.5} />
+                              {unreadCount > 0 && (
+                                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-[#f5f5f5]"></span>
+                              )}
+                            </button>
+                            <Link to="/profile">
+                              <div className="w-11 h-11 bg-[#e9e0ff] rounded-full overflow-hidden border border-gray-100">
+                                <img
+                                  src={
+                                    avatar ||
+                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=ff5e00&color=fff`
+                                  }
+                                  alt="Profile"
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </Link>
+                          </>
+                        ) : (
+                          <Link
+                            to="/login"
+                            className="bg-[#1c1c1c] text-white px-5 py-2.5 rounded-full font-bold text-xs shadow-lg uppercase tracking-wider transition-all active:scale-[0.98]">
+                            Join Now
+                          </Link>
+                        )}
+                      </div>
                     </div>
 
                     {/* Mobile Discover Text */}
@@ -236,7 +246,7 @@ const Home = () => {
                         isLoading={isLoadingBanners}
                       />
                     </div>
- 
+
                     <div className="relative z-30 bg-transparent -mx-4 px-4 pt-2 md:pt-0 transition-all duration-300">
                       <div className="w-full max-w-4xl mx-auto md:mt-2 md:-mt-14 relative z-10 mb-4 md:px-2">
                         <div
@@ -258,11 +268,23 @@ const Home = () => {
                               }}
                               className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400 text-base"
                             />
-                            <ChevronDown
-                              size={16}
-                              className={`text-gray-400 ml-1 transition-transform duration-200 cursor-pointer ${showLocationDropdown ? "rotate-180" : ""}`}
-                              onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                            />
+                            {selectedCoordinates || locationQuery ? (
+                              <X
+                                size={16}
+                                className="text-gray-400 ml-1 cursor-pointer hover:text-gray-700 transition-colors shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  clearLocation();
+                                  setShowLocationDropdown(false);
+                                }}
+                              />
+                            ) : (
+                              <ChevronDown
+                                size={16}
+                                className={`text-gray-400 ml-1 transition-transform duration-200 cursor-pointer shrink-0 ${showLocationDropdown ? "rotate-180" : ""}`}
+                                onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                              />
+                            )}
 
                             {showLocationDropdown && (
                               <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden z-50 py-1 min-w-[280px]">
@@ -339,7 +361,7 @@ const Home = () => {
                           {/* Search Input */}
                           <div className="flex-1 flex items-center px-6 py-4 md:py-4 relative z-0 bg-[#f5f5f5] md:bg-transparent rounded-full md:rounded-none">
                             <Search className="md:hidden text-[#111] mr-3" size={22} strokeWidth={1.5} />
-                            
+
                             <div className="w-full relative flex items-center">
                               <input
                                 type="text"
@@ -356,18 +378,18 @@ const Home = () => {
                                 </button>
                               )}
                               {/* Filter Icon for Mobile */}
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 onClick={() => setIsFilterModalOpen(true)}
                                 className="md:hidden p-1 text-[#111] ml-1"
                               >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <line x1="3" y1="6" x2="21" y2="6"/>
-                                  <line x1="3" y1="12" x2="21" y2="12"/>
-                                  <line x1="3" y1="18" x2="21" y2="18"/>
-                                  <line x1="15" y1="4" x2="15" y2="8"/>
-                                  <line x1="9" y1="10" x2="9" y2="14"/>
-                                  <line x1="15" y1="16" x2="15" y2="20"/>
+                                  <line x1="3" y1="6" x2="21" y2="6" />
+                                  <line x1="3" y1="12" x2="21" y2="12" />
+                                  <line x1="3" y1="18" x2="21" y2="18" />
+                                  <line x1="15" y1="4" x2="15" y2="8" />
+                                  <line x1="9" y1="10" x2="9" y2="14" />
+                                  <line x1="15" y1="16" x2="15" y2="20" />
                                 </svg>
                               </button>
                             </div>
@@ -468,12 +490,15 @@ const Home = () => {
             );
           })}
         </div>
+        {!hasMoreRestaurants && !isLoadingInitial && (
+          <Footer />
+        )}
       </div>
 
-      <FilterModal 
-        isOpen={isFilterModalOpen} 
-        onClose={() => setIsFilterModalOpen(false)} 
-        filters={appliedFilters} 
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={appliedFilters}
         onApply={setAppliedFilters}
         hasLocation={!!selectedCoordinates}
       />

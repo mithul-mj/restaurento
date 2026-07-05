@@ -371,7 +371,7 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                         <div className="space-y-6">
-                            <img src="/LogoWithText.png" alt="Restaurento" className="h-10 w-auto" />
+                            <img src="/text.png" alt="Restaurento" className="h-10 w-auto" />
                             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
                                 Restaurento is the premier ecosystem for booking tables and pre-ordering meals at the world's finest restaurants.
                             </p>

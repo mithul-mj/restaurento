@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { MAX_FOOD_QUANTITY } from "../constants/constants.js";
 
 const wishlistSchema = new Schema(
     {
@@ -21,6 +22,7 @@ const wishlistSchema = new Schema(
                 qty: {
                     type: Number,
                     default: 1,
+                    max: MAX_FOOD_QUANTITY
                 },
             },
         ],

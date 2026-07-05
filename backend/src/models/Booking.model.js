@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from 'jsonwebtoken'
 import { env } from "../config/env.config.js";
+import { MAX_FOOD_QUANTITY } from "../constants/constants.js";
 
 const bookingSchema = new Schema(
     {
@@ -101,7 +102,7 @@ const bookingSchema = new Schema(
                 dishId: { type: Schema.Types.ObjectId },
                 name: { type: String },
                 dietaryPreference: { type: String, enum: ['veg', 'non-veg'], default: 'veg' },
-                qty: { type: Number, required: true },
+                qty: { type: Number, required: true, max: MAX_FOOD_QUANTITY },
                 priceAtBooking: { type: Number, required: true },
             },
         ],
