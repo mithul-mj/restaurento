@@ -11,7 +11,7 @@ import LocationViewer from "../../components/shared/LocationViewer";
 import ImageGallery from "../../components/shared/ImageGallery";
 import RestaurantMenu from "./RestaurantMenu";
 import RestaurantReviews from "./RestaurantReviews";
-import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES } from "../../constants/constants";
+import { TAX_RATE, PLATFORM_FEE_RATE, BOOKING_BUFFER_MINUTES, MAX_FOOD_QUANTITY, MAX_PARTY_SIZE } from "../../constants/constants";
 import { formatTime12Hour, formatDate } from "../../utils/timeUtils";
 import { getCategoryFromTimeSlot } from "../../utils/timeCategoryUtils";
 import { showConfirm, showToast } from "../../utils/alert";
@@ -24,10 +24,17 @@ const RestaurantDetails = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [activeTab, setActiveTab] = useState("about");
-    const [partySize, setPartySize] = useState(Number(location.state?.prefilledGuests || 2));
+    const [partySize, setPartySize] = useState(() => Math.min(MAX_PARTY_SIZE, Math.max(1, Number(location.state?.prefilledGuests || 2))));
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-    const [cart, setCart] = useState(location.state?.prefilledCart || {});
+    const [cart, setCart] = useState(() => {
+        const initial = location.state?.prefilledCart || {};
+        const sanitized = {};
+        for (const [key, item] of Object.entries(initial)) {
+            sanitized[key] = { ...item, qty: Math.min(MAX_FOOD_QUANTITY, item.qty || 1) };
+        }
+        return sanitized;
+    });
     const [isDateOpen, setIsDateOpen] = useState(false);
     const [liveSlotAvailability, setLiveSlotAvailability] = useState({});
     const [isBooking, setIsBooking] = useState(false);
@@ -123,7 +130,12 @@ const RestaurantDetails = () => {
         setCart(prev => {
             const currentItem = prev[item._id];
             const currentQty = currentItem?.qty || 0;
-            const newQty = Math.max(0, currentQty + change);
+            const newQty = Math.min(MAX_FOOD_QUANTITY, Math.max(0, currentQty + change));
+
+            if (newQty === currentQty && change > 0 && currentQty === MAX_FOOD_QUANTITY) {
+                showToast(`Maximum quantity limit (${MAX_FOOD_QUANTITY}) reached.`, "error");
+                return prev;
+            }
 
             if (newQty === 0) {
                 const { [item._id]: _, ...rest } = prev;
@@ -744,9 +756,9 @@ const RestaurantDetails = () => {
                                                         const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
                                                         const liveAvailableSeats = selectedSlotMinutes !== null && liveSlotAvailability[selectedSlotMinutes] !== undefined
                                                             ? liveSlotAvailability[selectedSlotMinutes]
-                                                            : restaurant?.totalSeats || 10;
+                                                            : restaurant?.totalSeats || MAX_PARTY_SIZE;
 
-                                                        const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 10, liveAvailableSeats));
+                                                        const maxAllowedPartySize = Math.max(1, Math.min(MAX_PARTY_SIZE, restaurant?.totalSeats || MAX_PARTY_SIZE, liveAvailableSeats));
 
                                                         return (
                                                             <motion.button
@@ -1030,11 +1042,11 @@ const RestaurantDetails = () => {
                                         {(() => {
                                             const selectedSlotIndex = availableLabels.indexOf(selectedTimeSlot);
                                             const selectedSlotMinutes = selectedSlotIndex >= 0 ? availableMinutes[selectedSlotIndex] : null;
-                                            const liveAvailableSeats = selectedSlotMinutes && liveSlotAvailability[selectedSlotMinutes] !== undefined
+                                            const liveAvailableSeats = selectedSlotMinutes !== null && liveSlotAvailability[selectedSlotMinutes] !== undefined
                                                 ? liveSlotAvailability[selectedSlotMinutes]
-                                                : restaurant?.totalSeats || 10;
+                                                : restaurant?.totalSeats || MAX_PARTY_SIZE;
 
-                                            const maxAllowedPartySize = Math.max(1, Math.min(10, restaurant?.totalSeats || 10, liveAvailableSeats));
+                                            const maxAllowedPartySize = Math.max(1, Math.min(MAX_PARTY_SIZE, restaurant?.totalSeats || MAX_PARTY_SIZE, liveAvailableSeats));
 
                                             return (
                                                 <motion.button
@@ -1091,25 +1103,28 @@ const RestaurantDetails = () => {
                                                     <button
                                                         key={startTimeInMinutes}
                                                         onClick={async () => {
-                                                            const availableSeats = liveSlotAvailability[startTimeInMinutes];
+                                                            const effectiveSeats = liveSlotAvailability[startTimeInMinutes] !== undefined
+                                                                ? liveSlotAvailability[startTimeInMinutes]
+                                                                : (restaurant?.totalSeats || MAX_PARTY_SIZE);
 
                                                             // Handle fully booked slots
-                                                            if (availableSeats === 0) {
+                                                            if (effectiveSeats === 0) {
                                                                 showToast(`Sorry, ${timeLabel} is now fully booked!`, 'info');
                                                                 return;
                                                             }
 
-                                                            // Handle partial availability by asking to adjust party size
-                                                            if (availableSeats !== undefined && availableSeats < partySize) {
+                                                            let nextPartySize = partySize;
+                                                            if (effectiveSeats < partySize) {
                                                                 const confirmAdjust = await showConfirm(
                                                                     "Adjust Party Size?",
-                                                                    `Only <b>${availableSeats}</b> seats are available at ${timeLabel}. Do you want to reduce your party size to <b>${availableSeats}</b> and select this slot?`,
+                                                                    `Only <b>${effectiveSeats}</b> seats are available at ${timeLabel}. Do you want to reduce your party size to <b>${effectiveSeats}</b> and select this slot?`,
                                                                     "Yes, Adjust",
+                                                                    "warning",
                                                                     true // isHtml
                                                                 );
 
                                                                 if (confirmAdjust.isConfirmed) {
-                                                                    setPartySize(availableSeats);
+                                                                    nextPartySize = effectiveSeats;
                                                                 } else {
                                                                     return;
                                                                 }
@@ -1120,7 +1135,7 @@ const RestaurantDetails = () => {
                                                             const cartItemsList = Object.values(cart);
 
                                                             const conflictingItems = cartItemsList.filter(item => {
-                                                                if (item.categories && Array.isArray(item.categories)) {
+                                                                if (newCategory && item.categories && Array.isArray(item.categories)) {
                                                                     return !item.categories.includes(newCategory);
                                                                 }
                                                                 return false;
@@ -1132,7 +1147,8 @@ const RestaurantDetails = () => {
                                                                     "Use this time slot?",
                                                                     `Switching to <b>${timeLabel}</b> (${newCategory}) will remove the following items from your cart:<br/><br/>${itemNames}`,
                                                                     "Yes, switch & clear",
-                                                                    true // isHtml = true
+                                                                    "warning",
+                                                                    true // isHtml
                                                                 );
 
                                                                 if (result.isConfirmed) {
@@ -1142,10 +1158,12 @@ const RestaurantDetails = () => {
                                                                         conflictingItems.forEach(ci => delete nextCart[ci._id]);
                                                                         return nextCart;
                                                                     });
+                                                                    if (nextPartySize !== partySize) setPartySize(nextPartySize);
                                                                     setSelectedTimeSlot(timeLabel);
                                                                     setActiveTab("menu");
                                                                 }
                                                             } else {
+                                                                if (nextPartySize !== partySize) setPartySize(nextPartySize);
                                                                 setSelectedTimeSlot(timeLabel);
                                                                 setActiveTab("menu");
                                                             }

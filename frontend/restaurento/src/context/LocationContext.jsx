@@ -73,6 +73,12 @@ export const LocationProvider = ({ children }) => {
         localStorage.setItem('recentLocations', JSON.stringify(newRecent));
     };
 
+    const clearLocation = () => {
+        setSelectedCoordinates(null);
+        setPlaceholderText("Pick a location..");
+        setLocationQuery("");
+    };
+
     return (
         <LocationContext.Provider value={{
             placeholderText,
@@ -84,7 +90,8 @@ export const LocationProvider = ({ children }) => {
             setIsLocationModalOpen,
             selectedCoordinates,
             handleDetectLocation,
-            handleLocationSelect
+            handleLocationSelect,
+            clearLocation
         }}>
             {children}
         </LocationContext.Provider>

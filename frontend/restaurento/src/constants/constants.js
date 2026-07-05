@@ -4,3 +4,5 @@ export const BOOKING_BUFFER_MINUTES = 60;
 export const REFERRAL_REWARD_REFERRER = 10;
 export const REFERRAL_REWARD_NEW_USER = 5;
 export const BOOKING_HOLD_TIME_SECONDS = 300;
+export const MAX_FOOD_QUANTITY = 99;
+export const MAX_PARTY_SIZE = 20;

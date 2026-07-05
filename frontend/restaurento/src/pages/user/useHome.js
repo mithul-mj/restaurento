@@ -145,7 +145,8 @@ const useHome = () => {
         isLoadingInitial,
         allRestaurants,
         activeBanners,
-        isLoadingBanners
+        isLoadingBanners,
+        hasNextPage
     };
 };
 

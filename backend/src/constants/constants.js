@@ -13,3 +13,5 @@ export const DEFAULT_PAGE_LIMIT = 10;
 export const DEFAULT_PAGE_NUMBER = 1;
 
 export const DEFAULT_SLOT_DURATION = 60;
+export const MAX_FOOD_QUANTITY = 99;
+export const MAX_PARTY_SIZE = 20;
