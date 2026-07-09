@@ -3,12 +3,14 @@ import Redis from 'ioredis'
 import { sendEmail } from '../services/email.service.js'
 import { env } from '../config/env.config.js'
 
-const connection = new Redis({
-    host: env.REDIS_HOST,
-    port: env.REDIS_PORT,
-    password: env.REDIS_PASSWORD,
-    maxRetriesPerRequest: null,
-})
+const connection = env.REDIS_URL
+    ? new Redis(env.REDIS_URL, { maxRetriesPerRequest: null })
+    : new Redis({
+        host: env.REDIS_HOST,
+        port: env.REDIS_PORT,
+        password: env.REDIS_PASSWORD || undefined,
+        maxRetriesPerRequest: null,
+    });
 
 export const emailQueue = new Queue('email-queue', { connection });
 

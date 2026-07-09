@@ -29,6 +29,7 @@ const envSchema = z.object({
   REDIS_PASSWORD: z.string().default(""),
   REDIS_HOST: z.string().min(1, "REDIS_HOST is required"),
   REDIS_PORT: z.string().min(1, "REDIS_PORT is required"),
+  REDIS_URL: z.string().optional(),
 
   MONGO_URI: z.string().min(1, "MONGO_URI is required"),
   JWT_FORGOT_PASSWORD_SECRET: z
