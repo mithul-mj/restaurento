@@ -5,6 +5,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallback from "../ErrorFallback";
 import ChatbotModal from "../common/ChatbotModal";
+import { useState } from "react";
 
 const UserLayout = () => {
     const location = useLocation();

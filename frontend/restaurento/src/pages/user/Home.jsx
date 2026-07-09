@@ -8,6 +8,7 @@ import {
   LocateFixed,
   History,
   Bell,
+  MessageSquare,
 } from "lucide-react";
 import FilterModal from "./FilterModal";
 import Loader from "../../components/Loader";
@@ -23,6 +24,7 @@ import { useSocket } from "../../context/SocketContext";
 import notificationService from "../../services/notification.service";
 import NotificationModal from "../../pages/user/NotificationModal";
 import Footer from "../../components/common/Footer";
+import { openChatbot } from "../../components/common/ChatbotModal";
 
 const Home = () => {
   const {
@@ -196,12 +198,18 @@ const Home = () => {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={openChatbot}
+                          className="relative text-[#ff5e00] p-2.5 bg-orange-50 hover:bg-orange-100 rounded-full transition-colors shadow-sm"
+                        >
+                          <MessageSquare size={20} strokeWidth={1.5} />
+                        </button>
                         {user ? (
                           <>
                             <button
                               onClick={handleBellClick}
-                              className="relative text-[#111] p-3 bg-[#f5f5f5] hover:bg-gray-200 rounded-full transition-colors"
+                              className="relative text-[#111] p-2.5 bg-[#f5f5f5] hover:bg-gray-200 rounded-full transition-colors"
                             >
                               <Bell size={22} strokeWidth={1.5} />
                               {unreadCount > 0 && (
