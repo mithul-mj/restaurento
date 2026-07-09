@@ -8,6 +8,7 @@ import adminAuthRoutes from "./admin/auth.routes.js";
 import restaurantAuthRoutes from "./restaurant/auth.routes.js";
 import errorHandler from "../middlewares/errorHandler.middleware.js";
 import commonAuthRoutes from "./common/auth.routes.js";
+import commonChatRoutes from "./common/chat.routes.js";
 import { authLimiter } from "../middlewares/rateLimiter.middleware.js";
 import onboardingRoutes from "./restaurant/onboarding.routes.js";
 import restaurantRoutes from "./restaurant/restaurant.routes.js";
@@ -40,6 +41,7 @@ router.use("/api/v1/", authLimiter, userAuthRoutes);
 router.use("/api/v1/", userProfileRoutes);
 router.use("/api/v1/", userPaymentRoutes);
 router.use("/api/v1/", userReviewRoutes);
+router.use("/api/v1/", commonChatRoutes);
 
 router.use(errorHandler);
 

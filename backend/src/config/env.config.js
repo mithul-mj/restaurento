@@ -77,6 +77,11 @@ const envSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().min(1, "RAZORPAY_KEY_SECRET is required"),
 
   QR_CODE_SECRET: z.string().min(1, "QR_CODE_SECRET is required"),
+
+  // Chatbot configuration
+  GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required for Chatbot"),
+  QDRANT_URL: z.string().min(1, "QDRANT_URL is required"),
+  QDRANT_API_KEY: z.string().min(1, "QDRANT_API_KEY is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);

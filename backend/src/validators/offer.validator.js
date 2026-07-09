@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const offerSchema = z.object({
+const baseOfferSchema = z.object({
     discountValue: z.preprocess(
         (val) => (val === "" || isNaN(val) || val === null ? undefined : Number(val)),
         z.number({ required_error: "Discount amount is required" }).min(1, "Minimum ₹1 discount").max(1000, "Discount cannot exceed ₹1000")
@@ -11,7 +11,9 @@ export const offerSchema = z.object({
     ),
     validFrom: z.string().optional().nullable(),
     validUntil: z.string().optional().nullable()
-}).refine((data) => {
+});
+
+export const offerSchema = baseOfferSchema.refine((data) => {
     const discount = data.discountValue || 0;
     const minBill = data.minOrderValue || 0;
     return discount < minBill;
@@ -26,4 +28,20 @@ export const offerSchema = z.object({
     path: ["validUntil"]
 });
 
-export const updateOfferSchema = offerSchema.partial();
+export const updateOfferSchema = baseOfferSchema.partial().refine((data) => {
+    const discount = data.discountValue || 0;
+    const minBill = data.minOrderValue || 0;
+    if (data.discountValue !== undefined && data.minOrderValue !== undefined) {
+        return discount < minBill;
+    }
+    return true;
+}, {
+    message: "Discount must be less than the minimum bill",
+    path: ["discountValue"]
+}).refine((data) => {
+    if (!data.validUntil || !data.validFrom) return true;
+    return new Date(data.validUntil) > new Date(data.validFrom);
+}, {
+    message: "Expiry date must be after the start date",
+    path: ["validUntil"]
+});
