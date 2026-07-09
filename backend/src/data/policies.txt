@@ -1,0 +1,179 @@
+Restaurento Platform Policies & Frequently Asked Questions
+
+========================================
+1. Cancellation Policy
+========================================
+
+1a. Who Can Cancel:
+- Only the user who made the booking can cancel it from the "My Bookings" section.
+- You cannot cancel a booking that has already been checked-in.
+- You cannot cancel a booking that is already cancelled.
+- You cannot cancel a past booking (a booking whose date and time slot have already passed).
+
+1b. Refund on Cancellation:
+- If you cancel a confirmed (approved) booking, the full booking amount is refunded 100% to your Restaurento Wallet — no cancellation fees are charged.
+- If you cancel a booking that is still in "pending-payment" status (payment not yet completed), no refund is issued because no payment was collected yet.
+- All refunds are credited to your Restaurento Wallet, not back to your original payment method (credit card/bank/UPI).
+- You will receive an in-app notification confirming the cancellation and the refund amount.
+
+1c. Restaurant-Initiated Cancellations:
+- If a restaurant cancels your booking, you are entitled to a 100% full refund with no fees.
+- The full amount is credited to your Restaurento Wallet.
+- You will receive an in-app notification immediately when a restaurant cancels your booking.
+
+1d. Special Circumstances:
+- For cancellations due to medical emergencies or exceptional circumstances, please contact support@restaurento.com with documentation. These are reviewed case by case.
+
+========================================
+2. No-Show Policy
+========================================
+
+- If a diner does not arrive within 15 minutes of their scheduled booking time without prior notice, the reservation is marked as a "No-Show".
+- No-shows are not eligible for any refund. The full amount paid during booking will be forfeited.
+- Repeated no-shows (more than 3 in a month) may result in the suspension of the diner's account.
+
+========================================
+3. Wallet and Refund Rules
+========================================
+
+- Refunds for cancellations are always credited to the Restaurento Wallet, not back to the original payment source (credit card/bank).
+- Wallet balances cannot be withdrawn to a bank account. They can only be used for future bookings on the Restaurento platform.
+- When making a new booking, you can choose to apply your wallet balance. If the wallet balance is insufficient, the remaining amount must be paid via Razorpay.
+- Your wallet transaction history is available in the "My Wallet" section of the app, showing all credits and debits with timestamps.
+- Wallet credits earned from referrals, cancellation refunds, and goodwill gestures all appear in the transaction log.
+
+========================================
+4. Pricing, Taxes & Platform Fees
+========================================
+
+- All booking prices shown are exclusive of taxes and platform fees.
+- A 5% tax (GST) is applied to the booking total at checkout.
+- A 5% platform fee is charged on every booking to support the Restaurento platform.
+- The final breakdown of slot price, taxes, and platform fees is clearly displayed on the checkout confirmation screen before you pay.
+- There are no hidden charges beyond the tax and platform fee.
+
+========================================
+5. Payment and Payment Retries
+========================================
+
+- All payments are processed securely via Razorpay.
+- When you initiate a booking, your table is temporarily held for up to 5 minutes (300 seconds) while you complete payment.
+- You have a total window of 10 minutes (600 seconds) to successfully complete a payment before the hold is released.
+- If a payment fails during checkout, you have a 2-minute (120 second) window and up to 3 retry attempts to retry the payment.
+- If the payment is not completed within the retry window, the table hold is released and you will have to restart the booking process from scratch.
+- You can pay using Razorpay (credit card, debit card, UPI, net banking) or by applying your Restaurento Wallet balance.
+
+========================================
+6. Coupon Codes
+========================================
+
+- Only one coupon code or offer can be applied per booking. They cannot be combined.
+- Coupons are percentage-based discounts (e.g., a 20% coupon saves 20% of your total).
+- Each coupon has a maximum discount cap. Even if your percentage calculates higher, the maximum saving is capped (up to ₹1000 maximum cap).
+- Coupons may require a minimum order value to be eligible. Check the coupon details before applying.
+- Coupons have a usage limit (maximum number of times they can be used across all users). Once the limit is hit, the coupon is no longer applicable.
+- Coupons have an expiry date. Expired coupons cannot be applied.
+- If a booking with an applied coupon is cancelled, the coupon is considered "used" and cannot be applied again to a future booking.
+- Coupons are not case-sensitive. "SAVE20" and "save20" are treated as the same code.
+- You can view all currently available and valid coupons on the checkout page before completing your booking.
+
+========================================
+7. Restaurant Offers
+========================================
+
+- Restaurants can create their own flat-discount offers (e.g., "Get ₹50 off on bills above ₹300").
+- Restaurant offers are flat amounts in ₹ (not percentages). The maximum offer discount is ₹1000.
+- Every offer has a minimum bill threshold. The discount amount must always be strictly less than the minimum bill value. For example, a ₹50 offer requires the bill to be at least ₹51 or more.
+- The minimum bill threshold is based on your pre-ordered food total, not the full booking cost.
+- Offers have a validity window (valid from and valid until dates). You cannot apply an expired offer.
+- Platform coupons and restaurant-specific offers cannot be combined in the same booking.
+- Active offers are visible on the restaurant's booking page. Inactive or expired offers will not appear.
+
+========================================
+8. Pre-ordering Food
+========================================
+
+- Pre-ordered food is confirmed along with the table booking and is paid for at checkout.
+- Pre-ordered items are served at your table upon arrival. You do not need to place a separate order at the restaurant.
+- If you cancel the booking, the food pre-order is also cancelled automatically under the same cancellation policy terms.
+- You cannot modify the pre-ordered food once the booking is confirmed. You must cancel and re-book if you want to change your food order.
+- Each food item has a maximum order quantity of 99 per booking.
+- Menu items are marked as either Veg 🟢 or Non-Veg 🔴. Please review your pre-order carefully.
+- Not all menu items may be available. Unavailable items are hidden from the menu during booking.
+
+========================================
+9. General Booking Rules
+========================================
+
+- The maximum party size per booking is 20 people. Some restaurants may have lower limits.
+- Bookings are non-transferable. The person who made the booking must be present.
+- Children under 5 years old do not need to be counted in the party size for table capacity, but please mention them in the booking notes.
+- A QR code check-in token is generated for every confirmed booking. This is used by the restaurant staff to verify your arrival.
+- The check-in QR code is valid only until the end of your scheduled time slot. It cannot be used after your slot ends.
+- You can access your QR code from the "My Bookings" section of the app.
+
+========================================
+10. Referral Program
+========================================
+
+- Every Restaurento user has a unique referral code visible in their profile.
+- When a new user signs up using your referral code, both of you receive a wallet credit reward.
+- The referrer (you) earns ₹10 in Restaurento Wallet credit.
+- The new user (your friend) earns ₹5 in Restaurento Wallet credit as a welcome bonus.
+- Referral rewards are credited to the wallet after the new user successfully verifies their email.
+- The referral reward can only be claimed once per account. You cannot refer the same person twice.
+- Referral rewards can be used towards any future booking on the platform.
+
+========================================
+11. Reviews & Ratings
+========================================
+
+- You can leave a review and rating for a restaurant after completing a booking (status: checked-in).
+- Ratings are on a scale of 1 to 5 stars.
+- You can only submit one review per restaurant. If you have booked the same restaurant multiple times, you can update your existing review.
+- Review comments must not exceed 500 characters.
+- Restaurento reserves the right to remove reviews that contain abusive language, spam, or false information.
+
+========================================
+12. Account Suspension & Bans
+========================================
+
+- Accounts may be suspended for: repeated no-shows (more than 3 per month), repeated cancellations (more than 5 per month), abusive behavior, or violation of platform terms.
+- Suspended users cannot make new bookings but can still view their booking history and wallet balance.
+- If you believe your account was suspended in error, please contact support@restaurento.com for a review.
+- Restaurants on the platform are verified by the Restaurento admin team before being listed. They must submit a valid restaurant license, business certificate, FSSAI certificate, and owner ID.
+
+========================================
+13. Temporary Restaurant Closures
+========================================
+
+- A restaurant may temporarily close due to an emergency, renovation, or maintenance. When this happens, the restaurant sets a "closed until" date.
+- If the restaurant chooses to cancel existing bookings during its closure period, every affected booking is automatically cancelled and you receive a 100% full refund to your Restaurento Wallet with no fees.
+- You will receive an in-app notification immediately if your booking is cancelled due to a restaurant closure. The notification will state the restaurant name, your booking date, and the closure period.
+- If a restaurant is temporarily closed, its booking slots will be unavailable until it reopens.
+
+========================================
+14. Restaurant Schedule & Pricing Changes
+========================================
+
+- Restaurants may update their seating capacity, slot price, opening hours, and slot duration at any time.
+- Due to fairness for existing bookings, any changes to timing, pricing, or seat capacity take effect only after a 5-day lead time. This means your confirmed booking will always honour the price and schedule that was in effect when you booked.
+- Minor profile updates such as description, photos, and cuisine tags take effect immediately.
+- Restaurants can submit their verification documents up to a maximum of 3 times. After 3 rejected attempts, the account requires admin intervention.
+
+========================================
+15. Booking Statuses Explained
+========================================
+
+- pending-payment: Your booking has been initiated and a table hold is active, but payment has not been completed yet. This status auto-expires after 30 minutes if payment is not completed.
+- approved: Your payment is confirmed and your reservation is secured. You will receive a QR check-in token for this booking.
+- checked-in: The restaurant has scanned your QR code and you have been marked as arrived. This is the final successful status.
+- cancelled: The booking has been cancelled, either by you or by the restaurant. Refunds (if applicable) are credited to your wallet.
+
+========================================
+16. Contact & Support
+========================================
+
+- For any policy questions, billing disputes, or account issues, contact our support team at: support@restaurento.com
+- Our team typically responds within 24 business hours.
+- For urgent issues related to an active or upcoming booking, please mention your Booking ID in the subject line for faster resolution.

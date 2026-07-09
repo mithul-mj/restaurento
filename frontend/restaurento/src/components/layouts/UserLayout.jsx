@@ -4,6 +4,7 @@ import MobileBottomNav from "../user/MobileBottomNav";
 import { Outlet, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallback from "../ErrorFallback";
+import ChatbotModal from "../common/ChatbotModal";
 
 const UserLayout = () => {
     const location = useLocation();
@@ -23,6 +24,7 @@ const UserLayout = () => {
                 </ErrorBoundary>
             </main>
             <MobileBottomNav />
+            <ChatbotModal />
         </div>
     );
 };

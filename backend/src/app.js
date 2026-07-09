@@ -9,13 +9,14 @@ import allRoutes from "./routes/index.js";
 import { setupReservation } from "./socket/reservationSocket.js";
 import { initExpiryListener } from "./services/expiryListener.js";
 import { seedAdmin } from "./utils/seedAdmin.js";
+import { seedPolicies } from "./utils/seedPolicies.js";
 import { env } from "./config/env.config.js";
 import { setupNotifications } from "./socket/notificationSocket.js";
 import { globalLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 connectDB();
 seedAdmin();
-// API System Initialized
+seedPolicies();
 
 const app = express();
 const server = http.createServer(app);
