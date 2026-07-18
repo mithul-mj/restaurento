@@ -58,7 +58,7 @@ const ChatbotModal = ({ isOpenProp, onCloseProp }) => {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(true);
-    
+
     const messagesEndRef = useRef(null);
     const containerRef = useRef(null);
     const inputRef = useRef(null);
@@ -127,9 +127,9 @@ const ChatbotModal = ({ isOpenProp, onCloseProp }) => {
             <div className="bg-gradient-to-r from-[#ff5e00] to-orange-400 pt-3 pb-4 px-4 flex flex-col shrink-0 md:pt-4">
                 {/* Mobile Drag Handle */}
                 {isMobile && (
-                    <div 
-                        className="w-12 h-1.5 bg-white/30 rounded-full mx-auto mb-3 shrink-0 cursor-grab active:cursor-grabbing" 
-                        onPointerDown={(e) => dragControls.start(e)} 
+                    <div
+                        className="w-12 h-1.5 bg-white/30 rounded-full mx-auto mb-3 shrink-0 cursor-grab active:cursor-grabbing"
+                        onPointerDown={(e) => dragControls.start(e)}
                     />
                 )}
                 <div className="flex items-center justify-between">
@@ -215,7 +215,6 @@ const ChatbotModal = ({ isOpenProp, onCloseProp }) => {
                         <Send size={14} className="translate-x-px" />
                     </button>
                 </div>
-                <p className="text-center text-[10px] text-gray-300 mt-1.5 hidden md:block">Powered by Gemini AI</p>
             </form>
         </div>
     );
@@ -226,12 +225,12 @@ const ChatbotModal = ({ isOpenProp, onCloseProp }) => {
                 <AnimatePresence>
                     {isOpen && (
                         <div className="fixed inset-0 z-[200] md:hidden">
-                            <motion.div 
-                                initial={{ opacity: 0 }} 
-                                animate={{ opacity: 1 }} 
-                                exit={{ opacity: 0 }} 
-                                onClick={closeChat} 
-                                className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" 
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={closeChat}
+                                className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
                             />
                             <motion.div
                                 drag="y"

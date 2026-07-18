@@ -177,3 +177,30 @@ Restaurento Platform Policies & Frequently Asked Questions
 - For any policy questions, billing disputes, or account issues, contact our support team at: support@restaurento.com
 - Our team typically responds within 24 business hours.
 - For urgent issues related to an active or upcoming booking, please mention your Booking ID in the subject line for faster resolution.
+
+========================================
+17. How to Reserve a Table (Booking Process)
+========================================
+
+- Step 1: Browse and select a restaurant from the Restaurento platform.
+- Step 2: Choose your preferred date and available time slot on the restaurant's page.
+- Step 3: Enter your party size (maximum 20 people).
+- Step 4 (Optional): Pre-order your food from the restaurant's menu to save time.
+- Step 5: Proceed to checkout. Your table will be temporarily held for 5 minutes while you pay.
+- Step 6: Apply any valid coupons or wallet balance, and complete the remaining payment securely via Razorpay.
+- Step 7: Once payment is successful, your booking is confirmed (approved) and you will receive a QR code token in "My Bookings" for check-in!
+
+========================================
+18. About Restaurento (What is this website?)
+========================================
+
+- Restaurento is a premium, seamless restaurant reservation platform designed to eliminate waiting times.
+- We allow diners to browse top restaurants, book guaranteed table slots, and optionally pre-order their food so it's ready when they arrive.
+- Our mission is to provide a hassle-free, VIP dining experience where your table and food are always waiting for you, never the other way around.
+
+========================================
+19. Modifying a Booking (Time, Date, or Guests)
+========================================
+
+- Currently, confirmed bookings cannot be directly modified (you cannot change the time, date, party size, or pre-ordered food).
+- If you need to make changes, you must cancel your existing booking from the "My Bookings" section (which instantly refunds 100% to your Restaurento Wallet) and then create a brand new booking with your desired details.

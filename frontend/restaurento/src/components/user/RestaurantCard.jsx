@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { MapPin, Tag, Star } from "lucide-react";
+import { MapPin, Tag, Star, Navigation } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop";
+const FALLBACK_IMAGE =
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop";
 
 const RestaurantCard = React.memo(({ item }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -15,69 +16,137 @@ const RestaurantCard = React.memo(({ item }) => {
         return url;
     };
 
+    /* cuisine tags formatted as "indian • keralafood • continental •..." */
+    const cuisineLine = item.tags?.length
+        ? item.tags.join(" • ")
+        : "Classical";
+
     return (
-        <Link to={`/restaurants/${item._id}`} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform group">
-            <div className="relative h-48 w-full overflow-hidden shrink-0 bg-gray-200">
-                <img
-                    src={getOptimizedImageUrl(item.images?.[0])}
-                    alt={item.restaurantName}
-                    loading="lazy"
-                    onLoad={() => setImageLoaded(true)}
-                    className={`w-full h-full object-cover hover:scale-110 transition-all duration-700 ${imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                        }`}
-                />
-                <div
-                    className={`absolute top-4 right-4 ${item.isCurrentlyOpen ? "bg-green-500" : "bg-red-500"
-                        } text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide z-10`}
-                >
-                    {item.isCurrentlyOpen ? "OPEN" : "CLOSED"}
+        <Link
+            to={`/restaurants/${item._id}`}
+            className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col will-change-transform group cursor-pointer"
+            style={{ aspectRatio: "3/3", minHeight: 280 }}
+        >
+            {/* ── Full-bleed image ── */}
+            <img
+                src={getOptimizedImageUrl(item.images?.[0])}
+                alt={item.restaurantName}
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+                className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+            />
+
+            {/* skeleton shimmer while loading */}
+            {!imageLoaded && (
+                <div className="absolute inset-0 bg-gray-300 animate-pulse" />
+            )}
+
+            {/* ── dark gradient overlay ── */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    background:
+                        "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.10) 40%, rgba(0,0,0,0.72) 75%, rgba(0,0,0,0.88) 100%)",
+                }}
+            />
+
+            {/* ── Offer badge – absolute top-left ── */}
+            {item.bestOffer && (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-[#ff5e00] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full shadow-lg shadow-orange-600/50 border border-orange-300/30 backdrop-blur-sm uppercase tracking-wider">
+                    <Tag size={10} className="text-orange-100 shrink-0" />
+                    <span>Up to ₹{item.bestOffer.discountValue} Off</span>
                 </div>
+            )}
 
-                {item.bestOffer && (
-                    <div className="absolute bottom-3 left-3 bg-gradient-to-r from-orange-500 to-[#ff5e00] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-lg shadow-orange-500/40 z-10 border border-white/20 backdrop-blur-md uppercase tracking-wider">
-                        <Tag size={12} className="text-orange-50 mt-[1px]" />
-                        <span>Up to ₹{item.bestOffer.discountValue} Off</span>
-                    </div>
-                )}
-
-                {item.distanceFromUser !== undefined && item.distanceFromUser !== null && (
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                        <MapPin size={10} className="text-[#ff9500]" />
-                        <span>
-                            {item.distanceFromUser < 1000
-                                ? `${Math.round(item.distanceFromUser)} m`
-                                : `${(item.distanceFromUser / 1000).toFixed(1)} km`}
-                        </span>
-                    </div>
-                )}
+            {/* ── Open / Closed badge – absolute top-right ── */}
+            <div
+                className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 text-white text-[10px] font-bold px-3 py-1.5 rounded-full border backdrop-blur-md tracking-widest uppercase ${item.isCurrentlyOpen
+                    ? "bg-black/30 border-green-400/40 shadow-[0_0_12px_rgba(34,197,94,0.35)]"
+                    : "bg-black/30 border-red-400/40 shadow-[0_0_12px_rgba(239,68,68,0.35)]"
+                    }`}
+            >
+                {/* glowing dot */}
+                <span className="relative flex h-2 w-2 shrink-0">
+                    <span
+                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${item.isCurrentlyOpen ? "bg-green-400" : "bg-red-400"
+                            }`}
+                    />
+                    <span
+                        className={`relative inline-flex rounded-full h-2 w-2 ${item.isCurrentlyOpen ? "bg-green-400" : "bg-red-400"
+                            }`}
+                    />
+                </span>
+                {item.isCurrentlyOpen ? "Open" : "Closed"}
             </div>
 
-            <div className="p-5 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-2 gap-2">
-                    <h4 className="text-base font-semibold text-gray-900 line-clamp-1 flex-1">
-                        {item.restaurantName}
-                    </h4>
-                    {item.ratingStats && item.ratingStats.average > 0 && (
-                        <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 text-green-700 font-semibold text-xs shrink-0 transition-all group-hover:bg-green-100/50">
-                            <Star size={12} className="fill-green-600 text-green-600" />
-                            <span>{item.ratingStats.average.toFixed(1)}</span>
-                        </div>
-                    )}
-                </div>
+            {/* ── BOTTOM text block (overlaid on gradient) ── */}
+            <div className="relative z-10 mt-auto px-4 pb-0">
+                {/* Restaurant name */}
+                <h4 className="text-white font-bold text-xl leading-tight line-clamp-1 drop-shadow-sm">
+                    {item.restaurantName}
+                </h4>
 
-                <p className="text-[13px] text-gray-500 line-clamp-1">
-                    {item.tags?.join(", ") || "Classical"}
+                {/* Cuisine tags */}
+                <p className="text-white/75 text-[12px] mt-0.5 line-clamp-1">
+                    {cuisineLine}
                 </p>
 
-                <div className="mt-auto flex items-center justify-between pt-3 mt-3 border-t border-gray-50">
-                    <div className="flex items-start gap-1.5 flex-1 mr-4">
-                        <MapPin size={13} className="text-gray-400 mt-0.5 shrink-0" />
-                        <span className="line-clamp-2 text-xs font-medium text-gray-500">
-                            {item.address || "Unknown"}
+                {/* ── Single info row: rating • distance • availability ── */}
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {item.ratingStats && item.ratingStats.average > 0 && (
+                        <>
+                            <div className="flex items-center gap-1">
+                                <Star size={12} className="fill-yellow-400 text-yellow-400" />
+                                <span className="text-white text-[12px] font-semibold">
+                                    {item.ratingStats.average.toFixed(1)}
+                                </span>
+                            </div>
+                            <span className="text-white/40 text-[10px]">•</span>
+                        </>
+                    )}
+
+                    {item.distanceFromUser !== undefined && item.distanceFromUser !== null && (
+                        <>
+                            <div className="flex items-center gap-1">
+                                <Navigation size={11} className="text-white/70" />
+                                <span className="text-white/80 text-[12px] font-medium">
+                                    {item.distanceFromUser < 1000
+                                        ? `${Math.round(item.distanceFromUser)} m`
+                                        : `${(item.distanceFromUser / 1000).toFixed(1)} km`}
+                                </span>
+                            </div>
+                            <span className="text-white/40 text-[10px]">•</span>
+                        </>
+                    )}
+
+                    <span
+                        className={`text-[12px] font-semibold ${item.isCurrentlyOpen ? "text-green-400" : "text-red-400"
+                            }`}
+                    >
+                        {item.isCurrentlyOpen ? "Available" : "Unavailable"}
+                    </span>
+                </div>
+
+                {/* ── Divider line ── */}
+                <div className="border-t border-white/20 mt-3" />
+
+                {/* ── Location + slot price ── */}
+                <div className="flex items-center justify-between py-3 gap-3">
+                    <div className="flex items-start gap-1.5 flex-1 min-w-0">
+                        <MapPin size={13} className="text-white/60 mt-0.5 shrink-0" />
+                        <span className="text-white/80 text-[11px] font-medium line-clamp-2 leading-snug">
+                            {item.address || "Unknown location"}
                         </span>
                     </div>
-                    <div className="text-xs font-semibold text-gray-700 shrink-0">
-                        ₹{item.slotPrice || 3}/slot
+                    <div className="shrink-0 text-right">
+                        <p className="text-white/55 text-[9px] font-medium uppercase tracking-wide">
+                            Starting at
+                        </p>
+                        <p className="text-white font-bold text-sm leading-tight">
+                            ₹{item.slotPrice || 3}
+                            <span className="text-white/60 text-[10px] font-medium">/slot</span>
+                        </p>
                     </div>
                 </div>
             </div>

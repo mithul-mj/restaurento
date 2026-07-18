@@ -28,6 +28,7 @@
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.5.3",
+    "minisearch": "^7.2.0",
     "mongoose": "^9.0.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",

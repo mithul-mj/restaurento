@@ -38,10 +38,10 @@ router.use("/api/v1/restaurant/offers", restaurantOfferRoutes);
 router.use("/api/v1/restaurant", restaurantRoutes);
 
 router.use("/api/v1/", authLimiter, userAuthRoutes);
+router.use("/api/v1/", commonChatRoutes);
 router.use("/api/v1/", userProfileRoutes);
 router.use("/api/v1/", userPaymentRoutes);
 router.use("/api/v1/", userReviewRoutes);
-router.use("/api/v1/", commonChatRoutes);
 
 router.use(errorHandler);
 
