@@ -35,10 +35,10 @@ const authService = {
     const response = await api.post("/auth/reset-password-link", data);
     return response;
   },
-  googleLogin: async (googleToken, role = "USER", referralCode) => {
+  googleLogin: async (googleCredential, role = "USER", referralCode) => {
     const endpoint = role === "RESTAURANT" ? "/restaurant/auth/google" : "/auth/google";
     const response = await api.post(endpoint, { 
-      token: googleToken,
+      credential: googleCredential,
       referralCode 
     });
     return response;

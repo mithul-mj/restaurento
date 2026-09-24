@@ -25,10 +25,10 @@ const SkeletonCard = React.memo(() => (
         <div className="relative z-10 mt-auto px-4 pb-0">
             {/* Title */}
             <div className="w-2/3 h-6 bg-white/20 rounded animate-pulse" />
-            
+
             {/* Tags */}
             <div className="w-1/2 h-3 bg-white/20 rounded animate-pulse mt-1" />
-            
+
             {/* Info Row (Rating, Distance, Avail) */}
             <div className="flex gap-2 mt-2">
                 <div className="w-10 h-4 bg-white/20 rounded animate-pulse" />

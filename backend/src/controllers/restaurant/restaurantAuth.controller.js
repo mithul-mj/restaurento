@@ -11,6 +11,7 @@ import { env } from "../../config/env.config.js";
 import STATUS_CODES from "../../constants/statusCodes.js";
 import { sendAuthResponse, clearAuthCookies } from "../../utils/auth.util.js";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages.js";
+import { OAuth2Client } from "google-auth-library";
 
 
 export const registerRestaurant = async (req, res, next) => {
@@ -47,18 +48,31 @@ export const loginRestaurant = async (req, res, next) => {
   }
 };
 
-export const googleAuthRestaurant = async (req, res, next) => {
-  const { token } = req.body;
-  try {
-    const response = await fetch(
-      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
-    );
+const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
-    if (!response.ok) {
-      throw new Error(ERROR_MESSAGES.VERIFICATION_FAILED);
+export const googleAuthRestaurant = async (req, res, next) => {
+  const { credential } = req.body;
+  try {
+    if (!credential) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: ERROR_MESSAGES.VERIFICATION_FAILED,
+      });
     }
 
-    const payload = await response.json();
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email_verified) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: ERROR_MESSAGES.VERIFICATION_FAILED,
+      });
+    }
 
     const { email, name } = payload;
 

@@ -39,17 +39,28 @@ export const registerUser = async (req, res, next) => {
 const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 export const googleAuthUser = async (req, res, next) => {
-  const { token, referralCode } = req.body;
+  const { credential, referralCode } = req.body;
   try {
-    const response = await fetch(
-      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
-    );
-
-    if (!response.ok) {
-      throw new Error(ERROR_MESSAGES.VERIFICATION_FAILED);
+    if (!credential) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: ERROR_MESSAGES.VERIFICATION_FAILED,
+      });
     }
 
-    const payload = await response.json();
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email_verified) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: ERROR_MESSAGES.VERIFICATION_FAILED,
+      });
+    }
 
     const { email, name, picture } = payload;
 
